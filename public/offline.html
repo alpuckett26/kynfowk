@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Kynfowk offline</title>
+    <meta name="theme-color" content="#c7663f" />
+    <style>
+      :root {
+        --bg: #fcf7f1;
+        --card: rgba(255, 255, 255, 0.9);
+        --border: rgba(121, 83, 55, 0.14);
+        --text: #34211b;
+        --muted: #7c6257;
+        --accent: #c7663f;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+        font-family: ui-sans-serif, system-ui, sans-serif;
+        color: var(--text);
+        background:
+          radial-gradient(circle at top left, rgba(255, 215, 186, 0.55), transparent 30%),
+          linear-gradient(180deg, #fffaf5 0%, #fcf7f1 42%, #f6eee5 100%);
+      }
+
+      .card {
+        width: min(560px, 100%);
+        padding: 24px;
+        border: 1px solid var(--border);
+        border-radius: 24px;
+        background: var(--card);
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: rgba(244, 217, 201, 0.7);
+        color: #8d4428;
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      h1 {
+        margin: 14px 0 10px;
+        font-size: clamp(30px, 6vw, 48px);
+        line-height: 1;
+      }
+
+      p {
+        margin: 0 0 12px;
+        color: var(--muted);
+        line-height: 1.6;
+      }
+
+      a {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 46px;
+        padding: 0 18px;
+        border-radius: 999px;
+        background: linear-gradient(135deg, var(--accent) 0%, #8d4428 100%);
+        color: #fff9f5;
+        text-decoration: none;
+        font-weight: 700;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="card">
+      <span class="eyebrow">Offline for now</span>
+      <h1>Kynfowk will be ready again once you reconnect.</h1>
+      <p>
+        Live family updates, call details, and reminders need a connection. When you are back
+        online, your dashboard will pick up right where it left off.
+      </p>
+      <p>
+        If you were trying to join a call, reconnect first so Kynfowk can open the latest
+        meeting link and attendance details.
+      </p>
+      <a href="/dashboard">Try again</a>
+    </main>
+  </body>
+  </html>
