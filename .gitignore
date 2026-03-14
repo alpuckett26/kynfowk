@@ -8,5 +8,5 @@ node_modules
 coverage
 *.log
 *.tsbuildinfo
-
 .vercel
+supabase/.temp
