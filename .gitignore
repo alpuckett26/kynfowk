@@ -10,3 +10,12 @@ coverage
 *.tsbuildinfo
 .vercel
 supabase/.temp
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/
+tests/e2e/.auth/
+.env.test
