@@ -20,8 +20,17 @@ setup("sign in as test user", async ({ page }) => {
   await page.getByLabel("Password").fill(password);
   await page.getByRole("button", { name: /Open dashboard/i }).click();
 
-  // Should land on dashboard after sign-in
-  await page.waitForURL("**/dashboard", { timeout: 15000 });
+  // May land on /onboarding if this account hasn't completed setup yet
+  await page.waitForURL(/\/(dashboard|onboarding)/, { timeout: 15000 });
+
+  if (page.url().includes("/onboarding")) {
+    // Complete onboarding with minimal test data
+    await page.getByLabel("Your full name").fill("Test User");
+    await page.getByLabel("Circle name").fill("Test Family Circle");
+    await page.getByRole("button", { name: /Finish onboarding/i }).click();
+    await page.waitForURL("**/dashboard", { timeout: 15000 });
+  }
+
   await expect(page.getByRole("heading", { name: /Keep your family rhythm in view/i })).toBeVisible();
 
   // Save auth cookies for all other tests

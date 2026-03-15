@@ -60,7 +60,7 @@ test.describe("Family", () => {
 test.describe("Settings", () => {
   test("loads with profile fields", async ({ page }) => {
     await page.goto("/settings");
-    await expect(page.getByRole("heading", { name: /Settings/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Keep the details behind the rhythm trustworthy/i })).toBeVisible();
     await expect(page.getByLabel(/Full name/i)).toBeVisible();
     await expect(page.getByLabel(/Timezone/i)).toBeVisible();
   });
@@ -75,10 +75,12 @@ test.describe("Getting started", () => {
 
 test.describe("Auth redirects", () => {
   test("unauthenticated visit to dashboard redirects to sign-in", async ({ browser }) => {
-    // Use a fresh context with no saved auth
-    const context = await browser.newContext();
+    // Use a fresh context with no saved auth cookies
+    const context = await browser.newContext({ storageState: { cookies: [], origins: [] } });
     const page = await context.newPage();
-    await page.goto("/dashboard");
+    await page.goto("https://kynfowk.vercel.app/dashboard");
+    // Allow time for the server-side redirect to complete
+    await page.waitForURL(/sign-in|sign-up|dashboard/, { timeout: 10000 });
     await expect(page).toHaveURL(/sign-in|sign-up/);
     await context.close();
   });
