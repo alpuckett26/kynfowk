@@ -373,6 +373,21 @@ export async function completeOnboardingAction(
     if (memberInsert.error) {
       return { status: "error", message: memberInsert.error.message };
     }
+
+    if (hasSupabaseServiceRoleEnv()) {
+      const admin = createSupabaseAdminClient();
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+      await Promise.allSettled(
+        memberRows
+          .filter((m) => m.invite_email)
+          .map((m) =>
+            admin.auth.admin.inviteUserByEmail(m.invite_email!, {
+              data: { full_name: m.display_name },
+              redirectTo: `${siteUrl}/auth/callback`
+            })
+          )
+      );
+    }
   }
 
   const availabilityRows = slots.map((slot) => {
@@ -1112,6 +1127,45 @@ export async function markCallCompletedAction(
   redirect(`/dashboard?status=call-completed&recap=${callId}`);
 }
 
+export async function cancelCallAction(formData: FormData) {
+  const user = await requireViewer();
+  const supabase = await createSupabaseServerClient();
+
+  const callId = String(formData.get("callId") ?? "");
+  const familyCircleId = String(formData.get("familyCircleId") ?? "");
+
+  if (!callId || !familyCircleId) {
+    redirect("/dashboard" as Route);
+  }
+
+  const family = await getViewerFamilyCircle(user.id);
+  if (!family || family.circle.id !== familyCircleId || family.membership.status !== "active") {
+    redirect(`/calls/${callId}` as Route);
+  }
+
+  await supabase
+    .from("call_sessions")
+    .update({
+      status: "canceled",
+      reminder_status: "not_needed"
+    })
+    .eq("id", callId)
+    .eq("family_circle_id", familyCircleId)
+    .in("status", ["scheduled", "live"]);
+
+  await dismissCallNotifications(supabase, callId, [
+    "reminder_24h_before",
+    "reminder_15m_before",
+    "starting_now",
+    "missing_join_link_warning",
+    "call_passed_without_completion"
+  ]);
+
+  revalidatePath("/dashboard");
+  revalidatePath(`/calls/${callId}`);
+  redirect(`/dashboard?status=call-canceled` as Route);
+}
+
 export async function markCallReminderSentAction(formData: FormData) {
   const user = await requireViewer();
   const supabase = await createSupabaseServerClient();
@@ -1412,13 +1466,16 @@ export async function saveCallRecapAction(
     };
   }
 
-  const recapUpsert = await supabase.from("call_recaps").upsert({
-    call_session_id: callId,
-    summary: summary || null,
-    highlight: highlight || null,
-    next_step: nextStep || null,
-    created_by: user.id
-  });
+  const recapUpsert = await supabase.from("call_recaps").upsert(
+    {
+      call_session_id: callId,
+      summary: summary || null,
+      highlight: highlight || null,
+      next_step: nextStep || null,
+      created_by: user.id
+    },
+    { onConflict: "call_session_id" }
+  );
 
   if (recapUpsert.error) {
     return {

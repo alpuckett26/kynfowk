@@ -129,7 +129,7 @@ test.describe("Call origination", () => {
     // Hard reload to bypass Next.js cache
     await page.goto(`/dashboard?t=${Date.now()}`);
     await page.waitForLoadState("networkidle");
-    await expect(page.getByText("E2E Test Call")).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText("E2E Test Call").first()).toBeVisible({ timeout: 10000 });
   });
 
   test("call detail shows the scheduled participant", async ({ page }) => {
@@ -156,28 +156,37 @@ test.describe("Call termination", () => {
     const durationInput = page.getByLabel("Minutes shared");
     await durationInput.fill("30");
 
-    // Submit
-    await page.getByRole("button", { name: "Save completed call" }).click();
+    // Submit — success redirects to /dashboard, so wait for navigation
+    await Promise.all([
+      page.waitForNavigation({ timeout: 15000, waitUntil: "commit" }),
+      page.getByRole("button", { name: "Save completed call" }).click()
+    ]);
 
-    // Should redirect back to the call page with success status
-    await page.waitForURL(/\/calls\/.+/, { timeout: 15000 });
+    // Navigate to the call page to verify Completed status
+    await page.goto(`/calls/${seededCallId}?t=${Date.now()}`);
 
     // Status card now shows Completed
     await expect(page.getByText("Completed").first()).toBeVisible({ timeout: 10000 });
   });
 
+  test("verify call is completed in DB", async () => {
+    const callData = await fetchSupabase("GET", `call_sessions?id=eq.${seededCallId}&select=id,status`);
+    expect(callData[0]?.status).toBe("completed");
+  });
+
   test("completed call shows attendance summary", async ({ page }) => {
-    await page.goto(`/calls/${seededCallId}`);
-    await expect(page.getByRole("heading", { name: "Attendance summary" })).toBeVisible();
+    // Cache-bust to ensure fresh server-side render after completion
+    await page.goto(`/calls/${seededCallId}?t=${Date.now()}`);
+    await expect(page.getByRole("heading", { name: "Attendance summary" })).toBeVisible({ timeout: 10000 });
   });
 
   test("completed call shows post-call recap form", async ({ page }) => {
-    await page.goto(`/calls/${seededCallId}`);
+    await page.goto(`/calls/${seededCallId}?t=${Date.now()}`);
     await expect(page.getByRole("heading", { name: "Post-call recap" })).toBeVisible();
   });
 
   test("completed call no longer shows Complete this call form", async ({ page }) => {
-    await page.goto(`/calls/${seededCallId}`);
+    await page.goto(`/calls/${seededCallId}?t=${Date.now()}`);
     await expect(page.getByRole("heading", { name: "Complete this call" })).not.toBeVisible();
   });
 

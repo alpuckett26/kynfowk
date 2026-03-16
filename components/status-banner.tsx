@@ -9,6 +9,11 @@ const MESSAGES: Record<string, { title: string; body: string; tone: "success" | 
     body: "Nice work. Your connections counter is updated, and the recap is ready while the call is still fresh.",
     tone: "success"
   },
+  "call-canceled": {
+    title: "Call canceled",
+    body: "That call has been removed from your upcoming schedule. Schedule a new one any time.",
+    tone: "warning"
+  },
   "joined-circle": {
     title: "You joined your Family Circle",
     body: "Your invite was matched to this account, and your dashboard is ready.",

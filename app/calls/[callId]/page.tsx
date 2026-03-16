@@ -2,6 +2,7 @@ import type { Route } from "next";
 import Link from "next/link";
 
 import { markCallReminderSentAction } from "@/app/actions";
+import { CancelCallButton } from "@/components/cancel-call-button";
 import { Card } from "@/components/card";
 import { CallLinkForm } from "@/components/call-link-form";
 import { CompleteCallForm } from "@/components/complete-call-form";
@@ -285,6 +286,17 @@ export default async function CallDetailPage({
                         Share feedback
                       </Link>
                     </div>
+                  </div>
+                </Card>
+
+                <Card>
+                  <div className="stack-md">
+                    <h2>Cancel this call</h2>
+                    <p className="meta">
+                      If this call is no longer happening, cancel it to keep your schedule clean.
+                      This cannot be undone.
+                    </p>
+                    <CancelCallButton callId={data.call.id} familyCircleId={data.circle.id} />
                   </div>
                 </Card>
 
