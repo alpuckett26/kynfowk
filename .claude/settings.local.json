@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm test:*)",
+      "Bash(for f:*)",
+      "Bash(do echo:*)",
+      "Read(//c/Users/alpuc/Documents/kynfowk/**)",
+      "Bash(done)",
+      "Bash(npx supabase:*)",
+      "Bash(git add:*)",
+      "Bash(npx playwright:*)",
+      "Bash(npx dotenv:*)"
+    ]
+  }
+}

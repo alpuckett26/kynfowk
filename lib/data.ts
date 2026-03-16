@@ -659,9 +659,8 @@ export async function getCallDetailData(userId: string, callId: string): Promise
     .eq("id", callId)
     .maybeSingle();
 
-  // TEMP DEBUG: throw error instead of redirect to capture actual values
   if (!callResponse.data || callResponse.data.family_circle_id !== family.circle.id) {
-    throw new Error(`[debug:completion-missing] callId=${callId} callData=${JSON.stringify(callResponse.data)} callError=${JSON.stringify(callResponse.error)} familyCircleId=${family.circle.id}`);
+    redirect("/dashboard?status=completion-missing");
   }
 
   const [participantsResponse, recapResponse] = await Promise.all([
