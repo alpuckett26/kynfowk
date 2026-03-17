@@ -2099,6 +2099,73 @@ export async function callJoinedAction(
   return { attendanceEventId: eventResponse.data?.id ?? null };
 }
 
+export async function inviteFamilyMemberAction(formData: FormData) {
+  const user = await requireViewer();
+  const displayName = String(formData.get("displayName") ?? "").trim();
+  const inviteEmail = String(formData.get("inviteEmail") ?? "").trim().toLowerCase();
+
+  const redirectWithStatus = (status: string): never => {
+    redirect(`/family?status=${status}` as Route);
+  };
+
+  if (!displayName || !inviteEmail) {
+    redirectWithStatus("family-invite-error");
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const family = await getViewerFamilyCircle(user.id);
+
+  if (!family || family.membership.status !== "active") {
+    redirectWithStatus("family-member-forbidden");
+  }
+
+  const circle = family!.circle;
+  const membership = family!.membership;
+
+  const memberInsert = await supabase
+    .from("family_memberships")
+    .insert({
+      family_circle_id: circle.id,
+      display_name: displayName,
+      invite_email: inviteEmail,
+      status: "invited",
+      role: "member"
+    })
+    .select("id")
+    .single();
+
+  if (memberInsert.error) {
+    redirectWithStatus("family-invite-error");
+  }
+
+  if (hasSupabaseServiceRoleEnv()) {
+    const admin = createSupabaseAdminClient();
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+    const inviteResponse = await admin.auth.admin.inviteUserByEmail(inviteEmail, {
+      data: { full_name: displayName },
+      redirectTo: `${siteUrl}/auth/callback`
+    });
+
+    if (inviteResponse.error) {
+      const msg = inviteResponse.error.message.toLowerCase();
+      if (msg.includes("already") || msg.includes("exists")) {
+        redirectWithStatus("family-invite-already-claimed");
+      }
+    }
+  }
+
+  await supabase.from("family_activity").insert({
+    family_circle_id: circle.id,
+    actor_membership_id: membership.id,
+    activity_type: "members_invited",
+    summary: `${displayName} was invited to join the Family Circle.`
+  });
+
+  revalidatePath("/family");
+  revalidatePath("/dashboard");
+  redirectWithStatus("member-invited");
+}
+
 export async function callLeftAction(
   callId: string,
   attendanceEventId?: string

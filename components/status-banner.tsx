@@ -148,6 +148,11 @@ const MESSAGES: Record<string, { title: string; body: string; tone: "success" | 
     title: "Already blocked",
     body: "That member is already on the blocked list.",
     tone: "warning"
+  },
+  "member-invited": {
+    title: "Invite sent",
+    body: "A Kynfowk invite is on its way. They will appear in your Family Circle once they accept.",
+    tone: "success"
   }
 };
 

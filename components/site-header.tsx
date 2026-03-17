@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { signOutAction } from "@/app/actions";
 import { Button } from "@/components/button";
+import { InviteFamButton } from "@/components/invite-fam-button";
 import { NAV_LINKS } from "@/lib/constants";
 import { getViewer } from "@/lib/data";
 import { isAdminEmail } from "@/lib/env";
@@ -27,6 +28,7 @@ export async function SiteHeader() {
         <div className="header-actions">
           {user ? (
             <>
+              <InviteFamButton />
               {isAdminEmail(user.email) ? <a href="/admin">Admin</a> : null}
               <a href="/family">Family</a>
               <a href="/settings">Settings</a>

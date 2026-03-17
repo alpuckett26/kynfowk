@@ -1761,6 +1761,82 @@ h3 {
   border-color: #fde68a;
 }
 
+/* ── Invite Fam button + dialog ───────────────────────────────────────────────── */
+
+.invite-fam-btn {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+.invite-fam-btn:hover {
+  background: var(--accent-deep);
+  border-color: var(--accent-deep);
+}
+
+.invite-dialog {
+  border: 1px solid var(--border);
+  border-radius: 1.5rem;
+  padding: 0;
+  width: min(480px, 94vw);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.14);
+  background: var(--card);
+  color: var(--text);
+}
+
+.invite-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(2px);
+}
+
+.invite-dialog-inner {
+  padding: 1.75rem;
+  display: grid;
+  gap: 1rem;
+}
+
+.invite-dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.invite-dialog-header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.invite-dialog-close {
+  background: none;
+  border: none;
+  font-size: 1.1rem;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 0.2rem 0.4rem;
+  border-radius: 0.4rem;
+  line-height: 1;
+}
+
+.invite-dialog-close:hover {
+  color: var(--text);
+  background: var(--accent-soft);
+}
+
+.invite-form {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.invite-form-actions {
+  display: flex;
+  gap: 0.65rem;
+  margin-top: 0.25rem;
+}
+
 /* ── Case studies page ────────────────────────────────────────────────────────── */
 
 .case-study-highlights {
