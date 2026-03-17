@@ -203,42 +203,36 @@ async function sendEmailThroughProvider(input: {
   body: string;
   ctaHref?: string | null;
 }) {
-  const resendKey = process.env.RESEND_API_KEY;
-  const fromEmail = process.env.NOTIFICATION_FROM_EMAIL;
+  const { hasSESEnv, sendEmailViaSES } = await import("@/lib/ses");
 
-  if (!resendKey || !fromEmail) {
-    console.info(`[notifications] Email scaffold only for ${input.to}: ${input.subject}`);
+  if (!hasSESEnv()) {
+    console.info(`[notifications] SES not configured — skipping email to ${input.to}: ${input.subject}`);
     return {
       status: "skipped" as NotificationDeliveryStatus,
-      errorMessage: "No email provider configured. Logged locally instead."
+      errorMessage: "AWS SES environment variables not set."
     };
   }
 
-  const response = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${resendKey}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      from: fromEmail,
-      to: [input.to],
-      subject: input.subject,
-      text: input.ctaHref ? `${input.body}\n\nOpen: ${input.ctaHref}` : input.body
-    })
+  const bodyText = input.ctaHref
+    ? `${input.body}\n\nOpen: ${input.ctaHref}`
+    : input.body;
+
+  const result = await sendEmailViaSES({
+    to: input.to,
+    subject: input.subject,
+    bodyText
   });
 
-  if (!response.ok) {
+  if (result.error) {
     return {
       status: "failed" as NotificationDeliveryStatus,
-      errorMessage: `Email provider returned ${response.status}.`
+      errorMessage: result.error
     };
   }
 
-  const payload = (await response.json()) as { id?: string };
   return {
     status: "sent" as NotificationDeliveryStatus,
-    providerMessageId: payload.id ?? null
+    providerMessageId: result.messageId
   };
 }
 
