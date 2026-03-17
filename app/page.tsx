@@ -152,6 +152,36 @@ export default function HomePage() {
           </div>
         </section>
 
+        {/* ── Case studies teaser ───────────────────────────────── */}
+        <section className="home-section container">
+          <div className="home-section-label">Real families</div>
+          <h2 className="home-section-title">
+            Stories from circles that made the habit stick.
+          </h2>
+          <div className="home-stories-row">
+            <div className="home-story-preview">
+              <span className="home-story-num">01</span>
+              <p className="home-story-quote">&ldquo;She talks about her streak the way she talks about her garden — something she tends to.&rdquo;</p>
+              <p className="home-story-label">Grandparent connection · 4 time zones</p>
+            </div>
+            <div className="home-story-preview">
+              <span className="home-story-num">02</span>
+              <p className="home-story-quote">&ldquo;The app never made it feel complicated — it just told us when to show up.&rdquo;</p>
+              <p className="home-story-label">Long-distance siblings · 3 continents</p>
+            </div>
+            <div className="home-story-preview">
+              <span className="home-story-num">05</span>
+              <p className="home-story-quote">&ldquo;Having a call on the calendar was the difference between dread and anticipation.&rdquo;</p>
+              <p className="home-story-label">Military deployment · 9 months, 31 calls</p>
+            </div>
+          </div>
+          <div className="home-stories-link">
+            <Link className="button button-ghost" href="/case-studies">
+              Read all five stories →
+            </Link>
+          </div>
+        </section>
+
         {/* ── Final CTA ─────────────────────────────────────────── */}
         <section className="home-cta-section container">
           <div className="home-cta-card">

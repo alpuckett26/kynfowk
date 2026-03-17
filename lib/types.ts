@@ -51,6 +51,7 @@ export interface DashboardStats {
   totalMinutes: number;
   uniqueConnectedThisWeek: number;
   weeklyStreak: number;
+  connectionScore: number;
 }
 
 export interface ActivityItem {

@@ -22,6 +22,11 @@ export function StatsGrid({ stats }: { stats: DashboardStats }) {
       label: "Reconnection Streak",
       value: `${stats.weeklyStreak} week${stats.weeklyStreak === 1 ? "" : "s"}`,
       detail: "Consecutive weeks with at least one completed family call."
+    },
+    {
+      label: "Connection Score",
+      value: stats.connectionScore,
+      detail: "Earned by completing calls, staying long, including more people, and re-connecting after a gap."
     }
   ];
 

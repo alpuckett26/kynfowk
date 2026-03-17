@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { Card } from "@/components/card";
 import { SectionHeading } from "@/components/section-heading";
 import { CASE_STUDIES } from "@/lib/constants";
@@ -7,44 +9,43 @@ export default function CaseStudiesPage() {
     <main className="page-shell">
       <section className="container stack-lg">
         <SectionHeading
-          eyebrow="Case studies"
-          title="Investor-demo storytelling for how families actually reconnect"
-          description="These examples show what Kynfowk looks like when it turns family logistics into a warm, repeatable habit. Each one frames the problem, the product behavior, and the outcome."
+          eyebrow="Real families. Real rhythms."
+          title="What happens when good intentions become reliable habits."
+          description="Five families. Five different challenges. One shared outcome: calls that actually happen, and connections that grow over time."
         />
 
-        <div className="highlights-grid">
-          <Card className="highlight-card highlight-warm">
-            <p className="stat-label">Demo story angle</p>
-            <p className="highlight-value">Coordination becomes care</p>
-            <p className="meta">
-              Kynfowk turns availability overlap into moments families can actually keep.
-            </p>
-          </Card>
-          <Card className="highlight-card highlight-success">
-            <p className="stat-label">Product proof</p>
-            <p className="highlight-value">Calls, minutes, streaks</p>
-            <p className="meta">
-              The dashboard gives clear evidence that Family Connections are happening.
-            </p>
-          </Card>
-          <Card className="highlight-card">
-            <p className="stat-label">Why it matters</p>
-            <p className="highlight-value">Low-friction family ritual</p>
-            <p className="meta">
-              The product succeeds when it feels emotionally intelligent, not operational.
-            </p>
-          </Card>
+        <div className="case-study-highlights">
+          <div className="case-study-highlight-item">
+            <p className="stat-value">31</p>
+            <p className="stat-label">Calls kept during a 9-month deployment</p>
+          </div>
+          <div className="case-study-highlight-item">
+            <p className="stat-value">148</p>
+            <p className="stat-label">Peak Connection Score earned</p>
+          </div>
+          <div className="case-study-highlight-item">
+            <p className="stat-value">37 wks</p>
+            <p className="stat-label">Longest Reconnection Streak</p>
+          </div>
+          <div className="case-study-highlight-item">
+            <p className="stat-value">3</p>
+            <p className="stat-label">Continents bridged by one sibling circle</p>
+          </div>
         </div>
 
         <div className="story-grid">
-          {CASE_STUDIES.map((story) => (
-            <Card key={story.title}>
+          {CASE_STUDIES.map((story, index) => (
+            <Card key={story.title} className="story-card">
               <div className="stack-md">
-                <span className="eyebrow">{story.family}</span>
-                <h2>{story.title}</h2>
-                <p>{story.summary}</p>
+                <div className="story-card-header">
+                  <span className="story-card-number">0{index + 1}</span>
+                  <span className="eyebrow">{story.family}</span>
+                </div>
+                <h2 className="story-card-title">{story.title}</h2>
+                <p className="story-card-summary">{story.summary}</p>
+
                 <div className="story-block">
-                  <strong>Challenge</strong>
+                  <strong>The challenge</strong>
                   <p>{story.challenge}</p>
                 </div>
                 <div className="story-block">
@@ -52,9 +53,10 @@ export default function CaseStudiesPage() {
                   <p>{story.approach}</p>
                 </div>
                 <div className="story-block">
-                  <strong>Result</strong>
+                  <strong>What happened</strong>
                   <p>{story.result}</p>
                 </div>
+
                 <div className="metric-row">
                   {story.metrics.map((metric) => (
                     <span className="pill" key={metric}>
@@ -62,11 +64,28 @@ export default function CaseStudiesPage() {
                     </span>
                   ))}
                 </div>
-                <blockquote className="story-quote">“{story.quote}”</blockquote>
-                <p className="meta">{story.highlight}</p>
+
+                <blockquote className="story-quote">&ldquo;{story.quote}&rdquo;</blockquote>
+
+                <p className="story-highlight meta">{story.highlight}</p>
               </div>
             </Card>
           ))}
+        </div>
+
+        <div className="case-study-cta">
+          <h2>Your family&apos;s story starts with one scheduled call.</h2>
+          <p className="lede">
+            Set up your Family Circle in under two minutes. No credit card. No commitment.
+          </p>
+          <div className="home-cta-row">
+            <Link className="button home-cta-primary" href="/auth/sign-up">
+              Start your Family Circle
+            </Link>
+            <Link className="button button-ghost home-cta-secondary" href="/">
+              Learn how it works
+            </Link>
+          </div>
         </div>
       </section>
     </main>

@@ -426,6 +426,11 @@ export async function getDashboardData(userId: string): Promise<{
       uniqueConnectedThisWeek,
       weeklyStreak: getWeeklyStreak(
         completedCalls.map((call) => new Date(call.scheduled_start))
+      ),
+      connectionScore: computeConnectionScore(
+        completedCalls,
+        participantResponse.data ?? [],
+        attendedCountByCallId
       )
     },
     highlights: buildHighlights({
@@ -1131,6 +1136,55 @@ export async function getFamilyManagementData(userId: string): Promise<{
       blocked_reason: string | null;
     }[]
   };
+}
+
+function computeConnectionScore(
+  completedCalls: Array<{ id: string; scheduled_start: string; actual_duration_minutes: number | null }>,
+  participants: Array<{ membership_id: string; call_session_id: string; attended: boolean | null }>,
+  attendedCountByCallId: Map<string, number>
+): number {
+  const sortedCalls = [...completedCalls].sort(
+    (a, b) => new Date(a.scheduled_start).getTime() - new Date(b.scheduled_start).getTime()
+  );
+
+  const attendeesByCall = new Map<string, string[]>();
+  for (const p of participants) {
+    if (p.attended !== true) {
+      continue;
+    }
+    const list = attendeesByCall.get(p.call_session_id) ?? [];
+    list.push(p.membership_id);
+    attendeesByCall.set(p.call_session_id, list);
+  }
+
+  const lastSeenByMember = new Map<string, Date>();
+  let score = 0;
+
+  for (const call of sortedCalls) {
+    const callDate = new Date(call.scheduled_start);
+    const attendedCount = attendedCountByCallId.get(call.id) ?? 0;
+    const attendees = attendeesByCall.get(call.id) ?? [];
+
+    score += 1;
+    if ((call.actual_duration_minutes ?? 0) >= 10) {
+      score += 1;
+    }
+    if (attendedCount >= 3) {
+      score += 1;
+    }
+    for (const memberId of attendees) {
+      const lastSeen = lastSeenByMember.get(memberId);
+      if (lastSeen) {
+        const daysSince = (callDate.getTime() - lastSeen.getTime()) / (1000 * 60 * 60 * 24);
+        if (daysSince >= 30) {
+          score += 2;
+        }
+      }
+      lastSeenByMember.set(memberId, callDate);
+    }
+  }
+
+  return score;
 }
 
 function getWeeklyStreak(dates: Date[]) {
