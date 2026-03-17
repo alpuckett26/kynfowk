@@ -4,6 +4,7 @@ import { Fraunces, Manrope } from "next/font/google";
 import "@/app/globals.css";
 
 import { InstallPrompt } from "@/components/install-prompt";
+import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 import { PwaBootstrap } from "@/components/pwa-bootstrap";
 import { SiteHeader } from "@/components/site-header";
 
@@ -44,6 +45,7 @@ export default function RootLayout({
         <PwaBootstrap />
         <SiteHeader />
         {children}
+        <MobileBottomNav />
         <InstallPrompt />
       </body>
     </html>

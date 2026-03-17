@@ -29,15 +29,17 @@ export async function SiteHeader() {
           {user ? (
             <>
               <InviteFamButton />
-              {isAdminEmail(user.email) ? <a href="/admin">Admin</a> : null}
-              <a href="/family">Family</a>
-              <a href="/settings">Settings</a>
-              <a href="/onboarding">Update Family Circle</a>
-              <form action={signOutAction}>
-                <Button type="submit" variant="secondary">
-                  Sign out
-                </Button>
-              </form>
+              <div className="header-secondary-actions">
+                {isAdminEmail(user.email) ? <a href="/admin">Admin</a> : null}
+                <a href="/family">Family</a>
+                <a href="/settings">Settings</a>
+                <a href="/onboarding">Update Circle</a>
+                <form action={signOutAction}>
+                  <Button type="submit" variant="secondary">
+                    Sign out
+                  </Button>
+                </form>
+              </div>
             </>
           ) : (
             <>

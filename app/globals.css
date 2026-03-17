@@ -78,9 +78,14 @@ main {
 
 .header-inner,
 .nav,
-.header-actions {
+.header-actions,
+.header-secondary-actions {
   display: flex;
   align-items: center;
+}
+
+.header-secondary-actions {
+  gap: 1rem;
 }
 
 .header-inner {
@@ -922,9 +927,16 @@ h3 {
   }
 
   .header-inner,
-  .nav,
   .header-actions {
     flex-wrap: wrap;
+  }
+
+  .nav {
+    display: none;
+  }
+
+  .header-secondary-actions {
+    display: none;
   }
 
   .page-shell {
@@ -972,7 +984,7 @@ h3 {
 
 @media (max-width: 640px) {
   .container {
-    width: min(100%, calc(100% - 1rem));
+    width: min(100%, calc(100% - 1.25rem));
   }
 
   .hero-copy h1,
@@ -989,11 +1001,7 @@ h3 {
   }
 
   .header-inner {
-    padding: 0.85rem 0;
-  }
-
-  .nav {
-    font-size: 0.95rem;
+    padding: 0.75rem 0;
   }
 
   .pill-row,
@@ -1003,6 +1011,54 @@ h3 {
 
   .field-grid.two-col {
     grid-template-columns: 1fr;
+  }
+
+  /* Stats: 2 per row so 5 cards become a compact 2+2+1 layout */
+  .stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .counter-card {
+    padding: 1rem;
+  }
+
+  .counter-card .stat-value {
+    font-size: 2rem;
+  }
+
+  .counter-card .meta {
+    display: none;
+  }
+
+  /* Tighter page spacing */
+  .page-shell {
+    padding-top: 1rem;
+    padding-bottom: 5rem;
+  }
+
+  .stack-lg {
+    gap: 1.25rem;
+  }
+
+  .dashboard-hero h1 {
+    font-size: 1.5rem;
+  }
+
+  .lede {
+    font-size: 0.95rem;
+  }
+
+  /* Highlights: 2 per row too */
+  .highlights-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .highlight-card {
+    padding: 1rem;
+  }
+
+  .highlight-value {
+    font-size: 1.6rem;
   }
 }
 
@@ -1922,4 +1978,55 @@ h3 {
   .case-study-highlights {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+}
+
+/* ── Mobile bottom navigation ─────────────────────────────────────────────────── */
+
+.mobile-bottom-nav {
+  display: none;
+}
+
+@media (max-width: 960px) {
+  .mobile-bottom-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 50;
+    background: rgba(252, 247, 241, 0.96);
+    backdrop-filter: blur(16px);
+    border-top: 1px solid rgba(121, 83, 55, 0.12);
+    padding: 0.4rem 0 calc(0.4rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* Give page content room above the bottom nav */
+  .page-shell {
+    padding-bottom: 5.5rem;
+  }
+}
+
+.mobile-nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.18rem;
+  padding: 0.4rem 0.25rem;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--muted);
+  text-decoration: none;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  transition: color 0.15s;
+}
+
+.mobile-nav-item:hover {
+  color: var(--accent);
+}
+
+.mobile-nav-icon {
+  font-size: 1.15rem;
+  line-height: 1;
 }
