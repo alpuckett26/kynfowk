@@ -644,6 +644,7 @@ export async function getCallDetailData(userId: string, callId: string): Promise
   recap: CallRecap | null;
   viewerTimezone: string;
   viewerTimezoneLabel: string;
+  viewerMembershipId: string;
   canManageFamily: boolean;
 }> {
   const supabase = await createSupabaseServerClient();
@@ -742,6 +743,7 @@ export async function getCallDetailData(userId: string, callId: string): Promise
         : null,
     viewerTimezone,
     viewerTimezoneLabel: formatTimezoneLabel(viewerTimezone),
+    viewerMembershipId: family.membership.id,
     canManageFamily: family.membership.role === "owner"
   };
 }

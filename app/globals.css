@@ -1439,3 +1439,249 @@ h3 {
     grid-template-columns: 1fr;
   }
 }
+
+/* ── Call room ─────────────────────────────────────────────────────────────── */
+
+.call-room {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  background: #111;
+  color: #fff;
+  overflow: hidden;
+}
+
+.call-room-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1.25rem;
+  background: rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  min-height: 3rem;
+}
+
+.call-room-title {
+  font-weight: 600;
+  font-size: 0.95rem;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.call-room-status-badge {
+  font-size: 0.78rem;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  padding: 0.2rem 0.75rem;
+  white-space: nowrap;
+}
+
+.call-video-grid {
+  flex: 1;
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  overflow: hidden;
+  align-items: stretch;
+}
+
+.call-video-grid-1 {
+  grid-template-columns: 1fr;
+}
+
+.call-video-grid-2 {
+  grid-template-columns: 1fr 1fr;
+}
+
+.call-video-grid-3 {
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+}
+
+.call-video-grid-4 {
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+}
+
+.call-video-tile {
+  position: relative;
+  background: #1e1e1e;
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.call-video-tile-local {
+  border: 2px solid rgba(199, 102, 63, 0.5);
+}
+
+.call-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.call-video-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  background: #2a2a2a;
+}
+
+.call-video-initials {
+  font-size: 3rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.call-video-label {
+  position: absolute;
+  bottom: 0.5rem;
+  left: 0.75rem;
+  font-size: 0.78rem;
+  background: rgba(0, 0, 0, 0.55);
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+  pointer-events: none;
+  max-width: calc(100% - 1.5rem);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.call-room-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.call-control-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  background: rgba(255, 255, 255, 0.12);
+  border: none;
+  border-radius: 12px;
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.7rem;
+  font-weight: 500;
+  min-width: 4rem;
+  padding: 0.65rem 1rem;
+  transition: background 0.15s;
+}
+
+.call-control-button:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.call-control-button-off {
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.call-control-button-leave {
+  background: #b91c1c;
+}
+
+.call-control-button-leave:hover {
+  background: #dc2626;
+}
+
+.call-room-error {
+  max-width: 36rem;
+  margin: 4rem auto;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  align-items: center;
+}
+
+@media (max-width: 640px) {
+  .call-video-grid-2,
+  .call-video-grid-3,
+  .call-video-grid-4 {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+  }
+}
+
+/* ── Call live status (lobby / pop-in) ────────────────────────────────────── */
+
+.call-live-status {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.call-live-status-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.call-live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #22c55e;
+  flex-shrink: 0;
+  animation: live-pulse 2s ease-in-out infinite;
+}
+
+@keyframes live-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.call-live-label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.call-live-avatars {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.call-live-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  border: 2px solid var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--accent-deep);
+  flex-shrink: 0;
+}
+
+.call-live-names {
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.call-live-popin-button {
+  align-self: flex-start;
+}

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { markCallReminderSentAction } from "@/app/actions";
 import { CancelCallButton } from "@/components/cancel-call-button";
 import { Card } from "@/components/card";
+import { CallLiveStatus } from "@/components/call-live-status";
 import { CallLinkForm } from "@/components/call-link-form";
 import { CompleteCallForm } from "@/components/complete-call-form";
 import { EmptyState } from "@/components/empty-state";
@@ -77,17 +78,32 @@ export default async function CallDetailPage({
                   Add to calendar
                 </Link>
               ) : null}
-              {data.call.meeting_url ? (
+              {isManageableCall ? (
                 <Link
                   className="button"
+                  href={`/calls/${data.call.id}/live` as Route}
+                >
+                  Join live call
+                </Link>
+              ) : null}
+              {data.call.meeting_url ? (
+                <Link
+                  className="button button-secondary"
                   href={`/calls/${data.call.id}/join` as Route}
                   rel="noreferrer noopener"
                   target="_blank"
                 >
-                  Join call
+                  External link
                 </Link>
               ) : null}
             </div>
+
+            {isManageableCall ? (
+              <CallLiveStatus
+                callId={data.call.id}
+                viewerMembershipId={data.viewerMembershipId}
+              />
+            ) : null}
           </Card>
         </section>
 

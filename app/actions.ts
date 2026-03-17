@@ -1968,3 +1968,58 @@ export async function removeFamilyMemberAction(formData: FormData) {
   revalidatePath("/dashboard");
   redirectWithStatus("family-member-removed");
 }
+
+// ── Live call actions ────────────────────────────────────────────────────────
+
+export async function callJoinedAction(
+  callId: string,
+  familyCircleId: string,
+  membershipId: string
+): Promise<{ attendanceEventId: string | null }> {
+  if (!hasSupabaseEnv()) return { attendanceEventId: null };
+  const supabase = await createSupabaseServerClient();
+
+  // Transition call to "live" and record actual_started_at only when
+  // the first person joins (status still "scheduled").
+  await supabase
+    .from("call_sessions")
+    .update({ status: "live", actual_started_at: new Date().toISOString() })
+    .eq("id", callId)
+    .eq("family_circle_id", familyCircleId)
+    .eq("status", "scheduled");
+
+  // Mark this participant as attended in the call_participants row
+  await supabase
+    .from("call_participants")
+    .update({ attended: true })
+    .eq("call_session_id", callId)
+    .eq("membership_id", membershipId);
+
+  // Insert a durable attendance event for precise join/leave tracking
+  const eventResponse = await supabase
+    .from("call_attendance_events")
+    .insert({ call_session_id: callId, membership_id: membershipId })
+    .select("id")
+    .maybeSingle();
+
+  revalidatePath(`/calls/${callId}`);
+  return { attendanceEventId: eventResponse.data?.id ?? null };
+}
+
+export async function callLeftAction(
+  callId: string,
+  attendanceEventId?: string
+): Promise<void> {
+  if (!hasSupabaseEnv()) return;
+  const supabase = await createSupabaseServerClient();
+
+  // Stamp left_at on the attendance event for precise duration tracking
+  if (attendanceEventId) {
+    await supabase
+      .from("call_attendance_events")
+      .update({ left_at: new Date().toISOString() })
+      .eq("id", attendanceEventId);
+  }
+
+  revalidatePath(`/calls/${callId}`);
+}
