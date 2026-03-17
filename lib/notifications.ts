@@ -203,38 +203,54 @@ async function sendEmailThroughProvider(input: {
   body: string;
   ctaHref?: string | null;
 }) {
-  const { hasSESEnv, sendEmailViaSES } = await import("@/lib/ses");
+  const resendKey = process.env.RESEND_API_KEY;
+  const fromEmail = process.env.NOTIFICATION_FROM_EMAIL;
 
-  if (!hasSESEnv()) {
-    console.info(`[notifications] SES not configured — skipping email to ${input.to}: ${input.subject}`);
+  if (!resendKey || !fromEmail) {
+    console.info(`[notifications] Resend not configured — skipping email to ${input.to}: ${input.subject}`);
     return {
       status: "skipped" as NotificationDeliveryStatus,
-      errorMessage: "AWS SES environment variables not set."
+      errorMessage: "RESEND_API_KEY or NOTIFICATION_FROM_EMAIL not set."
     };
   }
 
-  const bodyText = input.ctaHref
-    ? `${input.body}\n\nOpen: ${input.ctaHref}`
-    : input.body;
-
-  const result = await sendEmailViaSES({
-    to: input.to,
-    subject: input.subject,
-    bodyText
+  const response = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${resendKey}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      from: fromEmail,
+      to: [input.to],
+      subject: input.subject,
+      text: input.ctaHref ? `${input.body}\n\nOpen: ${input.ctaHref}` : input.body
+    })
   });
 
-  if (result.error) {
+  if (!response.ok) {
     return {
       status: "failed" as NotificationDeliveryStatus,
-      errorMessage: result.error
+      errorMessage: `Resend returned ${response.status}.`
     };
   }
 
+  const payload = (await response.json()) as { id?: string };
   return {
     status: "sent" as NotificationDeliveryStatus,
-    providerMessageId: result.messageId
+    providerMessageId: payload.id ?? null
   };
 }
+
+/*
+ * Future SES migration note
+ * ─────────────────────────
+ * When AWS SES production access is approved, replace sendEmailThroughProvider
+ * with the implementation in lib/ses.ts (already scaffolded).
+ * Swap env vars: remove RESEND_API_KEY, add AWS_REGION / AWS_ACCESS_KEY_ID /
+ * AWS_SECRET_ACCESS_KEY. NOTIFICATION_FROM_EMAIL stays the same.
+ * Also update Supabase Auth SMTP from smtp.resend.com to the SES SMTP endpoint.
+ */
 
 async function sendPushThroughProvider(input: {
   subscription: {
