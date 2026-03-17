@@ -1969,6 +1969,99 @@ export async function removeFamilyMemberAction(formData: FormData) {
   redirectWithStatus("family-member-removed");
 }
 
+export async function blockFamilyMemberAction(formData: FormData) {
+  const user = await requireViewer();
+  const familyCircleId = String(formData.get("familyCircleId") ?? "");
+  const membershipId = String(formData.get("membershipId") ?? "");
+  const reason = String(formData.get("reason") ?? "").trim() || null;
+  const redirectWithStatus = (status: string): never => {
+    redirect(`/family?status=${status}` as Route);
+  };
+
+  if (!familyCircleId || !membershipId) redirectWithStatus("family-member-error");
+
+  const { supabase, family } = await requireOwnerFamilyContext(user.id, familyCircleId);
+  if (!family) redirectWithStatus("family-member-forbidden");
+  const ownerFamily = family!;
+
+  const membershipResponse = await supabase
+    .from("family_memberships")
+    .select("id, display_name, status, role")
+    .eq("id", membershipId)
+    .eq("family_circle_id", familyCircleId)
+    .maybeSingle();
+
+  if (!membershipResponse.data) redirectWithStatus("family-member-error");
+  const target = membershipResponse.data!;
+
+  if (target.role === "owner" || target.id === ownerFamily.membership.id) {
+    redirectWithStatus("family-member-block-self");
+  }
+
+  if (target.status === "blocked") redirectWithStatus("family-member-already-blocked");
+
+  await supabase
+    .from("family_memberships")
+    .update({ status: "blocked", blocked_at: new Date().toISOString(), blocked_reason: reason })
+    .eq("id", membershipId)
+    .eq("family_circle_id", familyCircleId);
+
+  await supabase.from("family_activity").insert({
+    family_circle_id: familyCircleId,
+    actor_membership_id: ownerFamily.membership.id,
+    activity_type: "member_blocked",
+    summary: `${target.display_name} was blocked from the Family Circle.`
+  });
+
+  revalidatePath("/family");
+  revalidatePath("/dashboard");
+  redirectWithStatus("family-member-blocked");
+}
+
+export async function unblockFamilyMemberAction(formData: FormData) {
+  const user = await requireViewer();
+  const familyCircleId = String(formData.get("familyCircleId") ?? "");
+  const membershipId = String(formData.get("membershipId") ?? "");
+  const redirectWithStatus = (status: string): never => {
+    redirect(`/family?status=${status}` as Route);
+  };
+
+  if (!familyCircleId || !membershipId) redirectWithStatus("family-member-error");
+
+  const { supabase, family } = await requireOwnerFamilyContext(user.id, familyCircleId);
+  if (!family) redirectWithStatus("family-member-forbidden");
+
+  const membershipResponse = await supabase
+    .from("family_memberships")
+    .select("id, display_name, status")
+    .eq("id", membershipId)
+    .eq("family_circle_id", familyCircleId)
+    .maybeSingle();
+
+  if (!membershipResponse.data || membershipResponse.data.status !== "blocked") {
+    redirectWithStatus("family-member-error");
+  }
+  const target = membershipResponse.data!;
+
+  // Restore to "invited" so they can be re-onboarded if needed
+  await supabase
+    .from("family_memberships")
+    .update({ status: "invited", blocked_at: null, blocked_reason: null })
+    .eq("id", membershipId)
+    .eq("family_circle_id", familyCircleId);
+
+  await supabase.from("family_activity").insert({
+    family_circle_id: familyCircleId,
+    actor_membership_id: family!.membership.id,
+    activity_type: "member_unblocked",
+    summary: `${target.display_name} was unblocked and restored to invited status.`
+  });
+
+  revalidatePath("/family");
+  revalidatePath("/dashboard");
+  redirectWithStatus("family-member-unblocked");
+}
+
 // ── Live call actions ────────────────────────────────────────────────────────
 
 export async function callJoinedAction(

@@ -128,6 +128,26 @@ const MESSAGES: Record<string, { title: string; body: string; tone: "success" | 
     title: "That invite may already be claimed",
     body: "Kynfowk could not send a fresh invite because this email may already belong to an account. Ask them to sign in with the invited email instead.",
     tone: "warning"
+  },
+  "family-member-blocked": {
+    title: "Member blocked",
+    body: "That person has been blocked. They are excluded from calls, scheduling, and family activity until you unblock them.",
+    tone: "success"
+  },
+  "family-member-unblocked": {
+    title: "Member unblocked",
+    body: "That person has been restored to invited status and can rejoin the Family Circle.",
+    tone: "success"
+  },
+  "family-member-block-self": {
+    title: "Cannot block that member",
+    body: "The circle owner and your own account cannot be blocked.",
+    tone: "warning"
+  },
+  "family-member-already-blocked": {
+    title: "Already blocked",
+    body: "That member is already on the blocked list.",
+    tone: "warning"
   }
 };
 

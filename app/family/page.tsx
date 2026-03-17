@@ -14,6 +14,8 @@ export default async function FamilyPage({
   const user = await requireViewer();
   const data = await getFamilyManagementData(user.id);
   const pendingInvites = data.members.filter((member) => member.status === "invited").length;
+  const blockedCount = data.members.filter((member) => member.status === "blocked").length;
+  const activeCount = data.members.filter((member) => member.status === "active").length;
 
   return (
     <main className="page-shell">
@@ -32,11 +34,14 @@ export default async function FamilyPage({
 
           <Card className="hero-summary-card">
             <p className="stat-label">Family overview</p>
-            <p className="highlight-value">{data.members.length} people</p>
+            <p className="highlight-value">{activeCount} active</p>
             <p className="meta">
               {pendingInvites
                 ? `${pendingInvites} pending invite${pendingInvites === 1 ? "" : "s"} still need a little follow-through.`
                 : "Everyone currently listed here is either active or already cleaned up."}
+              {blockedCount > 0
+                ? ` ${blockedCount} member${blockedCount === 1 ? " is" : "s are"} currently blocked.`
+                : ""}
             </p>
             <div className="pill-row compact-pills">
               <Link className="button button-secondary" href="/dashboard">

@@ -1084,10 +1084,12 @@ export async function getFamilyManagementData(userId: string): Promise<{
     display_name: string;
     relationship_label: string | null;
     invite_email: string | null;
-    status: "active" | "invited";
+    status: "active" | "invited" | "blocked";
     role: "owner" | "member";
     user_id: string | null;
     created_at: string;
+    blocked_at: string | null;
+    blocked_reason: string | null;
   }[];
 }> {
   const supabase = await createSupabaseServerClient();
@@ -1104,7 +1106,7 @@ export async function getFamilyManagementData(userId: string): Promise<{
   const membersResponse = await supabase
     .from("family_memberships")
     .select(
-      "id, display_name, relationship_label, invite_email, status, role, user_id, created_at"
+      "id, display_name, relationship_label, invite_email, status, role, user_id, created_at, blocked_at, blocked_reason"
     )
     .eq("family_circle_id", family.circle.id)
     .order("created_at", { ascending: true });
@@ -1116,7 +1118,18 @@ export async function getFamilyManagementData(userId: string): Promise<{
       role: family.membership.role,
       canManage: family.membership.role === "owner"
     },
-    members: membersResponse.data ?? []
+    members: (membersResponse.data ?? []) as {
+      id: string;
+      display_name: string;
+      relationship_label: string | null;
+      invite_email: string | null;
+      status: "active" | "invited" | "blocked";
+      role: "owner" | "member";
+      user_id: string | null;
+      created_at: string;
+      blocked_at: string | null;
+      blocked_reason: string | null;
+    }[]
   };
 }
 
