@@ -277,8 +277,9 @@ export function CallRoom({
 
     return () => {
       active = false;
-      for (const peer of peersRef.current.values()) peer.connection.close();
-      peersRef.current.clear();
+      const peers = peersRef.current;
+      for (const peer of peers.values()) peer.connection.close();
+      peers.clear();
       channelRef.current?.untrack();
       channelRef.current?.unsubscribe();
       localStreamRef.current?.getTracks().forEach((t) => t.stop());
@@ -310,7 +311,7 @@ export function CallRoom({
       <main className="page-shell">
         <div className="container stack-lg">
           <div className="call-room-error">
-            <h1>Can't join call</h1>
+            <h1>Can&apos;t join call</h1>
             <p className="meta">{errorMessage}</p>
             <button
               className="button button-secondary"

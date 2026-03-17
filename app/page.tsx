@@ -91,7 +91,7 @@ export default function HomePage() {
             <div className="home-step">
               <div className="home-step-num">02</div>
               <div className="home-step-body">
-                <h3>Share when you're free</h3>
+                <h3>Share when you&apos;re free</h3>
                 <p>Each member marks their preferred hours. No polls, no group chats, no chasing replies.</p>
               </div>
             </div>
@@ -117,7 +117,7 @@ export default function HomePage() {
         {/* ── Features ──────────────────────────────────────────── */}
         <section className="home-section container">
           <div className="home-section-label">What you get</div>
-          <h2 className="home-section-title">Everything a family needs. Nothing it doesn't.</h2>
+          <h2 className="home-section-title">Everything a family needs. Nothing it doesn&apos;t.</h2>
           <div className="home-features">
             <div className="home-feature-card">
               <div className="home-feature-icon">📅</div>
@@ -127,12 +127,12 @@ export default function HomePage() {
             <div className="home-feature-card">
               <div className="home-feature-icon">📊</div>
               <h3>Time Together tracking</h3>
-              <p>Every completed call adds to your family's Connections counter. See who's been on, how long you talked, and keep the momentum.</p>
+              <p>Every completed call adds to your family&apos;s Connections counter. See who&apos;s been on, how long you talked, and keep the momentum.</p>
             </div>
             <div className="home-feature-card">
               <div className="home-feature-icon">📝</div>
               <h3>Post-call recaps</h3>
-              <p>Capture a highlight and next step right after each call while the memory is fresh. Build a living history of your family's story.</p>
+              <p>Capture a highlight and next step right after each call while the memory is fresh. Build a living history of your family&apos;s story.</p>
             </div>
             <div className="home-feature-card">
               <div className="home-feature-icon">🔔</div>
@@ -142,7 +142,7 @@ export default function HomePage() {
             <div className="home-feature-card">
               <div className="home-feature-icon">🔒</div>
               <h3>Private by default</h3>
-              <p>Your family's schedule and conversations belong to your family. No ads, no data selling, no third-party access.</p>
+              <p>Your family&apos;s schedule and conversations belong to your family. No ads, no data selling, no third-party access.</p>
             </div>
             <div className="home-feature-card">
               <div className="home-feature-icon">📱</div>
@@ -156,10 +156,10 @@ export default function HomePage() {
         <section className="home-cta-section container">
           <div className="home-cta-card">
             <span className="eyebrow">Ready to reconnect?</span>
-            <h2>Your family's next call is closer than you think.</h2>
+            <h2>Your family&apos;s next call is closer than you think.</h2>
             <p>Set up your Family Circle in under two minutes. No credit card. No commitment.</p>
             <Link className="button home-cta-big" href="/auth/sign-up">
-              Start your Family Circle — it's free
+              Start your Family Circle — it&apos;s free
             </Link>
           </div>
         </section>
