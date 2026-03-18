@@ -5,6 +5,7 @@ import { Suspense } from "react";
 import { scheduleSuggestedCallAction } from "@/app/actions";
 import { AICallSuggestion } from "@/components/ai-call-suggestion";
 import { Card } from "@/components/card";
+import { CarouselPhotoUpload } from "@/components/carousel-photo-upload";
 import { FamilyPollChart } from "@/components/family-poll-chart";
 import { FamilyPollPopup } from "@/components/family-poll-popup";
 import { CallLinkForm } from "@/components/call-link-form";
@@ -19,8 +20,10 @@ import { StatusBanner } from "@/components/status-banner";
 import {
   getDashboardData,
   getFamilyPollResults,
+  getCircleCarouselPhotos,
   getNextUnansweredPoll,
   getPollPersonalizationTags,
+  getViewerFamilyCircle,
   requireViewer
 } from "@/lib/data";
 import { formatDateTime, formatDateTimeRange } from "@/lib/utils";
@@ -32,12 +35,15 @@ export default async function DashboardPage({
 }) {
   const params = searchParams ? await searchParams : undefined;
   const user = await requireViewer();
-  const [data, nextPoll, pollResults, personalization] = await Promise.all([
-    getDashboardData(user.id),
-    getNextUnansweredPoll(user.id),
-    getFamilyPollResults(user.id),
-    getPollPersonalizationTags(user.id)
-  ]);
+  const [data, nextPoll, pollResults, personalization, carouselPhotos, viewerFamily] =
+    await Promise.all([
+      getDashboardData(user.id),
+      getNextUnansweredPoll(user.id),
+      getFamilyPollResults(user.id),
+      getPollPersonalizationTags(user.id),
+      getCircleCarouselPhotos(user.id),
+      getViewerFamilyCircle(user.id)
+    ]);
   const timezone = data.viewerTimezone;
   // Personalized nudge based on poll answers
   const foodPref = personalization["food"] ?? null;
@@ -459,6 +465,22 @@ export default async function DashboardPage({
                     />
                   )}
                 </div>
+              </div>
+            </Card>
+
+            <Card>
+              <div className="stack-md">
+                <h2>Family photo reel</h2>
+                <p className="meta">
+                  Share a photo with your circle — it shows up in the carousel on the home screen
+                  so everyone sees a little piece of family when they visit.
+                </p>
+                {viewerFamily && (
+                  <CarouselPhotoUpload
+                    membershipId={viewerFamily.membership.id}
+                    photos={carouselPhotos}
+                  />
+                )}
               </div>
             </Card>
           </div>

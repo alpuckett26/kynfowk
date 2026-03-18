@@ -1309,6 +1309,39 @@ function buildHighlights(input: {
   ];
 }
 
+// ── Carousel Photos ───────────────────────────────────────────────────────────
+
+export async function getCircleCarouselPhotos(userId: string): Promise<Array<{
+  id: string;
+  photoUrl: string;
+  caption: string | null;
+  displayName: string;
+  membershipId: string;
+}>> {
+  if (!hasSupabaseEnv()) return [];
+  const supabase = await createSupabaseServerClient();
+  const family = await getViewerFamilyCircle(userId);
+  if (!family) return [];
+
+  const { data } = await supabase
+    .from("circle_carousel_photos")
+    .select("id, photo_url, caption, membership_id, family_memberships(display_name)")
+    .eq("family_circle_id", family.circle.id)
+    .order("created_at", { ascending: false })
+    .limit(20);
+
+  return (data ?? []).map((row) => {
+    const mem = row.family_memberships as unknown as { display_name: string } | null;
+    return {
+      id: row.id,
+      photoUrl: row.photo_url,
+      caption: row.caption ?? null,
+      displayName: mem?.display_name ?? "Family member",
+      membershipId: row.membership_id
+    };
+  });
+}
+
 // ── Phonebook ─────────────────────────────────────────────────────────────────
 
 export async function getPhonebookData(userId: string): Promise<{

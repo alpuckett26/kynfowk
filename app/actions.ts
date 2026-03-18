@@ -2337,6 +2337,44 @@ export async function scheduleDirectCallAction(formData: FormData): Promise<void
   redirect(`/calls/${session.id}`);
 }
 
+export async function addCarouselPhotoAction(
+  photoUrl: string,
+  caption: string | null
+): Promise<void> {
+  if (!hasSupabaseEnv()) return;
+  const user = await requireViewer();
+  const family = await getViewerFamilyCircle(user.id);
+  if (!family) return;
+
+  const supabase = await createSupabaseServerClient();
+  await supabase.from("circle_carousel_photos").insert({
+    family_circle_id: family.circle.id,
+    membership_id: family.membership.id,
+    photo_url: photoUrl,
+    caption
+  });
+
+  revalidatePath("/");
+  revalidatePath("/dashboard");
+}
+
+export async function removeCarouselPhotoAction(photoId: string): Promise<void> {
+  if (!hasSupabaseEnv()) return;
+  const user = await requireViewer();
+  const family = await getViewerFamilyCircle(user.id);
+  if (!family) return;
+
+  const supabase = await createSupabaseServerClient();
+  await supabase
+    .from("circle_carousel_photos")
+    .delete()
+    .eq("id", photoId)
+    .eq("family_circle_id", family.circle.id);
+
+  revalidatePath("/");
+  revalidatePath("/dashboard");
+}
+
 export async function saveContactAction(
   _prev: ContactState,
   formData: FormData

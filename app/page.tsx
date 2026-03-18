@@ -1,11 +1,18 @@
 import Link from "next/link";
 
+import { FamilyPhotoCarousel } from "@/components/family-photo-carousel";
 import { SplashScreen } from "@/components/splash-screen";
-import { getHomepageStats, getViewer, getViewerFamilyCircle } from "@/lib/data";
+import {
+  getCircleCarouselPhotos,
+  getHomepageStats,
+  getViewer,
+  getViewerFamilyCircle
+} from "@/lib/data";
 
 export default async function HomePage() {
   const [stats, viewer] = await Promise.all([getHomepageStats(), getViewer()]);
   const family = viewer ? await getViewerFamilyCircle(viewer.id) : null;
+  const carouselPhotos = viewer ? await getCircleCarouselPhotos(viewer.id) : [];
   const isSignedIn = !!viewer;
   const hasCircle = !!family;
   const firstName = family?.membership.display_name?.split(" ")[0] ?? null;
@@ -133,6 +140,15 @@ export default async function HomePage() {
           <span>✦ No ads, no noise</span>
           <span>✦ Private by design</span>
         </div>
+
+        {/* ── Family photo reel ─────────────────────────────────── */}
+        {carouselPhotos.length > 0 && (
+          <section className="home-section container home-carousel-section">
+            <div className="home-section-label">Family reel</div>
+            <h2 className="home-section-title">Your circle, in pictures.</h2>
+            <FamilyPhotoCarousel photos={carouselPhotos} />
+          </section>
+        )}
 
         {/* ── How it works ──────────────────────────────────────── */}
         <section className="home-section container">
