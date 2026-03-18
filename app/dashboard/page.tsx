@@ -1,7 +1,9 @@
 import type { Route } from "next";
 import Link from "next/link";
+import { Suspense } from "react";
 
 import { scheduleSuggestedCallAction } from "@/app/actions";
+import { AICallSuggestion } from "@/components/ai-call-suggestion";
 import { Card } from "@/components/card";
 import { CallLinkForm } from "@/components/call-link-form";
 import { DashboardHighlights } from "@/components/dashboard-highlights";
@@ -206,6 +208,15 @@ export default async function DashboardPage({
                 </div>
               </div>
             </Card>
+
+            <Suspense fallback={<div className="ai-suggestion-skeleton" />}>
+              <AICallSuggestion
+                familyCircleId={data.circle.id}
+                suggestions={data.suggestions}
+                timezone={data.viewerTimezone}
+                userId={user.id}
+              />
+            </Suspense>
 
             <Card>
               <div className="stack-md">
