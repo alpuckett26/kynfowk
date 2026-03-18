@@ -99,6 +99,7 @@ export interface CallDetailParticipant {
   membershipId: string;
   displayName: string;
   attended: boolean | null;
+  avatarUrl: string | null;
 }
 
 export interface DashboardHighlight {

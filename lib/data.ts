@@ -713,7 +713,7 @@ export async function getCallDetailData(userId: string, callId: string): Promise
   const [participantsResponse, recapResponse] = await Promise.all([
     supabase
       .from("call_participants")
-      .select("membership_id, attended, family_memberships!inner(display_name)")
+      .select("membership_id, attended, family_memberships!inner(display_name, avatar_url)")
       .eq("call_session_id", callId),
     supabase
       .from("call_recaps")
@@ -724,16 +724,19 @@ export async function getCallDetailData(userId: string, callId: string): Promise
 
   const participants = (participantsResponse.data ?? []).map((participant) => {
     const familyMembershipRecord = participant.family_memberships as
-      | { display_name: string }[]
-      | { display_name: string }
+      | { display_name: string; avatar_url: string | null }[]
+      | { display_name: string; avatar_url: string | null }
       | null;
+
+    const record = Array.isArray(familyMembershipRecord)
+      ? familyMembershipRecord[0]
+      : familyMembershipRecord;
 
     return {
       membershipId: participant.membership_id,
-      displayName: Array.isArray(familyMembershipRecord)
-        ? familyMembershipRecord[0]?.display_name ?? "Family member"
-        : familyMembershipRecord?.display_name ?? "Family member",
-      attended: participant.attended
+      displayName: record?.display_name ?? "Family member",
+      attended: participant.attended,
+      avatarUrl: record?.avatar_url ?? null
     };
   });
 

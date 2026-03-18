@@ -2,6 +2,7 @@ import type { Route } from "next";
 import Link from "next/link";
 
 import { markCallReminderSentAction } from "@/app/actions";
+import { CallVideoPreview } from "@/components/call-video-preview";
 import { CancelCallButton } from "@/components/cancel-call-button";
 import { Card } from "@/components/card";
 import { CallLiveStatus } from "@/components/call-live-status";
@@ -106,6 +107,15 @@ export default async function CallDetailPage({
             ) : null}
           </Card>
         </section>
+
+        {isManageableCall && data.participants.length > 0 && (
+          <CallVideoPreview
+            callId={data.call.id}
+            callTitle={data.call.title}
+            isLive={!!data.call.actual_started_at}
+            participants={data.participants}
+          />
+        )}
 
         <section className="dashboard-grid">
           <div className="dashboard-main">
