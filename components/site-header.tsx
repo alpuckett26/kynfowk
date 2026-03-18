@@ -32,6 +32,7 @@ export async function SiteHeader() {
               <div className="header-secondary-actions">
                 {isAdminEmail(user.email) ? <a href="/admin">Admin</a> : null}
                 <a href="/family">Family</a>
+                <a href="/phonebook">Phonebook</a>
                 <a href="/settings">Settings</a>
                 <a href="/onboarding">Update Circle</a>
                 <form action={signOutAction}>

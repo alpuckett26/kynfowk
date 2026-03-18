@@ -106,6 +106,23 @@ export function OnboardingForm({
             rows={3}
           />
         </label>
+
+        <div className="field-grid two-col">
+          <label className="field">
+            <span>Your phone number <span className="field-optional">(optional)</span></span>
+            <input name="phoneNumber" placeholder="(555) 867-5309" type="tel" />
+          </label>
+          <label className="field">
+            <span>Your address <span className="field-optional">(optional)</span></span>
+            <input name="address" placeholder="123 Main St, Atlanta, GA" />
+          </label>
+        </div>
+
+        <p className="microcopy phonebook-privacy-notice">
+          Your phone number and address are only visible to members of your Family Circle —
+          never shared with third parties or used for advertising. This info helps your family
+          stay connected between calls.
+        </p>
       </section>
 
       <section className="stack-md">

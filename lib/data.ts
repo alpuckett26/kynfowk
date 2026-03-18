@@ -1309,6 +1309,47 @@ function buildHighlights(input: {
   ];
 }
 
+// ── Phonebook ─────────────────────────────────────────────────────────────────
+
+export async function getPhonebookData(userId: string): Promise<{
+  circle: { id: string; name: string };
+  viewerMembershipId: string;
+  members: Array<{
+    id: string;
+    display_name: string;
+    relationship_label: string | null;
+    phone_number: string | null;
+    address: string | null;
+    avatar_url: string | null;
+    status: string;
+  }>;
+}> {
+  const supabase = await createSupabaseServerClient();
+  const family = await getViewerFamilyCircle(userId);
+  if (!family) redirect("/onboarding");
+
+  const { data } = await supabase
+    .from("family_memberships")
+    .select("id, display_name, relationship_label, phone_number, address, avatar_url, status")
+    .eq("family_circle_id", family.circle.id)
+    .in("status", ["active", "invited"])
+    .order("created_at", { ascending: true });
+
+  return {
+    circle: family.circle,
+    viewerMembershipId: family.membership.id,
+    members: (data ?? []) as Array<{
+      id: string;
+      display_name: string;
+      relationship_label: string | null;
+      phone_number: string | null;
+      address: string | null;
+      avatar_url: string | null;
+      status: string;
+    }>
+  };
+}
+
 // ── Family Polls ──────────────────────────────────────────────────────────────
 
 export interface FamilyPoll {

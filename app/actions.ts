@@ -82,6 +82,11 @@ export interface PollResponseState {
   message?: string;
 }
 
+export interface ContactState {
+  status: "idle" | "success" | "error";
+  message?: string;
+}
+
 async function getRecoverableCallContext(input: {
   userId: string;
   familyCircleId: string;
@@ -288,6 +293,8 @@ export async function completeOnboardingAction(
   const fullName = String(formData.get("fullName") ?? "").trim();
   const circleName = String(formData.get("circleName") ?? "").trim();
   const circleDescription = String(formData.get("circleDescription") ?? "").trim();
+  const phoneNumber = String(formData.get("phoneNumber") ?? "").trim() || null;
+  const address = String(formData.get("address") ?? "").trim() || null;
   const membersInput = String(formData.get("members") ?? "");
   const slots = formData.getAll("slots").map(String);
 
@@ -343,6 +350,8 @@ export async function completeOnboardingAction(
       user_id: user.id,
       display_name: fullName,
       invite_email: user.email ?? null,
+      phone_number: phoneNumber,
+      address,
       status: "active",
       role: "owner"
     })
@@ -2326,6 +2335,41 @@ export async function scheduleDirectCallAction(formData: FormData): Promise<void
   revalidatePath("/dashboard");
   revalidatePath("/family/tree");
   redirect(`/calls/${session.id}`);
+}
+
+export async function saveContactAction(
+  _prev: ContactState,
+  formData: FormData
+): Promise<ContactState> {
+  const membershipId = formData.get("membershipId") as string;
+  const phoneNumber = String(formData.get("phoneNumber") ?? "").trim() || null;
+  const address = String(formData.get("address") ?? "").trim() || null;
+
+  if (!membershipId) return { status: "error", message: "Missing membership ID." };
+
+  const user = await requireViewer();
+  const family = await getViewerFamilyCircle(user.id);
+  if (!family) return { status: "error", message: "No family circle found." };
+
+  // Only allow updating your own record or circle owner updating others
+  const isOwn = membershipId === family.membership.id;
+  const isOwner = family.membership.role === "owner";
+  if (!isOwn && !isOwner) {
+    return { status: "error", message: "You can only update your own contact info." };
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase
+    .from("family_memberships")
+    .update({ phone_number: phoneNumber, address })
+    .eq("id", membershipId)
+    .eq("family_circle_id", family.circle.id);
+
+  if (error) return { status: "error", message: error.message };
+
+  revalidatePath("/phonebook");
+  revalidatePath("/family");
+  return { status: "success", message: "Contact info saved." };
 }
 
 export async function savePollResponseAction(

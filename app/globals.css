@@ -4118,3 +4118,121 @@ textarea:focus {
 }
 .poll-bar-who-a { background: rgba(199,102,63,0.15); color: var(--accent-warm, #c7663f); }
 .poll-bar-who-b { background: rgba(124,106,247,0.15); color: var(--accent-purple, #7c6af7); }
+
+/* ── Phonebook ────────────────────────────────────────────────────────────── */
+
+.phonebook-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.phonebook-entry {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--border, #e8e0d4);
+}
+.phonebook-entry:last-child { border-bottom: none; }
+
+.phonebook-avatar { flex-shrink: 0; }
+
+.phonebook-avatar-img {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.phonebook-avatar-initials {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 0.02em;
+}
+
+.phonebook-info { flex: 1; min-width: 0; }
+
+.phonebook-name-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.3rem;
+}
+
+.phonebook-name {
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.phonebook-rel {
+  font-size: 0.75rem;
+  color: var(--text-muted, #888);
+  background: var(--surface, #f8f4ee);
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+}
+
+.phonebook-contact-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.phonebook-detail {
+  font-size: 0.85rem;
+  color: var(--text-secondary, #555);
+  text-decoration: none;
+}
+a.phonebook-detail:hover { text-decoration: underline; }
+
+.phonebook-empty {
+  color: var(--text-muted, #aaa);
+  font-style: italic;
+}
+
+.phonebook-edit-btn {
+  font-size: 0.78rem;
+  background: none;
+  border: 1px solid var(--border, #e8e0d4);
+  border-radius: 6px;
+  padding: 0.2rem 0.6rem;
+  cursor: pointer;
+  color: var(--accent-warm, #c7663f);
+  font-family: inherit;
+}
+.phonebook-edit-btn:hover { background: var(--surface, #f8f4ee); }
+
+.phonebook-edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.phonebook-edit-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.phonebook-privacy-notice {
+  background: var(--surface, #f8f4ee);
+  border-left: 3px solid var(--accent-warm, #c7663f);
+  border-radius: 4px;
+  padding: 0.6rem 0.8rem;
+}
+
+.field-optional {
+  font-weight: 400;
+  color: var(--text-muted, #aaa);
+  font-size: 0.8em;
+}
