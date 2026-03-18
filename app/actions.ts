@@ -2267,3 +2267,78 @@ export async function updateMemberAvatarAction(
   revalidatePath("/family");
   revalidatePath("/family/tree");
 }
+
+// ---------------------------------------------------------------------------
+// Presence tracking
+// ---------------------------------------------------------------------------
+
+export async function updatePresenceAction(): Promise<void> {
+  if (!hasSupabaseEnv()) return;
+  const supabase = await createSupabaseServerClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
+
+  await supabase
+    .from("family_memberships")
+    .update({ last_seen_at: new Date().toISOString() })
+    .eq("user_id", user.id)
+    .eq("status", "active");
+}
+
+// ---------------------------------------------------------------------------
+// Direct call scheduling (from member info panel)
+// ---------------------------------------------------------------------------
+
+export async function scheduleDirectCallAction(formData: FormData): Promise<void> {
+  if (!hasSupabaseEnv()) return;
+  const supabase = await createSupabaseServerClient();
+  const user = await requireViewer();
+  const family = await getViewerFamilyCircle(user.id);
+  if (!family) redirect("/onboarding");
+
+  const familyCircleId = String(formData.get("familyCircleId") ?? "").trim();
+  const targetMembershipId = String(formData.get("targetMembershipId") ?? "").trim();
+  const title = String(formData.get("title") ?? "Family Connections call").trim();
+  const scheduledStart = String(formData.get("scheduledStart") ?? "").trim();
+  const durationMinutes = parseInt(String(formData.get("durationMinutes") ?? "30"), 10);
+
+  if (!scheduledStart) return;
+
+  const start = new Date(scheduledStart);
+  const end = new Date(start.getTime() + durationMinutes * 60 * 1000);
+
+  const { data: session, error } = await supabase
+    .from("call_sessions")
+    .insert({
+      family_circle_id: familyCircleId,
+      title: title || "Family Connections call",
+      scheduled_start: start.toISOString(),
+      scheduled_end: end.toISOString(),
+      status: "scheduled",
+      reminder_status: "pending",
+      created_by: user.id
+    })
+    .select("id")
+    .single();
+
+  if (error || !session) return;
+
+  // Add both the viewer and the target as participants
+  const participants = [
+    { call_session_id: session.id, membership_id: family.membership.id, family_circle_id: familyCircleId },
+    { call_session_id: session.id, membership_id: targetMembershipId, family_circle_id: familyCircleId }
+  ].filter((p, i, arr) => arr.findIndex(x => x.membership_id === p.membership_id) === i);
+
+  await supabase.from("call_participants").insert(participants);
+
+  await supabase.from("family_activity").insert({
+    family_circle_id: familyCircleId,
+    actor_membership_id: family.membership.id,
+    activity_type: "call_scheduled",
+    summary: `${family.membership.display_name} scheduled a call: "${title}".`
+  });
+
+  revalidatePath("/dashboard");
+  revalidatePath("/family/tree");
+  redirect(`/calls/${session.id}`);
+}

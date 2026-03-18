@@ -17,6 +17,9 @@ export interface TreeMember {
   is_deceased: boolean;
   placeholder_notes: string | null;
   avatar_url: string | null;
+  last_seen_at: string | null;
+  phone_number: string | null;
+  invite_email: string | null;
 }
 
 export interface TreeRow {
@@ -455,6 +458,9 @@ export function buildTreeLayout(
     is_deceased: boolean;
     placeholder_notes: string | null;
     avatar_url: string | null;
+    last_seen_at: string | null;
+    phone_number: string | null;
+    invite_email: string | null;
   }>,
   viewerMembershipId: string
 ): TreeLayout {
@@ -473,7 +479,10 @@ export function buildTreeLayout(
       is_placeholder: false,
       is_deceased: false,
       placeholder_notes: null,
-      avatar_url: null
+      avatar_url: null,
+      last_seen_at: null,
+      phone_number: null,
+      invite_email: null
     }
   ]);
 

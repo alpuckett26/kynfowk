@@ -30,7 +30,11 @@ export default async function FamilyTreePage() {
           </div>
         </section>
 
-        <FamilyTreeCanvas layout={layout} />
+        <FamilyTreeCanvas
+          familyCircleId={data.circle.id}
+          layout={layout}
+          viewerMembershipId={data.viewer.membershipId}
+        />
 
         {layout.unplaced.length > 0 && (
           <Card>

@@ -6,6 +6,7 @@ import "@/app/globals.css";
 import { InstallPrompt } from "@/components/install-prompt";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 import { PageTransition } from "@/components/page-transition";
+import { PresenceTracker } from "@/components/presence-tracker";
 import { PwaBootstrap } from "@/components/pwa-bootstrap";
 import { SiteHeader } from "@/components/site-header";
 
@@ -44,6 +45,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${fraunces.variable} ${manrope.variable}`}>
         <PwaBootstrap />
+        <PresenceTracker />
         <PageTransition />
         <SiteHeader />
         {children}
