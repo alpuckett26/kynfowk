@@ -3,7 +3,11 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 
-import { callJoinedAction, callLeftAction } from "@/app/actions";
+import { callJoinedAction, callLeftAction, startGameSessionAction, endGameSessionAction } from "@/app/actions";
+import { GamePicker } from "@/components/game-picker";
+import { GameTrivia } from "@/components/game-trivia";
+import { GameWordChain } from "@/components/game-word-chain";
+import type { GameCatalogEntry } from "@/lib/data";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 interface CallRoomProps {
@@ -12,6 +16,7 @@ interface CallRoomProps {
   familyCircleId: string;
   membershipId: string;
   displayName: string;
+  gameSuggestions: GameCatalogEntry[];
 }
 
 interface PeerState {
@@ -58,7 +63,8 @@ export function CallRoom({
   callTitle,
   familyCircleId,
   membershipId,
-  displayName
+  displayName,
+  gameSuggestions
 }: CallRoomProps) {
   const router = useRouter();
   const localVideoRef = useRef<HTMLVideoElement>(null);
@@ -75,6 +81,17 @@ export function CallRoom({
   const [roomFull, setRoomFull] = useState(false);
   const [status, setStatus] = useState<"connecting" | "ready" | "error">("connecting");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  type GameMode = "idle" | "picking" | "playing";
+  type GameBroadcastPayload = { type: string; [key: string]: unknown };
+
+  const [gameMode, setGameMode] = useState<GameMode>("idle");
+  const [activeGameId, setActiveGameId] = useState<string | null>(null);
+  const [gameSessionId, setGameSessionId] = useState<string | null>(null);
+  const [gameSessionStart, setGameSessionStart] = useState<number>(0);
+  const [gamePeers, setGamePeers] = useState<Array<{ membershipId: string; displayName: string }>>([]);
+  const [isGameHost, setIsGameHost] = useState(false);
+  const gameHandlerRef = useRef<((payload: GameBroadcastPayload) => void) | null>(null);
 
   const syncPeers = useCallback(() => {
     setPeers(new Map(peersRef.current));
@@ -265,6 +282,22 @@ export function CallRoom({
         handleSignal(payload as SignalMessage);
       });
 
+      channel.on("broadcast", { event: "game_event" }, ({ payload }) => {
+        if (!active || !gameHandlerRef.current) return;
+        gameHandlerRef.current(payload as GameBroadcastPayload);
+      });
+
+      channel.on("broadcast", { event: "game_invite" }, ({ payload }) => {
+        if (!active) return;
+        // Non-host: receive game start invitation
+        const p = payload as { gameId: string; hostId: string; peers: Array<{ membershipId: string; displayName: string }> };
+        if (p.hostId === membershipId) return; // ignore self
+        setGameMode("playing");
+        setActiveGameId(p.gameId);
+        setIsGameHost(false);
+        setGamePeers(p.peers);
+      });
+
       await channel.subscribe(async (channelStatus) => {
         if (channelStatus === "SUBSCRIBED" && active) {
           await channel.track({ membership_id: membershipId, display_name: displayName });
@@ -299,6 +332,63 @@ export function CallRoom({
     const enabled = !cameraOn;
     localStreamRef.current.getVideoTracks().forEach((t) => { t.enabled = enabled; });
     setCameraOn(enabled);
+  }
+
+  function sendGameEvent(payload: GameBroadcastPayload) {
+    channelRef.current?.send({ type: "broadcast", event: "game_event", payload });
+  }
+
+  function onGameMessage(handler: (payload: GameBroadcastPayload) => void) {
+    gameHandlerRef.current = handler;
+    return () => { gameHandlerRef.current = null; };
+  }
+
+  async function openGamePicker() {
+    // Build current peers list
+    const currentPeers = [
+      { membershipId, displayName },
+      ...Array.from(peersRef.current.values()).map((p) => ({ membershipId: p.membershipId, displayName: p.displayName }))
+    ];
+    setGamePeers(currentPeers);
+    setGameMode("picking");
+  }
+
+  async function startGame(game: GameCatalogEntry) {
+    const currentPeers = [
+      { membershipId, displayName },
+      ...Array.from(peersRef.current.values()).map((p) => ({ membershipId: p.membershipId, displayName: p.displayName }))
+    ];
+    setGamePeers(currentPeers);
+    setActiveGameId(game.id);
+    setIsGameHost(true);
+    setGameMode("playing");
+    const now = Date.now();
+    setGameSessionStart(now);
+    // Tell other peers to join this game
+    channelRef.current?.send({
+      type: "broadcast",
+      event: "game_invite",
+      payload: { gameId: game.id, hostId: membershipId, peers: currentPeers }
+    });
+    // Log session
+    const sessionId = await startGameSessionAction(
+      callId,
+      familyCircleId,
+      game.id,
+      currentPeers.map((p) => p.membershipId)
+    );
+    if (sessionId) setGameSessionId(sessionId);
+  }
+
+  async function endGame() {
+    if (gameSessionId) {
+      const duration = Math.floor((Date.now() - gameSessionStart) / 1000);
+      await endGameSessionAction(gameSessionId, duration);
+    }
+    setGameMode("idle");
+    setActiveGameId(null);
+    setGameSessionId(null);
+    gameHandlerRef.current = null;
   }
 
   async function leaveCall() {
@@ -384,11 +474,60 @@ export function CallRoom({
           <span>{cameraOn ? "Camera off" : "Camera on"}</span>
         </button>
 
+        <button
+          className="call-control-button"
+          onClick={openGamePicker}
+          title="Play a game"
+        >
+          <GamepadIcon />
+          <span>Games</span>
+        </button>
+
         <button className="call-control-button call-control-button-leave" onClick={leaveCall}>
           <HangUpIcon />
           <span>Leave</span>
         </button>
       </div>
+
+      {gameMode === "picking" && (
+        <div className="game-overlay">
+          <GamePicker
+            suggestions={gameSuggestions}
+            participants={gamePeers}
+            onSelect={startGame}
+            onDismiss={() => setGameMode("idle")}
+          />
+        </div>
+      )}
+
+      {gameMode === "playing" && activeGameId === "trivia" && (
+        <div className="game-overlay">
+          <GameTrivia
+            membershipId={membershipId}
+            displayName={displayName}
+            isHost={isGameHost}
+            players={gamePeers}
+            onSend={(payload) => sendGameEvent(payload as GameBroadcastPayload)}
+            onMessage={(handler) => onGameMessage(handler as (payload: GameBroadcastPayload) => void)}
+            onEnd={endGame}
+            sessionStartTime={gameSessionStart}
+          />
+        </div>
+      )}
+
+      {gameMode === "playing" && activeGameId === "word_chain" && (
+        <div className="game-overlay">
+          <GameWordChain
+            membershipId={membershipId}
+            displayName={displayName}
+            isHost={isGameHost}
+            players={gamePeers}
+            onSend={(payload) => sendGameEvent(payload as GameBroadcastPayload)}
+            onMessage={(handler) => onGameMessage(handler as (payload: GameBroadcastPayload) => void)}
+            onEnd={endGame}
+          />
+        </div>
+      )}
     </div>
   );
 }
@@ -462,6 +601,18 @@ function HangUpIcon() {
   return (
     <svg aria-hidden fill="currentColor" height="20" viewBox="0 0 24 24" width="20">
       <path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17 0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1L6.6 10.8z" transform="rotate(135 12 12)" />
+    </svg>
+  );
+}
+
+function GamepadIcon() {
+  return (
+    <svg aria-hidden fill="none" height="20" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" width="20">
+      <line x1="6" x2="10" y1="12" y2="12" />
+      <line x1="8" x2="8" y1="10" y2="14" />
+      <line x1="15" x2="15.01" y1="13" y2="13" />
+      <line x1="18" x2="18.01" y1="11" y2="11" />
+      <rect height="12" rx="2" width="20" x="2" y="6" />
     </svg>
   );
 }

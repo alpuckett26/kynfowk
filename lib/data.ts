@@ -1509,3 +1509,67 @@ export async function getPollPersonalizationTags(
   }
   return tags;
 }
+
+// ── Game Engine ───────────────────────────────────────────────────────────────
+
+export interface GameCatalogEntry {
+  id: string;
+  name: string;
+  description: string | null;
+  category: string;
+  min_players: number;
+  max_players: number;
+  duration_label: string;
+  pace: string;
+  matchScore: number;
+  matchReason: string;
+}
+
+export async function getGameSuggestionsForCall(
+  callId: string,
+  membershipId: string
+): Promise<GameCatalogEntry[]> {
+  if (!hasSupabaseEnv()) return [];
+  const supabase = await createSupabaseServerClient();
+
+  // Get participants on this call
+  const { data: participants } = await supabase
+    .from("call_participants")
+    .select("membership_id")
+    .eq("call_session_id", callId);
+
+  const memberIds = (participants ?? []).map((p) => p.membership_id);
+
+  // Get game poll answers for these members
+  const { data: responses } = await supabase
+    .from("family_poll_responses")
+    .select("membership_id, choice, family_polls(category, option_a, option_b)")
+    .in("membership_id", memberIds.length ? memberIds : [membershipId]);
+
+  // Build preference tallies
+  const prefs = { trivia: 0, word: 0, quick: 0, fun: 0 };
+  for (const row of responses ?? []) {
+    const poll = row.family_polls as unknown as { category: string; option_a: string; option_b: string } | null;
+    if (!poll || poll.category !== "games") continue;
+    const choice = row.choice === "a" ? poll.option_a : poll.option_b;
+    const lc = choice.toLowerCase();
+    if (lc.includes("trivia")) prefs.trivia++;
+    if (lc.includes("word")) prefs.word++;
+    if (lc.includes("quick") || lc.includes("5")) prefs.quick++;
+    if (lc.includes("laugh") || lc.includes("fun")) prefs.fun++;
+  }
+
+  const { data: catalog } = await supabase
+    .from("game_catalog")
+    .select("id, name, description, category, min_players, max_players, duration_label, pace")
+    .eq("is_active", true);
+
+  return (catalog ?? []).map((game) => {
+    let score = 0;
+    let reason = "Good fit for any group";
+    if (game.category === "trivia" && prefs.trivia > 0) { score += prefs.trivia; reason = "Your circle loves trivia!"; }
+    if (game.category === "word" && prefs.word > 0) { score += prefs.word; reason = "Word games are a circle favorite"; }
+    if (game.pace === "quick" && prefs.quick > 0) { score += prefs.quick; reason = "Perfect for a quick round"; }
+    return { ...game, description: game.description ?? null, matchScore: score, matchReason: reason };
+  }).sort((a, b) => b.matchScore - a.matchScore);
+}

@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { CallRoom } from "@/components/call-room";
-import { getViewerFamilyCircle, requireViewer } from "@/lib/data";
+import { getGameSuggestionsForCall, getViewerFamilyCircle, requireViewer } from "@/lib/data";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export default async function LiveCallPage({
@@ -33,6 +33,8 @@ export default async function LiveCallPage({
     redirect(`/calls/${callId}`);
   }
 
+  const gameSuggestions = await getGameSuggestionsForCall(callId, family.membership.id);
+
   return (
     <CallRoom
       callId={call.id}
@@ -40,6 +42,7 @@ export default async function LiveCallPage({
       familyCircleId={family.circle.id}
       membershipId={family.membership.id}
       displayName={family.membership.display_name}
+      gameSuggestions={gameSuggestions}
     />
   );
 }

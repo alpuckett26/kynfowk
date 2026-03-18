@@ -82,6 +82,12 @@ export interface PollResponseState {
   message?: string;
 }
 
+export interface GameSessionState {
+  status: "idle" | "success" | "error";
+  sessionId?: string;
+  message?: string;
+}
+
 export interface ContactState {
   status: "idle" | "success" | "error";
   message?: string;
@@ -2438,4 +2444,47 @@ export async function savePollResponseAction(
 
   revalidatePath("/dashboard");
   return { status: "success" };
+}
+
+export async function startGameSessionAction(
+  callId: string,
+  familyCircleId: string,
+  gameId: string,
+  participants: string[]
+): Promise<string | null> {
+  if (!hasSupabaseEnv()) return null;
+  const user = await requireViewer();
+  const family = await getViewerFamilyCircle(user.id);
+  if (!family) return null;
+
+  const supabase = await createSupabaseServerClient();
+  const { data } = await supabase
+    .from("game_sessions")
+    .insert({
+      call_session_id: callId,
+      family_circle_id: familyCircleId,
+      game_id: gameId,
+      started_by_membership_id: family.membership.id,
+      participants: participants
+    })
+    .select("id")
+    .single();
+
+  return data?.id ?? null;
+}
+
+export async function endGameSessionAction(
+  sessionId: string,
+  durationSeconds: number
+): Promise<void> {
+  if (!hasSupabaseEnv()) return;
+  await requireViewer();
+  const supabase = await createSupabaseServerClient();
+  await supabase
+    .from("game_sessions")
+    .update({
+      ended_at: new Date().toISOString(),
+      duration_seconds: durationSeconds
+    })
+    .eq("id", sessionId);
 }
