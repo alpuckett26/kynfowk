@@ -9,7 +9,11 @@
       "Bash(npx supabase:*)",
       "Bash(git add:*)",
       "Bash(npx playwright:*)",
-      "Bash(npx dotenv:*)"
+      "Bash(npx dotenv:*)",
+      "Bash(grep -r \"call_recaps\" C:/Users/alpuc/Documents/kynfowk/supabase/migrations/ --include=\"*.sql\" -l 2>/dev/null | head -5)",
+      "Bash(grep -r \"button-danger\\\\|button-destructive\\\\|btn-danger\" C:/Users/alpuc/Documents/kynfowk/app C:/Users/alpuc/Documents/kynfowk/styles --include=\"*.css\" --include=\"*.scss\" --include=\"*.tsx\" -l 2>/dev/null | head -5)",
+      "Bash(ls C:/Users/alpuc/Documents/kynfowk/vercel.json 2>/dev/null; ls C:/Users/alpuc/Documents/kynfowk/*.json | head -5)",
+      "Bash(cd C:/Users/alpuc/Documents/kynfowk && node -e \"const webpush = require\\('web-push'\\); const keys = webpush.generateVAPIDKeys\\(\\); console.log\\('NEXT_PUBLIC_VAPID_PUBLIC_KEY=' + keys.publicKey\\); console.log\\('VAPID_PRIVATE_KEY=' + keys.privateKey\\);\" 2>&1)"
     ]
   }
 }

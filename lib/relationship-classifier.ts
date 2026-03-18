@@ -13,6 +13,10 @@ export interface TreeMember {
   status: "active" | "invited" | "blocked";
   classification: ClassifiedRelationship;
   isViewer: boolean;
+  is_placeholder: boolean;
+  is_deceased: boolean;
+  placeholder_notes: string | null;
+  avatar_url: string | null;
 }
 
 export interface TreeRow {
@@ -447,6 +451,10 @@ export function buildTreeLayout(
     display_name: string;
     relationship_label: string | null;
     status: "active" | "invited" | "blocked";
+    is_placeholder: boolean;
+    is_deceased: boolean;
+    placeholder_notes: string | null;
+    avatar_url: string | null;
   }>,
   viewerMembershipId: string
 ): TreeLayout {
@@ -461,7 +469,11 @@ export function buildTreeLayout(
       relationship_label: null,
       status: "active",
       classification: { tier: "immediate", generation: 0, normalized: "You" },
-      isViewer: true
+      isViewer: true,
+      is_placeholder: false,
+      is_deceased: false,
+      placeholder_notes: null,
+      avatar_url: null
     }
   ]);
 

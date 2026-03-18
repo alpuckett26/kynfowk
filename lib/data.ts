@@ -1136,6 +1136,10 @@ export async function getFamilyManagementData(userId: string): Promise<{
     created_at: string;
     blocked_at: string | null;
     blocked_reason: string | null;
+    is_placeholder: boolean;
+    is_deceased: boolean;
+    placeholder_notes: string | null;
+    avatar_url: string | null;
   }[];
 }> {
   const supabase = await createSupabaseServerClient();
@@ -1152,7 +1156,7 @@ export async function getFamilyManagementData(userId: string): Promise<{
   const membersResponse = await supabase
     .from("family_memberships")
     .select(
-      "id, display_name, relationship_label, invite_email, status, role, user_id, created_at, blocked_at, blocked_reason"
+      "id, display_name, relationship_label, invite_email, status, role, user_id, created_at, blocked_at, blocked_reason, is_placeholder, is_deceased, placeholder_notes, avatar_url"
     )
     .eq("family_circle_id", family.circle.id)
     .order("created_at", { ascending: true });
@@ -1175,6 +1179,10 @@ export async function getFamilyManagementData(userId: string): Promise<{
       created_at: string;
       blocked_at: string | null;
       blocked_reason: string | null;
+      is_placeholder: boolean;
+      is_deceased: boolean;
+      placeholder_notes: string | null;
+      avatar_url: string | null;
     }[]
   };
 }

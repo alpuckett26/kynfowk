@@ -2210,3 +2210,60 @@ export async function callLeftAction(
 
   revalidatePath(`/calls/${callId}`);
 }
+
+// ---------------------------------------------------------------------------
+// Placeholder family members
+// ---------------------------------------------------------------------------
+
+export async function addPlaceholderMemberAction(
+  formData: FormData
+): Promise<void> {
+  if (!hasSupabaseEnv()) return;
+  const supabase = await createSupabaseServerClient();
+  const user = await requireViewer();
+  const family = await getViewerFamilyCircle(user.id);
+  if (!family) redirect("/onboarding");
+
+  const displayName = String(formData.get("displayName") ?? "").trim();
+  const relationship = String(formData.get("relationship") ?? "").trim();
+  const inviteEmail = String(formData.get("inviteEmail") ?? "").trim();
+  const notes = String(formData.get("placeholderNotes") ?? "").trim();
+  const isDeceased = formData.get("isDeceased") === "true";
+
+  if (!displayName) return;
+
+  await supabase.from("family_memberships").insert({
+    family_circle_id: family.circle.id,
+    display_name: displayName,
+    relationship_label: relationship || null,
+    invite_email: inviteEmail || null,
+    status: "invited",
+    role: "member",
+    is_placeholder: true,
+    is_deceased: isDeceased,
+    placeholder_notes: notes || null
+  });
+
+  revalidatePath("/family");
+  revalidatePath("/family/tree");
+}
+
+export async function updateMemberAvatarAction(
+  membershipId: string,
+  avatarUrl: string
+): Promise<void> {
+  if (!hasSupabaseEnv()) return;
+  const supabase = await createSupabaseServerClient();
+  const user = await requireViewer();
+  const family = await getViewerFamilyCircle(user.id);
+  if (!family) return;
+
+  await supabase
+    .from("family_memberships")
+    .update({ avatar_url: avatarUrl })
+    .eq("id", membershipId)
+    .eq("family_circle_id", family.circle.id);
+
+  revalidatePath("/family");
+  revalidatePath("/family/tree");
+}

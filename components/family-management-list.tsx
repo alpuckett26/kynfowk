@@ -1,3 +1,5 @@
+"use client";
+
 import {
   blockFamilyMemberAction,
   removeFamilyMemberAction,
@@ -6,6 +8,7 @@ import {
   updateFamilyMemberAction
 } from "@/app/actions";
 import { EmptyState } from "@/components/empty-state";
+import { MemberAvatarUpload } from "@/components/member-avatar-upload";
 import { RELATIONSHIP_OPTIONS } from "@/lib/relationship-classifier";
 
 type Member = {
@@ -19,6 +22,10 @@ type Member = {
   created_at: string;
   blocked_at: string | null;
   blocked_reason: string | null;
+  is_placeholder: boolean;
+  is_deceased: boolean;
+  placeholder_notes: string | null;
+  avatar_url: string | null;
 };
 
 function ActiveMemberRow({
@@ -34,10 +41,19 @@ function ActiveMemberRow({
 }) {
   return (
     <div className="list-item family-member-row">
+      <MemberAvatarUpload
+        currentAvatarUrl={member.avatar_url}
+        displayName={member.display_name}
+        membershipId={member.id}
+      />
       <div className="stack-sm family-member-main">
         <div className="call-actions">
           <p>{member.display_name}</p>
-          <span className="badge">{member.status === "active" ? "Joined" : "Pending invite"}</span>
+          {member.is_placeholder && <span className="badge badge-warning">Placeholder</span>}
+          {member.is_deceased && <span className="badge">In memoriam</span>}
+          {!member.is_placeholder && (
+            <span className="badge">{member.status === "active" ? "Joined" : "Pending invite"}</span>
+          )}
           {member.role === "owner" ? <span className="badge">Owner</span> : null}
         </div>
         <p className="meta">
@@ -45,6 +61,9 @@ function ActiveMemberRow({
             ? `${member.relationship_label}${member.invite_email ? ` • ${member.invite_email}` : ""}`
             : member.invite_email ?? "Family Circle member"}
         </p>
+        {member.placeholder_notes && (
+          <p className="meta">{member.placeholder_notes}</p>
+        )}
       </div>
 
       {canManage ? (
