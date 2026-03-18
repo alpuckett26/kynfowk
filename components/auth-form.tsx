@@ -12,6 +12,7 @@ interface AuthFormProps {
     formData: FormData
   ) => Promise<AuthState>;
   mode: "sign-in" | "sign-up";
+  defaultEmail?: string;
 }
 
 const initialState: AuthState = {
@@ -33,7 +34,7 @@ async function signInWithProvider(provider: "google" | "apple" | "facebook") {
   });
 }
 
-export function AuthForm({ action, mode }: AuthFormProps) {
+export function AuthForm({ action, mode, defaultEmail }: AuthFormProps) {
   const [state, formAction, pending] = useActionState(action, initialState);
 
   return (
@@ -80,7 +81,14 @@ export function AuthForm({ action, mode }: AuthFormProps) {
 
           <label className="field">
             <span>Email</span>
-            <input name="email" placeholder="jordan@example.com" required type="email" />
+            <input
+                defaultValue={defaultEmail}
+                name="email"
+                placeholder="jordan@example.com"
+                readOnly={!!defaultEmail}
+                required
+                type="email"
+              />
           </label>
 
           <label className="field">

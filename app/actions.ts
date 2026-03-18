@@ -380,12 +380,20 @@ export async function completeOnboardingAction(
       await Promise.allSettled(
         memberRows
           .filter((m) => m.invite_email)
-          .map((m) =>
-            admin.auth.admin.inviteUserByEmail(m.invite_email!, {
-              data: { full_name: m.display_name },
-              redirectTo: `${siteUrl}/auth/callback`
-            })
-          )
+          .map((m) => {
+            const acceptUrl = new URL(`${siteUrl}/auth/accept-invite`);
+            acceptUrl.searchParams.set("circle", circleName);
+            acceptUrl.searchParams.set("from", fullName);
+            acceptUrl.searchParams.set("email", m.invite_email!);
+            return admin.auth.admin.inviteUserByEmail(m.invite_email!, {
+              data: {
+                full_name: m.display_name,
+                family_circle_name: circleName,
+                inviter_name: fullName
+              },
+              redirectTo: acceptUrl.toString()
+            });
+          })
       );
     }
   }
@@ -1861,13 +1869,20 @@ export async function resendFamilyInviteAction(formData: FormData) {
   const pendingMembership = membershipResponse.data!;
 
   const admin = createSupabaseAdminClient();
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  const acceptUrl = new URL(`${siteUrl}/auth/accept-invite`);
+  acceptUrl.searchParams.set("circle", ownerFamily.circle.name);
+  acceptUrl.searchParams.set("from", ownerFamily.membership.display_name);
+  acceptUrl.searchParams.set("email", pendingMembership.invite_email);
   const inviteResponse = await admin.auth.admin.inviteUserByEmail(
     pendingMembership.invite_email,
     {
       data: {
-        full_name: pendingMembership.display_name
+        full_name: pendingMembership.display_name,
+        family_circle_name: ownerFamily.circle.name,
+        inviter_name: ownerFamily.membership.display_name
       },
-      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"}/auth/callback`
+      redirectTo: acceptUrl.toString()
     }
   );
 
@@ -2141,9 +2156,17 @@ export async function inviteFamilyMemberAction(formData: FormData) {
   if (hasSupabaseServiceRoleEnv()) {
     const admin = createSupabaseAdminClient();
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+    const acceptUrl = new URL(`${siteUrl}/auth/accept-invite`);
+    acceptUrl.searchParams.set("circle", circle.name);
+    acceptUrl.searchParams.set("from", membership.display_name);
+    acceptUrl.searchParams.set("email", inviteEmail);
     const inviteResponse = await admin.auth.admin.inviteUserByEmail(inviteEmail, {
-      data: { full_name: displayName },
-      redirectTo: `${siteUrl}/auth/callback`
+      data: {
+        full_name: displayName,
+        family_circle_name: circle.name,
+        inviter_name: membership.display_name
+      },
+      redirectTo: acceptUrl.toString()
     });
 
     if (inviteResponse.error) {
