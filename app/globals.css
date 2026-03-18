@@ -2088,3 +2088,232 @@ h3 {
   font-size: 1.15rem;
   line-height: 1;
 }
+
+/* ── Family Tree ──────────────────────────────────────────────────────────── */
+
+.tree-canvas {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.tree-legend {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.tree-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: var(--muted);
+}
+
+.tree-legend-item::before {
+  content: "";
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+}
+
+.tree-legend-immediate::before { background: var(--accent); }
+.tree-legend-secondary::before { background: #7c6af7; }
+.tree-legend-extended::before  { background: #e0a020; }
+
+.tree-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.tree-row {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  align-items: start;
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--border);
+  gap: 1.5rem;
+}
+
+.tree-row:last-child {
+  border-bottom: none;
+}
+
+.tree-row-label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding-top: 0.25rem;
+}
+
+.tree-gen-label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--fg);
+}
+
+.tree-gen-badge {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.tree-row-members {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+/* Member cards */
+.tree-member-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.6rem 0.9rem;
+  border-radius: 10px;
+  border: 1.5px solid transparent;
+  cursor: default;
+  transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+  min-width: 110px;
+  max-width: 180px;
+}
+
+.tree-member-card:hover,
+.tree-member-hovered {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+}
+
+/* Viewer */
+.tree-member-viewer {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.tree-member-viewer .tree-member-name {
+  color: #fff;
+}
+
+/* Immediate */
+.tree-member-immediate {
+  background: color-mix(in srgb, var(--accent) 10%, var(--card-bg));
+  border-color: color-mix(in srgb, var(--accent) 30%, transparent);
+}
+
+/* Secondary */
+.tree-member-secondary {
+  background: color-mix(in srgb, #7c6af7 10%, var(--card-bg));
+  border-color: color-mix(in srgb, #7c6af7 30%, transparent);
+}
+
+/* Extended */
+.tree-member-extended {
+  background: color-mix(in srgb, #e0a020 10%, var(--card-bg));
+  border-color: color-mix(in srgb, #e0a020 30%, transparent);
+}
+
+.tree-member-name {
+  font-size: 0.83rem;
+  font-weight: 700;
+  color: var(--fg);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tree-member-rel {
+  font-size: 0.7rem;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tree-member-tooltip {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--fg);
+  color: var(--bg);
+  font-size: 0.72rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 6px;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.tree-member-tooltip::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: var(--fg);
+}
+
+/* Unplaced list */
+.tree-unplaced-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.tree-unplaced-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.tree-unplaced-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.tree-unplaced-label {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.tree-empty {
+  padding: 3rem 1rem;
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+@media (max-width: 680px) {
+  .tree-row {
+    grid-template-columns: 1fr;
+    gap: 0.6rem;
+  }
+
+  .tree-row-label {
+    flex-direction: row;
+    align-items: baseline;
+    gap: 0.5rem;
+  }
+
+  .tree-gen-badge {
+    font-size: 0.62rem;
+  }
+}

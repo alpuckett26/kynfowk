@@ -47,6 +47,9 @@ export default async function FamilyPage({
               <Link className="button button-secondary" href="/dashboard">
                 Back to dashboard
               </Link>
+              <Link className="button" href="/family/tree">
+                View Family Tree
+              </Link>
             </div>
           </Card>
         </section>
