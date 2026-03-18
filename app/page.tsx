@@ -13,15 +13,15 @@ export default async function HomePage() {
         {/* ── Hero ──────────────────────────────────────────────── */}
         <section className="home-hero container">
           <div className="home-hero-copy">
-            <span className="eyebrow">For families who want to stay close</span>
+            <span className="eyebrow">Family video calls, made effortless</span>
             <h1 className="home-headline">
-              Stop losing track of<br />
-              <em className="home-headline-accent">Time Together.</em>
+              Stop missing each other.<br />
+              <em className="home-headline-accent">Start showing up.</em>
             </h1>
             <p className="home-lede">
-              Kynfowk helps your family share real availability, find the
-              best overlap, and turn good intentions into calls that
-              actually happen — with zero back-and-forth.
+              Kynfowk finds the window where your whole family can actually
+              get on a video call together — then puts it on the calendar
+              automatically. No back-and-forth. No forgotten plans.
             </p>
             <div className="home-cta-row">
               <Link className="button home-cta-primary" href="/auth/sign-up">
@@ -33,35 +33,73 @@ export default async function HomePage() {
             </div>
           </div>
 
+          {/* ── Mock call detail (mirrors the actual call page UX) ── */}
           <div className="home-hero-visual" aria-hidden>
             <div className="home-mock-shell">
               <div className="home-mock-header">
                 <span className="home-mock-dot" />
                 <span className="home-mock-dot" />
                 <span className="home-mock-dot" />
-                <span className="home-mock-title">Family Circle Dashboard</span>
+                <span className="home-mock-title">Ellis Family Circle</span>
               </div>
               <div className="home-mock-body">
-                <div className="home-mock-stat-row">
-                  <div className="home-mock-stat">
-                    <span className="home-mock-stat-num">{stats.totalMinutes > 0 ? stats.totalMinutes.toLocaleString() : "—"}</span>
-                    <span className="home-mock-stat-label">Minutes Together</span>
+
+                {/* Hero summary card */}
+                <div className="home-mock-hero-card">
+                  <div className="home-mock-hero-left">
+                    <span className="home-mock-eyebrow">Sunday catch-up</span>
+                    <div className="home-mock-live-row">
+                      <span className="home-mock-live-dot" />
+                      <span className="home-mock-live-label">Active now</span>
+                    </div>
+                    <span className="home-mock-time">Sun 3:00 – 4:00 PM · EST</span>
                   </div>
-                  <div className="home-mock-stat">
-                    <span className="home-mock-stat-num">{stats.totalCalls > 0 ? stats.totalCalls : "—"}</span>
-                    <span className="home-mock-stat-label">Calls Completed</span>
+                  <a className="home-mock-join-btn">Join live call →</a>
+                </div>
+
+                {/* Participants */}
+                <div className="home-mock-section-label">Family members on this call</div>
+                <div className="home-mock-participants">
+                  <div className="home-mock-participant">
+                    <div className="home-mock-avatar home-mock-avatar-sm home-mock-av-1">MR</div>
+                    <div className="home-mock-pinfo">
+                      <span className="home-mock-pname">Mom Rose</span>
+                      <span className="home-mock-pmeta">Mother · Joined</span>
+                    </div>
+                    <span className="home-mock-badge home-mock-badge-present">Present</span>
+                  </div>
+                  <div className="home-mock-participant">
+                    <div className="home-mock-avatar home-mock-avatar-sm home-mock-av-2">GJ</div>
+                    <div className="home-mock-pinfo">
+                      <span className="home-mock-pname">Grandpa Joe</span>
+                      <span className="home-mock-pmeta">Grandfather · Joined</span>
+                    </div>
+                    <span className="home-mock-badge home-mock-badge-present">Present</span>
+                  </div>
+                  <div className="home-mock-participant">
+                    <div className="home-mock-avatar home-mock-avatar-sm home-mock-av-you">You</div>
+                    <div className="home-mock-pinfo">
+                      <span className="home-mock-pname">You</span>
+                      <span className="home-mock-pmeta">Scheduled to join</span>
+                    </div>
+                    <span className="home-mock-badge">Invited</span>
+                  </div>
+                  <div className="home-mock-participant">
+                    <div className="home-mock-avatar home-mock-avatar-sm home-mock-av-3">LK</div>
+                    <div className="home-mock-pinfo">
+                      <span className="home-mock-pname">Lia K.</span>
+                      <span className="home-mock-pmeta">Sister · Scheduled</span>
+                    </div>
+                    <span className="home-mock-badge">Invited</span>
                   </div>
                 </div>
-                <div className="home-mock-call">
-                  <span className="home-mock-call-badge">Active</span>
-                  <p className="home-mock-call-title">{stats.totalFamilies > 0 ? `${stats.totalFamilies} Family Circle${stats.totalFamilies === 1 ? "" : "s"}` : "Family Circles"}</p>
-                  <p className="home-mock-call-meta">{stats.totalMembers > 0 ? `${stats.totalMembers} active members staying connected` : "Members staying connected"}</p>
+
+                {/* Footer stat */}
+                <div className="home-mock-footer-stat">
+                  <span className="home-mock-live-dot" />
+                  Kynfowk found this window · via Zoom · 4 members scheduled
                 </div>
-                <div className="home-mock-call home-mock-call-alt">
-                  <span className="home-mock-call-badge home-mock-call-badge-done">Platform total</span>
-                  <p className="home-mock-call-title">Time Together logged</p>
-                  <p className="home-mock-call-meta">{stats.totalMinutes > 0 ? `${stats.totalMinutes.toLocaleString()} min across ${stats.totalCalls} completed call${stats.totalCalls === 1 ? "" : "s"}` : "Calls are being logged right now"}</p>
-                </div>
+
               </div>
             </div>
           </div>
@@ -69,9 +107,9 @@ export default async function HomePage() {
 
         {/* ── Trust strip ───────────────────────────────────────── */}
         <div className="home-trust-strip container">
-          <span>✦ Built for real families</span>
+          <span>✦ Works with Zoom, Meet &amp; FaceTime</span>
+          <span>✦ Schedules itself around everyone</span>
           <span>✦ No ads, no noise</span>
-          <span>✦ Works on any device</span>
           <span>✦ Private by design</span>
         </div>
 
@@ -79,38 +117,38 @@ export default async function HomePage() {
         <section className="home-section container">
           <div className="home-section-label">How it works</div>
           <h2 className="home-section-title">
-            From scattered schedules to a call everyone can make.
+            From scattered schedules to a video call everyone can make.
           </h2>
           <div className="home-steps">
             <div className="home-step">
               <div className="home-step-num">01</div>
               <div className="home-step-body">
                 <h3>Create your Family Circle</h3>
-                <p>Invite parents, siblings, cousins — whoever belongs. One shared space for the whole family.</p>
+                <p>Invite parents, siblings, cousins — whoever belongs. One shared space, one shared calendar.</p>
               </div>
             </div>
             <div className="home-step-connector" aria-hidden />
             <div className="home-step">
               <div className="home-step-num">02</div>
               <div className="home-step-body">
-                <h3>Share when you&apos;re free</h3>
-                <p>Each member marks their preferred hours. No polls, no group chats, no chasing replies.</p>
+                <h3>Everyone shares when they&apos;re free</h3>
+                <p>Each member marks their preferred hours once. No polls, no group chats, no chasing replies.</p>
               </div>
             </div>
             <div className="home-step-connector" aria-hidden />
             <div className="home-step">
               <div className="home-step-num">03</div>
               <div className="home-step-body">
-                <h3>Schedule from real overlap</h3>
-                <p>Kynfowk surfaces the best windows where everyone can actually show up — then books the call.</p>
+                <h3>Kynfowk finds the window</h3>
+                <p>The app surfaces the best times where everyone can actually show up and books the video call.</p>
               </div>
             </div>
             <div className="home-step-connector" aria-hidden />
             <div className="home-step">
               <div className="home-step-num">04</div>
               <div className="home-step-body">
-                <h3>Build your streak</h3>
-                <p>Track Time Together, review recaps, and watch your Family Connections counter grow.</p>
+                <h3>Show up and connect</h3>
+                <p>Get a join link, hop on your video call, and let Kynfowk track the time you spent together.</p>
               </div>
             </div>
           </div>
@@ -122,34 +160,34 @@ export default async function HomePage() {
           <h2 className="home-section-title">Everything a family needs. Nothing it doesn&apos;t.</h2>
           <div className="home-features">
             <div className="home-feature-card">
+              <div className="home-feature-icon">🎥</div>
+              <h3>Video call scheduling</h3>
+              <p>Kynfowk finds the window where everyone can show up, books the call, and sends you a join link — all automatically.</p>
+            </div>
+            <div className="home-feature-card">
               <div className="home-feature-icon">📅</div>
-              <h3>Overlap-based scheduling</h3>
-              <p>Stop guessing. Kynfowk matches availability across your whole circle and ranks the best windows automatically.</p>
+              <h3>Overlap-based availability</h3>
+              <p>Each member sets their free hours once. Kynfowk matches across the whole circle and surfaces the strongest shared windows.</p>
             </div>
             <div className="home-feature-card">
               <div className="home-feature-icon">📊</div>
               <h3>Time Together tracking</h3>
-              <p>Every completed call adds to your family&apos;s Connections counter. See who&apos;s been on, how long you talked, and keep the momentum.</p>
+              <p>Every completed video call logs to your family&apos;s Connections counter. See who joined, how long you talked, and keep the momentum.</p>
             </div>
             <div className="home-feature-card">
               <div className="home-feature-icon">📝</div>
               <h3>Post-call recaps</h3>
-              <p>Capture a highlight and next step right after each call while the memory is fresh. Build a living history of your family&apos;s story.</p>
+              <p>Capture a highlight and next step right after each video call while the memory is fresh. Build a living history of your family&apos;s story.</p>
             </div>
             <div className="home-feature-card">
               <div className="home-feature-icon">🔔</div>
               <h3>Smart reminders</h3>
-              <p>Gentle nudges 24 hours and 15 minutes before a call. No spam — just the right reminder at the right time.</p>
-            </div>
-            <div className="home-feature-card">
-              <div className="home-feature-icon">🔒</div>
-              <h3>Private by default</h3>
-              <p>Your family&apos;s schedule and conversations belong to your family. No ads, no data selling, no third-party access.</p>
+              <p>Gentle nudges 24 hours and 15 minutes before your video call. No spam — just the right reminder at the right time.</p>
             </div>
             <div className="home-feature-card">
               <div className="home-feature-icon">📱</div>
-              <h3>Works anywhere</h3>
-              <p>Browser, phone, or tablet — Kynfowk works wherever your family is. Add it to your home screen for one-tap access.</p>
+              <h3>Works on any device</h3>
+              <p>Browser, phone, or tablet — join your family video call wherever you are. Add Kynfowk to your home screen for one-tap access.</p>
             </div>
           </div>
         </section>
