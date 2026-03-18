@@ -6,13 +6,13 @@ export const NAV_LINKS = [
 ] satisfies { href: string; label: string }[];
 
 export const DAYS = [
-  { value: 0, label: "Sun" },
-  { value: 1, label: "Mon" },
-  { value: 2, label: "Tue" },
-  { value: 3, label: "Wed" },
-  { value: 4, label: "Thu" },
-  { value: 5, label: "Fri" },
-  { value: 6, label: "Sat" }
+  { value: 0, label: "Sun", fullLabel: "Sunday" },
+  { value: 1, label: "Mon", fullLabel: "Monday" },
+  { value: 2, label: "Tue", fullLabel: "Tuesday" },
+  { value: 3, label: "Wed", fullLabel: "Wednesday" },
+  { value: 4, label: "Thu", fullLabel: "Thursday" },
+  { value: 5, label: "Fri", fullLabel: "Friday" },
+  { value: 6, label: "Sat", fullLabel: "Saturday" }
 ];
 
 export const TIME_BLOCKS = [

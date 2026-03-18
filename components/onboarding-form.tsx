@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { useActionState } from "react";
 
 import type { OnboardingState } from "@/app/actions";
-import { DAYS, TIME_BLOCKS } from "@/lib/constants";
+import { AvailabilityPicker } from "@/components/availability-picker";
 import { RELATIONSHIP_OPTIONS } from "@/lib/relationship-classifier";
 
 const initialState: OnboardingState = {
@@ -196,30 +196,7 @@ export function OnboardingForm({
           <p>Select the windows that usually feel best for you. Kynfowk will turn overlap into call suggestions.</p>
         </div>
 
-        <div className="availability-grid">
-          <div className="availability-head" />
-          {DAYS.map((day) => (
-            <div className="availability-head" key={day.value}>
-              {day.label}
-            </div>
-          ))}
-
-          {TIME_BLOCKS.map((block) => (
-            <div className="availability-row" key={block.label}>
-              <div className="availability-label">{block.label}</div>
-              {DAYS.map((day) => (
-                <label className="availability-cell" key={`${day.value}-${block.label}`}>
-                  <input
-                    name="slots"
-                    type="checkbox"
-                    value={`${day.value}|${block.startHour}|${block.endHour}`}
-                  />
-                  <span>{block.label}</span>
-                </label>
-              ))}
-            </div>
-          ))}
-        </div>
+        <AvailabilityPicker currentSlots={[]} />
       </section>
 
       {state.message ? <p className="form-message">{state.message}</p> : null}

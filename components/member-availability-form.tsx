@@ -3,8 +3,8 @@
 import { useActionState } from "react";
 
 import { saveMemberAvailabilityAction, type AvailabilityState } from "@/app/actions";
+import { AvailabilityPicker } from "@/components/availability-picker";
 import { EmptyState } from "@/components/empty-state";
-import { DAYS, TIME_BLOCKS } from "@/lib/constants";
 
 const initialState: AvailabilityState = {
   status: "idle"
@@ -40,35 +40,7 @@ export function MemberAvailabilityForm({
           </p>
         </div>
 
-        <div className="availability-grid">
-          <div className="availability-head" />
-          {DAYS.map((day) => (
-            <div className="availability-head" key={day.value}>
-              {day.label}
-            </div>
-          ))}
-
-          {TIME_BLOCKS.map((block) => (
-            <div className="availability-row" key={block.label}>
-              <div className="availability-label">{block.label}</div>
-              {DAYS.map((day) => {
-                const slotValue = `${day.value}|${block.startHour}|${block.endHour}`;
-
-                return (
-                  <label className="availability-cell" key={slotValue}>
-                    <input
-                      defaultChecked={currentSlots.includes(slotValue)}
-                      name="slots"
-                      type="checkbox"
-                      value={slotValue}
-                    />
-                    <span>{block.label}</span>
-                  </label>
-                );
-              })}
-            </div>
-          ))}
-        </div>
+        <AvailabilityPicker currentSlots={currentSlots} />
       </section>
 
       {state.message ? (
