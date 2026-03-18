@@ -907,14 +907,8 @@ export async function saveScheduledCallDetailsAction(
           minute: "2-digit",
           timeZone: viewerTimezone
         }).format(new Date(scheduledStartUtc!))}.`
-      : meetingUrl
-        ? `${title} was updated with a fresh join link for the Family Circle.`
-        : `${title} was updated for the Family Circle.`
+      : `${title} was updated for the Family Circle.`
   });
-
-  if (meetingUrl) {
-    await dismissCallNotifications(supabase, callId, ["missing_join_link_warning"]);
-  }
 
   if (wantsReschedule) {
     await resetScheduledCallNotifications(supabase, callId);
@@ -982,9 +976,7 @@ export async function saveScheduledCallDetailsAction(
     status: "success",
     message: wantsReschedule
       ? "Call details saved. Kynfowk reset the schedule and reminder timing for this family moment."
-      : meetingUrl
-        ? "Call details saved. Your circle now has an updated title and join link."
-        : "Call details saved. You can add a join link any time before the call."
+      : "Call details saved."
   };
 }
 
