@@ -1105,6 +1105,44 @@ h3 {
 
 /* ── Splash screen ──────────────────────────────────────────────── */
 
+/* ── Page transition ──────────────────────────────────────────────────────── */
+
+.page-transition {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(circle at 30% 40%, rgba(255, 200, 160, 0.6), transparent 50%),
+    linear-gradient(160deg, #fff7ef 0%, #f6e8da 100%);
+  pointer-events: none;
+  animation: ptIn 0.18s ease both;
+}
+
+.page-transition-fade {
+  animation: ptOut 0.32s ease forwards;
+}
+
+.page-transition-brand {
+  font-family: var(--font-display), serif;
+  font-size: clamp(2rem, 6vw, 3.5rem);
+  letter-spacing: -0.05em;
+  color: var(--text);
+  animation: splashFadeIn 0.18s ease both;
+}
+
+@keyframes ptIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes ptOut {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
 @keyframes splashFadeIn {
   from { opacity: 0; transform: translateY(12px); }
   to   { opacity: 1; transform: translateY(0); }
