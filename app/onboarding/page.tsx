@@ -41,6 +41,16 @@ export default async function OnboardingPage() {
     redirect("/dashboard");
   }
 
+  // Pull name from OAuth metadata (Google / Facebook both provide full_name)
+  const oauthName =
+    (user.user_metadata?.full_name as string | undefined) ||
+    (user.user_metadata?.name as string | undefined) ||
+    "";
+
+  // Suggest "[Last Name] Family Circle" from the OAuth name
+  const lastName = oauthName.trim().split(" ").at(-1) ?? "";
+  const suggestedCircleName = lastName ? `${lastName} Family Circle` : "";
+
   return (
     <main className="page-shell">
       <div className="container panel-shell">
@@ -55,7 +65,11 @@ export default async function OnboardingPage() {
               </p>
             </div>
 
-            <OnboardingForm action={completeOnboardingAction} />
+            <OnboardingForm
+              action={completeOnboardingAction}
+              defaultFullName={oauthName}
+              suggestedCircleName={suggestedCircleName}
+            />
           </div>
         </Card>
       </div>

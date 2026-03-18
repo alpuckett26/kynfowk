@@ -11,12 +11,16 @@ const initialState: OnboardingState = {
 };
 
 export function OnboardingForm({
-  action
+  action,
+  defaultFullName = "",
+  suggestedCircleName = ""
 }: {
   action: (
     state: OnboardingState,
     formData: FormData
   ) => Promise<OnboardingState>;
+  defaultFullName?: string;
+  suggestedCircleName?: string;
 }) {
   const [state, formAction, pending] = useActionState(action, initialState);
   const [members, setMembers] = useState([
@@ -74,12 +78,22 @@ export function OnboardingForm({
         <div className="field-grid two-col">
           <label className="field">
             <span>Your full name</span>
-            <input name="fullName" placeholder="Jordan Ellis" required />
+            <input
+              defaultValue={defaultFullName}
+              name="fullName"
+              placeholder="Jordan Ellis"
+              required
+            />
           </label>
 
           <label className="field">
             <span>Circle name</span>
-            <input name="circleName" placeholder="Ellis Sunday Circle" required />
+            <input
+              defaultValue={suggestedCircleName}
+              name="circleName"
+              placeholder="Ellis Sunday Circle"
+              required
+            />
           </label>
         </div>
 
