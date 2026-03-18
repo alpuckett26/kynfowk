@@ -624,6 +624,7 @@ export async function scheduleSuggestedCallAction(formData: FormData) {
       title,
       scheduled_start: matchedSuggestion.start_at,
       scheduled_end: matchedSuggestion.end_at,
+      meeting_provider: "Kynfowk",
       reminder_status: "pending",
       created_by: user.id
     })
@@ -797,8 +798,6 @@ export async function saveScheduledCallDetailsAction(
   const callId = String(formData.get("callId") ?? "");
   const familyCircleId = String(formData.get("familyCircleId") ?? "");
   const title = String(formData.get("title") ?? "").trim();
-  const meetingProviderInput = String(formData.get("meetingProvider") ?? "").trim();
-  const meetingUrlInput = String(formData.get("meetingUrl") ?? "").trim();
   const scheduledStartLocal = String(formData.get("scheduledStartLocal") ?? "").trim();
   const scheduledEndLocal = String(formData.get("scheduledEndLocal") ?? "").trim();
   const viewerTimezone = String(formData.get("viewerTimezone") ?? "").trim() || "America/Chicago";
@@ -817,17 +816,6 @@ export async function saveScheduledCallDetailsAction(
       message: "Only active family members can manage scheduled calls for this Family Circle."
     };
   }
-
-  const meetingUrl = meetingUrlInput ? normalizeMeetingUrl(meetingUrlInput) : null;
-  if (meetingUrlInput && !meetingUrl) {
-    return {
-      status: "error",
-      message: "Please add a valid meeting URL so your family has a safe place to join."
-    };
-  }
-
-  const meetingProvider =
-    meetingUrl && !meetingProviderInput ? inferMeetingProvider(meetingUrl) : meetingProviderInput || null;
 
   const wantsReschedule = Boolean(scheduledStartLocal || scheduledEndLocal);
   if (wantsReschedule && (!scheduledStartLocal || !scheduledEndLocal)) {
@@ -888,8 +876,7 @@ export async function saveScheduledCallDetailsAction(
     .from("call_sessions")
     .update({
       title,
-      meeting_provider: meetingProvider,
-      meeting_url: meetingUrl,
+      meeting_provider: "Kynfowk",
       scheduled_start: scheduledStartUtc ?? undefined,
       scheduled_end: scheduledEndUtc ?? undefined,
       recovery_dismissed_at: null,
@@ -2320,6 +2307,7 @@ export async function scheduleDirectCallAction(formData: FormData): Promise<void
       scheduled_start: start.toISOString(),
       scheduled_end: end.toISOString(),
       status: "scheduled",
+      meeting_provider: "Kynfowk",
       reminder_status: "pending",
       created_by: user.id
     })

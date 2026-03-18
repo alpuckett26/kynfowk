@@ -400,7 +400,7 @@ export async function getDashboardData(userId: string): Promise<{
     .filter((call) => call.status === "scheduled" || call.status === "live")
     .map((call) => {
       const reminderStatus = normalizeReminderStatus(call.status, call.reminder_status);
-      const needsJoinLinkPrompt = !call.meeting_url && isCallNear(call.scheduled_start);
+      const needsJoinLinkPrompt = false; // built-in call room is always ready
       const needsCompletionPrompt = isCallPastDue(call.status, call.scheduled_end);
       const recovery = buildCallRecoveryState(call);
 
@@ -767,8 +767,7 @@ export async function getCallDetailData(userId: string, callId: string): Promise
         reminderStatus,
         callResponse.data.reminder_sent_at
       ),
-      needs_join_link_prompt:
-        !callResponse.data.meeting_url && isCallNear(callResponse.data.scheduled_start),
+      needs_join_link_prompt: false, // built-in call room is always ready
       needs_completion_prompt: isCallPastDue(
         callResponse.data.status,
         callResponse.data.scheduled_end

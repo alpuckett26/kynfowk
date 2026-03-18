@@ -87,16 +87,6 @@ export default async function CallDetailPage({
                   Join live call
                 </Link>
               ) : null}
-              {data.call.meeting_url ? (
-                <Link
-                  className="button button-secondary"
-                  href={`/calls/${data.call.id}/join` as Route}
-                  rel="noreferrer noopener"
-                  target="_blank"
-                >
-                  External link
-                </Link>
-              ) : null}
             </div>
 
             {isManageableCall ? (
@@ -140,11 +130,7 @@ export default async function CallDetailPage({
                   <div className="list-item">
                     <div>
                       <p>Join space</p>
-                      <p className="meta">
-                        {data.call.meeting_url
-                          ? `${data.call.meeting_provider ?? "Join link"} is ready`
-                          : "No join link has been added yet"}
-                      </p>
+                      <p className="meta">Kynfowk built-in call room — ready when you are</p>
                     </div>
                   </div>
                   <div className="list-item">
