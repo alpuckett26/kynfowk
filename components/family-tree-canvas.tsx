@@ -154,8 +154,8 @@ function AddPlaceholderPanel({ onClose }: { onClose: () => void }) {
       </div>
       <p className="meta">
         Placeholder family members hold a spot in the tree for people who
-        haven't joined yet — or who are no longer with us. When someone joins
-        with a matching email, they'll claim their place automatically.
+        haven&apos;t joined yet &mdash; or who are no longer with us. When someone joins
+        with a matching email, they&apos;ll claim their place automatically.
       </p>
       <form className="tree-placeholder-form stack-md" onSubmit={handleSubmit} ref={formRef}>
         <div className="field-grid two-col">
