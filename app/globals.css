@@ -202,6 +202,7 @@ h3 {
 }
 
 .card {
+  position: relative;
   padding: 1.4rem;
   border: 1px solid var(--border);
   border-radius: 1.5rem;
@@ -1105,42 +1106,110 @@ h3 {
 
 /* ── Splash screen ──────────────────────────────────────────────── */
 
-/* ── Page transition ──────────────────────────────────────────────────────── */
+/* ── Page turn transition ─────────────────────────────────────────────────── */
 
-.page-transition {
+.page-turn-overlay {
   position: fixed;
   inset: 0;
   z-index: 9998;
+  pointer-events: none;
+  perspective: 1600px;
+  overflow: hidden;
+}
+
+.page-turn-page {
+  position: absolute;
+  inset: 0;
+  background-color: #faf7f0;
+  background-image: linear-gradient(#ccdff7 1px, transparent 1px);
+  background-size: 100% 1.72rem;
+  transform-origin: left center;
+  transform-style: preserve-3d;
+  box-shadow: -12px 0 48px rgba(0,0,0,0.22), 4px 0 16px rgba(0,0,0,0.08);
+  will-change: transform;
+}
+
+.page-turn-entering .page-turn-page {
+  animation: pageTurnIn 0.42s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+.page-turn-leaving .page-turn-page {
+  animation: pageTurnOut 0.38s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+@keyframes pageTurnIn {
+  from { transform: rotateY(90deg); }
+  to   { transform: rotateY(0deg);  }
+}
+
+@keyframes pageTurnOut {
+  from { transform: rotateY(0deg);   }
+  to   { transform: rotateY(-90deg); }
+}
+
+.page-turn-ruled {
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(#ccdff7 1px, transparent 1px);
+  background-size: 100% 1.72rem;
+}
+
+.page-turn-margin {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 56px;
+  width: 2px;
+  background: rgba(220, 80, 80, 0.4);
+}
+
+.page-turn-holes {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 40px;
   display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  align-items: center;
+  padding: 15% 0;
+}
+
+.page-turn-hole {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #e8e0d4;
+  border: 2px solid #d4ccc4;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.15);
+}
+
+.page-turn-content {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  background:
-    radial-gradient(circle at 30% 40%, rgba(255, 200, 160, 0.6), transparent 50%),
-    linear-gradient(160deg, #fff7ef 0%, #f6e8da 100%);
-  pointer-events: none;
-  animation: ptIn 0.18s ease both;
+  gap: 0.4rem;
 }
 
-.page-transition-fade {
-  animation: ptOut 0.32s ease forwards;
-}
-
-.page-transition-brand {
+.page-turn-brand {
   font-family: var(--font-display), serif;
-  font-size: clamp(2rem, 6vw, 3.5rem);
+  font-size: clamp(2.5rem, 7vw, 4.5rem);
   letter-spacing: -0.05em;
-  color: var(--text);
-  animation: splashFadeIn 0.18s ease both;
+  color: #1c1c3a;
+  transform: rotate(-1.5deg);
+  display: block;
 }
 
-@keyframes ptIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-
-@keyframes ptOut {
-  from { opacity: 1; }
-  to   { opacity: 0; }
+.page-turn-tagline {
+  font-size: 0.9rem;
+  color: #8888aa;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 600;
 }
 
 @keyframes splashFadeIn {
@@ -2901,5 +2970,228 @@ h3 {
   .scrapbook-page .card:nth-child(3n+2),
   .scrapbook-page .card:nth-child(3n) {
     transform: none;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   GRANDMOTHER'S PHONE JOURNAL — Global notebook aesthetic
+   Cream ruled paper, red margin, navy ink, address-book list entries.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Notebook palette */
+:root {
+  --ruled:       rgba(110, 181, 255, 0.26);
+  --margin-ink:  rgba(220, 80, 80, 0.2);
+  --paper:       #fffef7;
+  --ink:         #1c1c3a;
+  --ink-faded:   #6b6b8a;
+  --punch:       #c8a96e;
+  --spiral:      #c8b89a;
+}
+
+/* ── Body: add a faint ruled-paper cadence to the warm background ─────────── */
+
+body {
+  background-image:
+    linear-gradient(var(--ruled) 1px, transparent 1px),
+    radial-gradient(circle at top left, rgba(255, 215, 186, 0.55), transparent 30%),
+    radial-gradient(circle at right 20%, rgba(244, 208, 178, 0.45), transparent 24%),
+    linear-gradient(180deg, #fffaf5 0%, #fcf7f1 42%, #f6eee5 100%);
+  background-size: 100% 1.72rem, auto, auto, auto;
+}
+
+/* ── Cards: ruled notebook paper sheets ──────────────────────────────────── */
+
+.card {
+  background: var(--paper);
+  background-image:
+    linear-gradient(to right, var(--margin-ink) 1px, transparent 1px),
+    linear-gradient(var(--ruled) 1px, transparent 1px);
+  background-size: 44px 100%, 100% 1.72rem;
+  background-position: 0 0, 0 3.4rem;
+  border: 1px solid rgba(110, 181, 255, 0.18);
+  border-radius: 4px;
+  box-shadow:
+    0 1px 0 rgba(0, 0, 0, 0.03),
+    0 3px 10px rgba(113, 73, 44, 0.08),
+    0 12px 32px rgba(113, 73, 44, 0.07);
+}
+
+/* Hole-punch column on every card */
+.card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 36px;
+  background:
+    radial-gradient(circle at 50% 18%, var(--punch) 42%, #f0e6d8 43%, transparent 55%),
+    radial-gradient(circle at 50% 50%, var(--punch) 42%, #f0e6d8 43%, transparent 55%),
+    radial-gradient(circle at 50% 82%, var(--punch) 42%, #f0e6d8 43%, transparent 55%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Push card content right of the hole-punch column */
+.card > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Card headings: ruled underline like a hand-drawn section label ────────── */
+
+.card h2 {
+  padding-bottom: 0.4rem;
+  border-bottom: 1.5px solid rgba(199, 102, 63, 0.2);
+  margin-bottom: 0.2rem;
+  font-size: 1.05rem;
+  color: var(--ink);
+  letter-spacing: -0.02em;
+}
+
+/* ── List items: phone-journal address-book entries ──────────────────────── */
+
+.list-item {
+  border-top: 1px solid rgba(110, 181, 255, 0.3);
+  padding-top: 0.85rem;
+  padding-bottom: 0.85rem;
+}
+
+/* Name/primary text in list items: bold navy ink */
+.list-item p:first-child,
+.list-item a {
+  font-weight: 700;
+  color: var(--ink);
+}
+
+/* Meta / secondary lines: pencil / faded ink */
+.list-item .meta {
+  font-size: 0.82rem;
+  color: var(--ink-faded);
+  line-height: 1.4;
+}
+
+/* ── Badges: ink-stamp feel ──────────────────────────────────────────────── */
+
+.badge {
+  border: 1px solid rgba(75, 122, 98, 0.22);
+  font-family: var(--font-body), sans-serif;
+  letter-spacing: 0.03em;
+}
+
+/* ── Eyebrow tabs: index-card divider tabs ───────────────────────────────── */
+
+.eyebrow {
+  border-radius: 3px 3px 0 0;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+}
+
+/* ── Form inputs: written-in-pencil feel ─────────────────────────────────── */
+
+input,
+select,
+textarea {
+  background: rgba(255, 254, 247, 0.92);
+  border: 1px solid rgba(110, 181, 255, 0.35);
+  border-bottom: 2px solid rgba(110, 181, 255, 0.5);
+  border-radius: 6px;
+  color: var(--ink);
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: rgba(199, 102, 63, 0.4);
+  border-bottom-color: var(--accent);
+  background: #fffef5;
+  box-shadow: 0 2px 0 rgba(199, 102, 63, 0.12);
+}
+
+/* ── Section header rows: ruled tab divider ──────────────────────────────── */
+
+.section-header-row > div > h2 {
+  font-size: 1.05rem;
+}
+
+/* ── Dashboard hero: open notebook cover page ───────────────────────────── */
+
+.page-shell:not(.scrapbook-page) .dashboard-hero h1 {
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  color: var(--ink);
+}
+
+/* ── Spiral binding decoration (desktop sidebar) ─────────────────────────── */
+
+@media (min-width: 1200px) {
+  .page-shell {
+    position: relative;
+  }
+
+  .page-shell::after {
+    content: "";
+    position: fixed;
+    top: 64px;
+    bottom: 0;
+    left: max(0px, calc(50% - 600px - 36px));
+    width: 22px;
+    background:
+      repeating-radial-gradient(
+        circle at 11px 11px,
+        var(--spiral) 0px,
+        var(--spiral) 8px,
+        transparent 8px,
+        transparent 11px
+      );
+    background-size: 22px 24px;
+    opacity: 0.55;
+    pointer-events: none;
+    z-index: 0;
+  }
+}
+
+/* ── Scrapbook page overrides: let dashboard keep its cork-board feel ──────── */
+
+.scrapbook-page body,
+.scrapbook-page {
+  /* scrapbook background wins over ruled paper */
+}
+
+.scrapbook-page .card {
+  background-image: none;  /* each scrapbook card variant sets its own background */
+}
+
+.scrapbook-page .card::before {
+  display: none;  /* no hole punches on scrapbook cards */
+}
+
+.scrapbook-page .card h2 {
+  border-bottom: 1.5px solid rgba(0, 0, 0, 0.08);
+}
+
+.scrapbook-page .list-item {
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+/* ── Mobile: simplify ruled textures ─────────────────────────────────────── */
+
+@media (max-width: 640px) {
+  body {
+    background-size: 100% 1.72rem, auto, auto, auto;
+  }
+
+  .card::before {
+    display: none;  /* hide hole punches on small screens */
+  }
+
+  .card {
+    background-size: 44px 100%, 100% 1.72rem;
+    border-radius: 8px;
+  }
+
+  .page-shell::after {
+    display: none;
   }
 }

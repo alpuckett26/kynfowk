@@ -5,36 +5,45 @@ import { useEffect, useRef, useState } from "react";
 
 export function PageTransition() {
   const pathname = usePathname();
-  const [visible, setVisible] = useState(false);
-  const [fading, setFading] = useState(false);
+  const [phase, setPhase] = useState<"idle" | "entering" | "leaving">("idle");
   const prevPath = useRef(pathname);
-  const fadeTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  const hideTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const t1 = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const t2 = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   useEffect(() => {
     if (pathname === prevPath.current) return;
     prevPath.current = pathname;
 
-    clearTimeout(fadeTimer.current);
-    clearTimeout(hideTimer.current);
+    clearTimeout(t1.current);
+    clearTimeout(t2.current);
 
-    setFading(false);
-    setVisible(true);
-
-    fadeTimer.current = setTimeout(() => setFading(true), 350);
-    hideTimer.current = setTimeout(() => setVisible(false), 700);
+    setPhase("entering");
+    t1.current = setTimeout(() => setPhase("leaving"), 420);
+    t2.current = setTimeout(() => setPhase("idle"), 800);
 
     return () => {
-      clearTimeout(fadeTimer.current);
-      clearTimeout(hideTimer.current);
+      clearTimeout(t1.current);
+      clearTimeout(t2.current);
     };
   }, [pathname]);
 
-  if (!visible) return null;
+  if (phase === "idle") return null;
 
   return (
-    <div className={`page-transition ${fading ? "page-transition-fade" : ""}`} aria-hidden>
-      <span className="page-transition-brand">Kynfowk</span>
+    <div className={`page-turn-overlay page-turn-${phase}`} aria-hidden>
+      <div className="page-turn-page">
+        <div className="page-turn-ruled" />
+        <div className="page-turn-margin" />
+        <div className="page-turn-content">
+          <span className="page-turn-brand">Kynfowk</span>
+          <span className="page-turn-tagline">Family Circle</span>
+        </div>
+        <div className="page-turn-holes">
+          <div className="page-turn-hole" />
+          <div className="page-turn-hole" />
+          <div className="page-turn-hole" />
+        </div>
+      </div>
     </div>
   );
 }
