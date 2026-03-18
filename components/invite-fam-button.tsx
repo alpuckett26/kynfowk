@@ -61,6 +61,16 @@ export function InviteFamButton() {
                 type="email"
               />
             </div>
+            <div className="field">
+              <label htmlFor="invite-relationship">Your relationship to them</label>
+              <input
+                autoComplete="off"
+                id="invite-relationship"
+                name="relationship"
+                placeholder="e.g. Grandmother, Brother, Uncle"
+              />
+              <span className="field-hint">Used to place them in your Family Tree</span>
+            </div>
             <div className="invite-form-actions">
               <button className="button" type="submit">
                 Send invite

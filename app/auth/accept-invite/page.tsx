@@ -13,6 +13,7 @@ export default async function AcceptInvitePage({
     circle?: string;
     from?: string;
     email?: string;
+    relationship?: string;
   }>;
 }) {
   const params = searchParams ? await searchParams : {};
@@ -37,6 +38,7 @@ export default async function AcceptInvitePage({
   const circleName = params.circle ?? "a Family Circle";
   const inviterName = params.from;
   const inviteEmail = params.email;
+  const relationship = params.relationship;
 
   const signUpHref = (
     inviteEmail
@@ -60,15 +62,26 @@ export default async function AcceptInvitePage({
             {inviterName ? (
               <p className="accept-invite-lede">
                 <strong>{inviterName}</strong> added you to their Family Circle
+                as{" "}
+                {relationship ? (
+                  <strong>{relationship}</strong>
+                ) : (
+                  "a family member"
+                )}{" "}
                 and wants to stay connected. Kynfowk helps families share real
                 availability, schedule calls that actually happen, and build a
                 streak of Time Together.
               </p>
             ) : (
               <p className="accept-invite-lede">
-                Someone added you to a Family Circle and wants to stay
-                connected. Kynfowk helps families find the best time to talk
-                and keep that rhythm going.
+                Someone added you to a Family Circle
+                {relationship ? (
+                  <>
+                    {" "}as <strong>{relationship}</strong>
+                  </>
+                ) : null}{" "}
+                and wants to stay connected. Kynfowk helps families find the
+                best time to talk and keep that rhythm going.
               </p>
             )}
 

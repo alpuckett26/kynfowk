@@ -2118,6 +2118,7 @@ export async function inviteFamilyMemberAction(formData: FormData) {
   const user = await requireViewer();
   const displayName = String(formData.get("displayName") ?? "").trim();
   const inviteEmail = String(formData.get("inviteEmail") ?? "").trim().toLowerCase();
+  const relationship = String(formData.get("relationship") ?? "").trim();
 
   const redirectWithStatus = (status: string): never => {
     redirect(`/family?status=${status}` as Route);
@@ -2143,6 +2144,7 @@ export async function inviteFamilyMemberAction(formData: FormData) {
       family_circle_id: circle.id,
       display_name: displayName,
       invite_email: inviteEmail,
+      relationship_label: relationship || null,
       status: "invited",
       role: "member"
     })
@@ -2160,11 +2162,13 @@ export async function inviteFamilyMemberAction(formData: FormData) {
     acceptUrl.searchParams.set("circle", circle.name);
     acceptUrl.searchParams.set("from", membership.display_name);
     acceptUrl.searchParams.set("email", inviteEmail);
+    if (relationship) acceptUrl.searchParams.set("relationship", relationship);
     const inviteResponse = await admin.auth.admin.inviteUserByEmail(inviteEmail, {
       data: {
         full_name: displayName,
         family_circle_name: circle.name,
-        inviter_name: membership.display_name
+        inviter_name: membership.display_name,
+        relationship_label: relationship || undefined
       },
       redirectTo: acceptUrl.toString()
     });
