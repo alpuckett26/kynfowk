@@ -1309,3 +1309,130 @@ function buildHighlights(input: {
     }
   ];
 }
+
+// ── Family Polls ──────────────────────────────────────────────────────────────
+
+export interface FamilyPoll {
+  id: string;
+  question: string;
+  option_a: string;
+  option_b: string;
+  emoji_a: string | null;
+  emoji_b: string | null;
+  category: string;
+}
+
+export interface FamilyPollResult extends FamilyPoll {
+  count_a: number;
+  count_b: number;
+  viewer_choice: "a" | "b" | null;
+  responses: Array<{ displayName: string; choice: "a" | "b" }>;
+}
+
+export async function getNextUnansweredPoll(
+  userId: string
+): Promise<FamilyPoll | null> {
+  if (!hasSupabaseEnv()) return null;
+  const supabase = await createSupabaseServerClient();
+  const family = await getViewerFamilyCircle(userId);
+  if (!family) return null;
+
+  // polls the viewer hasn't answered yet
+  const answeredRes = await supabase
+    .from("family_poll_responses")
+    .select("poll_id")
+    .eq("membership_id", family.membership.id);
+
+  const answeredIds = (answeredRes.data ?? []).map((r) => r.poll_id);
+
+  const query = supabase
+    .from("family_polls")
+    .select("id, question, option_a, option_b, emoji_a, emoji_b, category")
+    .order("created_at", { ascending: true })
+    .limit(1);
+
+  if (answeredIds.length > 0) {
+    query.not("id", "in", `(${answeredIds.map((id) => `'${id}'`).join(",")})`);
+  }
+
+  const { data } = await query.maybeSingle();
+  return data ?? null;
+}
+
+export async function getFamilyPollResults(
+  userId: string
+): Promise<FamilyPollResult[]> {
+  if (!hasSupabaseEnv()) return [];
+  const supabase = await createSupabaseServerClient();
+  const family = await getViewerFamilyCircle(userId);
+  if (!family) return [];
+
+  const [pollsRes, responsesRes, membersRes] = await Promise.all([
+    supabase
+      .from("family_polls")
+      .select("id, question, option_a, option_b, emoji_a, emoji_b, category")
+      .order("created_at", { ascending: true }),
+    supabase
+      .from("family_poll_responses")
+      .select("poll_id, membership_id, choice")
+      .eq("family_circle_id", family.circle.id),
+    supabase
+      .from("family_memberships")
+      .select("id, display_name")
+      .eq("family_circle_id", family.circle.id)
+      .eq("status", "active")
+  ]);
+
+  const polls = pollsRes.data ?? [];
+  const responses = responsesRes.data ?? [];
+  const members = membersRes.data ?? [];
+  const nameMap = new Map(members.map((m) => [m.id, m.display_name]));
+
+  // Only show polls that have at least one response in this circle
+  return polls
+    .map((poll) => {
+      const pollResponses = responses.filter((r) => r.poll_id === poll.id);
+      if (pollResponses.length === 0) return null;
+      const viewerResponse = pollResponses.find(
+        (r) => r.membership_id === family.membership.id
+      );
+      return {
+        ...poll,
+        count_a: pollResponses.filter((r) => r.choice === "a").length,
+        count_b: pollResponses.filter((r) => r.choice === "b").length,
+        viewer_choice: (viewerResponse?.choice ?? null) as "a" | "b" | null,
+        responses: pollResponses.map((r) => ({
+          displayName: nameMap.get(r.membership_id) ?? "Family member",
+          choice: r.choice as "a" | "b"
+        }))
+      };
+    })
+    .filter(Boolean) as FamilyPollResult[];
+}
+
+export async function getPollPersonalizationTags(
+  userId: string
+): Promise<Record<string, string>> {
+  if (!hasSupabaseEnv()) return {};
+  const supabase = await createSupabaseServerClient();
+  const family = await getViewerFamilyCircle(userId);
+  if (!family) return {};
+
+  const { data } = await supabase
+    .from("family_poll_responses")
+    .select("choice, family_polls(question, option_a, option_b, category)")
+    .eq("membership_id", family.membership.id);
+
+  const tags: Record<string, string> = {};
+  for (const row of data ?? []) {
+    const poll = row.family_polls as unknown as {
+      question: string; option_a: string; option_b: string; category: string;
+    } | null;
+    if (!poll) continue;
+    tags[poll.category] = row.choice === "a" ? poll.option_a : poll.option_b;
+    // Store by question slug for targeted nudges
+    const slug = poll.question.toLowerCase().replace(/[^a-z0-9]+/g, "_").slice(0, 40);
+    tags[slug] = row.choice === "a" ? poll.option_a : poll.option_b;
+  }
+  return tags;
+}

@@ -5,6 +5,8 @@ import { Suspense } from "react";
 import { scheduleSuggestedCallAction } from "@/app/actions";
 import { AICallSuggestion } from "@/components/ai-call-suggestion";
 import { Card } from "@/components/card";
+import { FamilyPollChart } from "@/components/family-poll-chart";
+import { FamilyPollPopup } from "@/components/family-poll-popup";
 import { CallLinkForm } from "@/components/call-link-form";
 import { DashboardHighlights } from "@/components/dashboard-highlights";
 import { EmptyState } from "@/components/empty-state";
@@ -14,7 +16,13 @@ import { NotificationPreferencesForm } from "@/components/notification-preferenc
 import { PostCallSummaryForm } from "@/components/post-call-summary-form";
 import { StatsGrid } from "@/components/stats-grid";
 import { StatusBanner } from "@/components/status-banner";
-import { getDashboardData, requireViewer } from "@/lib/data";
+import {
+  getDashboardData,
+  getFamilyPollResults,
+  getNextUnansweredPoll,
+  getPollPersonalizationTags,
+  requireViewer
+} from "@/lib/data";
 import { formatDateTime, formatDateTimeRange } from "@/lib/utils";
 
 export default async function DashboardPage({
@@ -24,8 +32,18 @@ export default async function DashboardPage({
 }) {
   const params = searchParams ? await searchParams : undefined;
   const user = await requireViewer();
-  const data = await getDashboardData(user.id);
+  const [data, nextPoll, pollResults, personalization] = await Promise.all([
+    getDashboardData(user.id),
+    getNextUnansweredPoll(user.id),
+    getFamilyPollResults(user.id),
+    getPollPersonalizationTags(user.id)
+  ]);
   const timezone = data.viewerTimezone;
+  // Personalized nudge based on poll answers
+  const foodPref = personalization["food"] ?? null;
+  const personalNudge = foodPref
+    ? `Got any ${foodPref.toLowerCase()} recipes to share with the circle?`
+    : null;
 
   return (
     <main className="page-shell scrapbook-page">
@@ -59,6 +77,15 @@ export default async function DashboardPage({
 
         <StatsGrid stats={data.stats} />
         <DashboardHighlights highlights={data.highlights} />
+
+        {personalNudge && (
+          <div className="poll-nudge-banner">
+            <span className="poll-nudge-icon">💬</span>
+            <span>{personalNudge}</span>
+          </div>
+        )}
+
+        {pollResults.length > 0 && <FamilyPollChart results={pollResults} />}
 
         <section className="dashboard-grid">
           <div className="dashboard-main">
@@ -437,6 +464,8 @@ export default async function DashboardPage({
           </div>
         </section>
       </div>
+
+      {nextPoll && <FamilyPollPopup poll={nextPoll} />}
     </main>
   );
 }

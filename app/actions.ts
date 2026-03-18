@@ -77,6 +77,11 @@ export interface AdminOpsState {
   message?: string;
 }
 
+export interface PollResponseState {
+  status: "idle" | "success" | "error";
+  message?: string;
+}
+
 async function getRecoverableCallContext(input: {
   userId: string;
   familyCircleId: string;
@@ -2341,4 +2346,34 @@ export async function scheduleDirectCallAction(formData: FormData): Promise<void
   revalidatePath("/dashboard");
   revalidatePath("/family/tree");
   redirect(`/calls/${session.id}`);
+}
+
+export async function savePollResponseAction(
+  _prev: PollResponseState,
+  formData: FormData
+): Promise<PollResponseState> {
+  const pollId = formData.get("pollId") as string;
+  const choice = formData.get("choice") as string;
+
+  if (!pollId || (choice !== "a" && choice !== "b")) {
+    return { status: "error", message: "Invalid response." };
+  }
+
+  const user = await requireViewer();
+  const family = await getViewerFamilyCircle(user.id);
+  if (!family) return { status: "error", message: "No family circle found." };
+
+  const supabase = await createSupabaseServerClient();
+  await supabase.from("family_poll_responses").upsert(
+    {
+      poll_id: pollId,
+      membership_id: family.membership.id,
+      family_circle_id: family.circle.id,
+      choice
+    },
+    { onConflict: "poll_id,membership_id" }
+  );
+
+  revalidatePath("/dashboard");
+  return { status: "success" };
 }
