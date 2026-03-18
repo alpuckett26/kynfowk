@@ -8,8 +8,8 @@ export function PageTransition() {
   const [visible, setVisible] = useState(false);
   const [fading, setFading] = useState(false);
   const prevPath = useRef(pathname);
-  const fadeTimer = useRef<ReturnType<typeof setTimeout>>();
-  const hideTimer = useRef<ReturnType<typeof setTimeout>>();
+  const fadeTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const hideTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   useEffect(() => {
     if (pathname === prevPath.current) return;
