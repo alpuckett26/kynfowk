@@ -5,6 +5,7 @@ import { useActionState } from "react";
 
 import type { OnboardingState } from "@/app/actions";
 import { DAYS, TIME_BLOCKS } from "@/lib/constants";
+import { RELATIONSHIP_OPTIONS } from "@/lib/relationship-classifier";
 
 const initialState: OnboardingState = {
   status: "idle"
@@ -155,13 +156,23 @@ export function OnboardingForm({
 
                 <label className="field">
                   <span>Relationship</span>
-                  <input
+                  <select
                     onChange={(event) =>
                       updateMember(member.id, "relationship", event.target.value)
                     }
-                    placeholder="Grandmother"
                     value={member.relationship}
-                  />
+                  >
+                    <option value="">— Select relationship —</option>
+                    {RELATIONSHIP_OPTIONS.map((group) => (
+                      <optgroup key={group.group} label={group.group}>
+                        {group.options.map((opt) => (
+                          <option key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </option>
+                        ))}
+                      </optgroup>
+                    ))}
+                  </select>
                 </label>
               </div>
             </div>

@@ -266,6 +266,136 @@ const KEYWORD_MAP: [string[], ClassifiedRelationship][] = [
 ];
 
 // ---------------------------------------------------------------------------
+// Selectable relationship options — used in dropdowns across the app
+// ---------------------------------------------------------------------------
+
+export interface RelationshipOption {
+  value: string; // stored as relationship_label in the DB
+  label: string;
+}
+
+export interface RelationshipGroup {
+  group: string;
+  options: RelationshipOption[];
+}
+
+export const RELATIONSHIP_OPTIONS: RelationshipGroup[] = [
+  {
+    group: "Great-great-grandparents",
+    options: [
+      { value: "Great-great-grandmother", label: "Great-great-grandmother" },
+      { value: "Great-great-grandfather", label: "Great-great-grandfather" },
+      { value: "Great-great-grandparent", label: "Great-great-grandparent" }
+    ]
+  },
+  {
+    group: "Great-grandparents",
+    options: [
+      { value: "Great-grandmother", label: "Great-grandmother" },
+      { value: "Great-grandfather", label: "Great-grandfather" },
+      { value: "Great-grandparent", label: "Great-grandparent" }
+    ]
+  },
+  {
+    group: "Grandparents",
+    options: [
+      { value: "Grandmother", label: "Grandmother" },
+      { value: "Grandfather", label: "Grandfather" },
+      { value: "Grandparent", label: "Grandparent" },
+      { value: "Great-aunt", label: "Great-aunt" },
+      { value: "Great-uncle", label: "Great-uncle" }
+    ]
+  },
+  {
+    group: "Parents",
+    options: [
+      { value: "Mother", label: "Mother" },
+      { value: "Father", label: "Father" },
+      { value: "Parent", label: "Parent" },
+      { value: "Stepmother", label: "Stepmother" },
+      { value: "Stepfather", label: "Stepfather" },
+      { value: "Stepparent", label: "Stepparent" },
+      { value: "Mother-in-law", label: "Mother-in-law" },
+      { value: "Father-in-law", label: "Father-in-law" },
+      { value: "Aunt", label: "Aunt" },
+      { value: "Uncle", label: "Uncle" }
+    ]
+  },
+  {
+    group: "Spouse & partners",
+    options: [
+      { value: "Wife", label: "Wife" },
+      { value: "Husband", label: "Husband" },
+      { value: "Spouse/Partner", label: "Spouse / Partner" },
+      { value: "Fiancée", label: "Fiancée" },
+      { value: "Fiancé", label: "Fiancé" }
+    ]
+  },
+  {
+    group: "Siblings",
+    options: [
+      { value: "Sister", label: "Sister" },
+      { value: "Brother", label: "Brother" },
+      { value: "Sibling", label: "Sibling" },
+      { value: "Half-sister", label: "Half-sister" },
+      { value: "Half-brother", label: "Half-brother" },
+      { value: "Stepsister", label: "Stepsister" },
+      { value: "Stepbrother", label: "Stepbrother" },
+      { value: "Twin", label: "Twin" }
+    ]
+  },
+  {
+    group: "Siblings-in-law & cousins",
+    options: [
+      { value: "Sister-in-law", label: "Sister-in-law" },
+      { value: "Brother-in-law", label: "Brother-in-law" },
+      { value: "Cousin", label: "Cousin" },
+      { value: "First cousin", label: "First cousin" },
+      { value: "Second cousin", label: "Second cousin" }
+    ]
+  },
+  {
+    group: "Children",
+    options: [
+      { value: "Daughter", label: "Daughter" },
+      { value: "Son", label: "Son" },
+      { value: "Child", label: "Child" },
+      { value: "Stepdaughter", label: "Stepdaughter" },
+      { value: "Stepson", label: "Stepson" },
+      { value: "Stepchild", label: "Stepchild" },
+      { value: "Daughter-in-law", label: "Daughter-in-law" },
+      { value: "Son-in-law", label: "Son-in-law" },
+      { value: "Niece", label: "Niece" },
+      { value: "Nephew", label: "Nephew" }
+    ]
+  },
+  {
+    group: "Grandchildren",
+    options: [
+      { value: "Granddaughter", label: "Granddaughter" },
+      { value: "Grandson", label: "Grandson" },
+      { value: "Grandchild", label: "Grandchild" },
+      { value: "Great-niece", label: "Great-niece" },
+      { value: "Great-nephew", label: "Great-nephew" }
+    ]
+  },
+  {
+    group: "Great-grandchildren",
+    options: [
+      { value: "Great-granddaughter", label: "Great-granddaughter" },
+      { value: "Great-grandson", label: "Great-grandson" },
+      { value: "Great-grandchild", label: "Great-grandchild" }
+    ]
+  },
+  {
+    group: "Great-great-grandchildren",
+    options: [
+      { value: "Great-great-grandchild", label: "Great-great-grandchild" }
+    ]
+  }
+];
+
+// ---------------------------------------------------------------------------
 // Core classifier
 // ---------------------------------------------------------------------------
 

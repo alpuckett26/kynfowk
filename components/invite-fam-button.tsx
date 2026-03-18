@@ -3,6 +3,7 @@
 import { useRef } from "react";
 
 import { inviteFamilyMemberAction } from "@/app/actions";
+import { RELATIONSHIP_OPTIONS } from "@/lib/relationship-classifier";
 
 export function InviteFamButton() {
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -62,14 +63,20 @@ export function InviteFamButton() {
               />
             </div>
             <div className="field">
-              <label htmlFor="invite-relationship">Your relationship to them</label>
-              <input
-                autoComplete="off"
-                id="invite-relationship"
-                name="relationship"
-                placeholder="e.g. Grandmother, Brother, Uncle"
-              />
-              <span className="field-hint">Used to place them in your Family Tree</span>
+              <label htmlFor="invite-relationship">Relationship</label>
+              <select id="invite-relationship" name="relationship" required>
+                <option value="">— Select relationship —</option>
+                {RELATIONSHIP_OPTIONS.map((group) => (
+                  <optgroup key={group.group} label={group.group}>
+                    {group.options.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </optgroup>
+                ))}
+              </select>
+              <span className="field-hint">Places them in your Family Tree automatically</span>
             </div>
             <div className="invite-form-actions">
               <button className="button" type="submit">

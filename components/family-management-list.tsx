@@ -6,6 +6,7 @@ import {
   updateFamilyMemberAction
 } from "@/app/actions";
 import { EmptyState } from "@/components/empty-state";
+import { RELATIONSHIP_OPTIONS } from "@/lib/relationship-classifier";
 
 type Member = {
   id: string;
@@ -56,11 +57,21 @@ function ActiveMemberRow({
               name="displayName"
               placeholder="Display name"
             />
-            <input
+            <select
               defaultValue={member.relationship_label ?? ""}
               name="relationshipLabel"
-              placeholder="Relationship label"
-            />
+            >
+              <option value="">— No relationship set —</option>
+              {RELATIONSHIP_OPTIONS.map((group) => (
+                <optgroup key={group.group} label={group.group}>
+                  {group.options.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
             <button className="button button-secondary" type="submit">
               Save
             </button>
