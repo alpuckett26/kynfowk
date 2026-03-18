@@ -224,7 +224,9 @@ async function sendEmailThroughProvider(input: {
       from: fromEmail,
       to: [input.to],
       subject: input.subject,
-      text: input.ctaHref ? `${input.body}\n\nOpen: ${input.ctaHref}` : input.body
+      text: input.ctaHref
+        ? `${input.body}\n\nJoin here: ${input.ctaHref.startsWith("http") ? input.ctaHref : `https://kynfowk.vercel.app${input.ctaHref}`}`
+        : input.body
     })
   });
 
@@ -844,8 +846,8 @@ export async function sweepFamilyCircleNotifications(
         type: "reminder_24h_before",
         title: `${call.title} is almost here`,
         body: `Your Family Circle has a call coming up within the next day. A little planning now makes it easier to show up together.`,
-        ctaLabel: "Open call",
-        ctaHref: `/calls/${call.id}`,
+        ctaLabel: "Join call",
+        ctaHref: `/calls/${call.id}/live`,
         dedupeKeyPrefix: `reminder-24h:${call.id}`,
         recipients
       });
@@ -858,8 +860,8 @@ export async function sweepFamilyCircleNotifications(
         type: "reminder_15m_before",
         title: `${call.title} starts soon`,
         body: `Fifteen minutes from now, your Family Circle has a moment waiting. It is a good time to settle in and get the link ready.`,
-        ctaLabel: "Open call",
-        ctaHref: `/calls/${call.id}`,
+        ctaLabel: "Join call",
+        ctaHref: `/calls/${call.id}/live`,
         dedupeKeyPrefix: `reminder-15m:${call.id}`,
         recipients
       });
@@ -872,8 +874,8 @@ export async function sweepFamilyCircleNotifications(
         type: "starting_now",
         title: `${call.title} is starting now`,
         body: `Your family window is open. Head in when you are ready and keep the rhythm going.`,
-        ctaLabel: call.meeting_url ? "Join call" : "Open call",
-        ctaHref: `/calls/${call.id}`,
+        ctaLabel: "Join call now",
+        ctaHref: `/calls/${call.id}/live`,
         dedupeKeyPrefix: `starting-now:${call.id}`,
         recipients
       });
