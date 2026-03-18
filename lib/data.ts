@@ -199,6 +199,47 @@ export async function getAvailabilityManagementData(userId: string): Promise<{
   };
 }
 
+export async function getHomepageStats(): Promise<{
+  totalMinutes: number;
+  totalCalls: number;
+  totalFamilies: number;
+  totalMembers: number;
+}> {
+  if (!hasSupabaseEnv()) {
+    return { totalMinutes: 0, totalCalls: 0, totalFamilies: 0, totalMembers: 0 };
+  }
+
+  try {
+    const admin = createSupabaseAdminClient();
+    const [callsRes, circlesRes, membersRes] = await Promise.all([
+      admin
+        .from("call_sessions")
+        .select("actual_duration_minutes")
+        .eq("status", "completed"),
+      admin.from("family_circles").select("id", { count: "exact", head: true }),
+      admin
+        .from("family_memberships")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "active")
+    ]);
+
+    const calls = callsRes.data ?? [];
+    const totalMinutes = calls.reduce(
+      (sum, c) => sum + (c.actual_duration_minutes ?? 0),
+      0
+    );
+
+    return {
+      totalMinutes,
+      totalCalls: calls.length,
+      totalFamilies: circlesRes.count ?? 0,
+      totalMembers: membersRes.count ?? 0
+    };
+  } catch {
+    return { totalMinutes: 0, totalCalls: 0, totalFamilies: 0, totalMembers: 0 };
+  }
+}
+
 export async function getDashboardData(userId: string): Promise<{
   circle: { id: string; name: string; description: string | null };
   memberships: {

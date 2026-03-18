@@ -1,8 +1,10 @@
 import Link from "next/link";
 
 import { SplashScreen } from "@/components/splash-screen";
+import { getHomepageStats } from "@/lib/data";
 
-export default function HomePage() {
+export default async function HomePage() {
+  const stats = await getHomepageStats();
   return (
     <>
       <SplashScreen />
@@ -42,23 +44,23 @@ export default function HomePage() {
               <div className="home-mock-body">
                 <div className="home-mock-stat-row">
                   <div className="home-mock-stat">
-                    <span className="home-mock-stat-num">142</span>
+                    <span className="home-mock-stat-num">{stats.totalMinutes > 0 ? stats.totalMinutes.toLocaleString() : "—"}</span>
                     <span className="home-mock-stat-label">Minutes Together</span>
                   </div>
                   <div className="home-mock-stat">
-                    <span className="home-mock-stat-num">6</span>
-                    <span className="home-mock-stat-label">Calls This Month</span>
+                    <span className="home-mock-stat-num">{stats.totalCalls > 0 ? stats.totalCalls : "—"}</span>
+                    <span className="home-mock-stat-label">Calls Completed</span>
                   </div>
                 </div>
                 <div className="home-mock-call">
-                  <span className="home-mock-call-badge">Upcoming</span>
-                  <p className="home-mock-call-title">Sunday Family Check-in</p>
-                  <p className="home-mock-call-meta">Sun, Dec 8 · 4:00 PM · 4 members joining</p>
+                  <span className="home-mock-call-badge">Active</span>
+                  <p className="home-mock-call-title">{stats.totalFamilies > 0 ? `${stats.totalFamilies} Family Circle${stats.totalFamilies === 1 ? "" : "s"}` : "Family Circles"}</p>
+                  <p className="home-mock-call-meta">{stats.totalMembers > 0 ? `${stats.totalMembers} active members staying connected` : "Members staying connected"}</p>
                 </div>
                 <div className="home-mock-call home-mock-call-alt">
-                  <span className="home-mock-call-badge home-mock-call-badge-done">Completed</span>
-                  <p className="home-mock-call-title">Grandma &amp; Grandpa Catch-up</p>
-                  <p className="home-mock-call-meta">Last week · 38 min shared</p>
+                  <span className="home-mock-call-badge home-mock-call-badge-done">Platform total</span>
+                  <p className="home-mock-call-title">Time Together logged</p>
+                  <p className="home-mock-call-meta">{stats.totalMinutes > 0 ? `${stats.totalMinutes.toLocaleString()} min across ${stats.totalCalls} completed call${stats.totalCalls === 1 ? "" : "s"}` : "Calls are being logged right now"}</p>
                 </div>
               </div>
             </div>
