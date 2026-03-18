@@ -2667,3 +2667,239 @@ h3 {
     font-size: 0.62rem;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SCRAPBOOK PAGE — dashboard visual prototype
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Cork board background */
+.scrapbook-page {
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='80' height='80' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E"),
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 3px,
+      rgba(0,0,0,0.015) 3px,
+      rgba(0,0,0,0.015) 4px
+    ),
+    linear-gradient(135deg, #c9a96e 0%, #b8895a 40%, #c4a472 70%, #b98f5e 100%);
+  min-height: 100vh;
+}
+
+/* ── Base paper card reset ────────────────────────────────────────────────── */
+
+.scrapbook-page .card {
+  border: none;
+  border-radius: 3px;
+  position: relative;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.scrapbook-page .card:hover {
+  z-index: 2;
+}
+
+/* Pushpin for select cards */
+.scrapbook-page .card::after {
+  content: "📌";
+  position: absolute;
+  top: -10px;
+  right: 16px;
+  font-size: 1.1rem;
+  filter: drop-shadow(0 2px 3px rgba(0,0,0,0.3));
+  z-index: 3;
+}
+
+/* ── Sticky note — yellow (1st, 4th, 7th…) ───────────────────────────────── */
+
+.scrapbook-page .card:nth-child(3n+1) {
+  background: #fef08a;
+  background-image: linear-gradient(
+    to bottom right,
+    rgba(255,255,255,0.4) 0%,
+    transparent 50%
+  );
+  box-shadow:
+    3px 4px 0 rgba(0,0,0,0.08),
+    6px 8px 16px rgba(0,0,0,0.18),
+    inset 0 -3px 6px rgba(0,0,0,0.05);
+  transform: rotate(-1.2deg);
+  padding: 1.6rem 1.4rem 2rem;
+}
+
+.scrapbook-page .card:nth-child(3n+1):hover {
+  transform: rotate(-0.4deg) translateY(-3px);
+  box-shadow:
+    4px 6px 0 rgba(0,0,0,0.1),
+    8px 14px 24px rgba(0,0,0,0.22);
+}
+
+/* Sticky note fold corner */
+.scrapbook-page .card:nth-child(3n+1)::before {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 28px;
+  height: 28px;
+  background: linear-gradient(
+    225deg,
+    rgba(0,0,0,0.06) 45%,
+    #f5d800 45%
+  );
+  border-top-left-radius: 4px;
+}
+
+/* Remove pushpin on sticky notes */
+.scrapbook-page .card:nth-child(3n+1)::after {
+  content: none;
+}
+
+/* ── Notebook paper (2nd, 5th, 8th…) ────────────────────────────────────── */
+
+.scrapbook-page .card:nth-child(3n+2) {
+  background-color: #fffef7;
+  background-image:
+    linear-gradient(#6eb5ff 1px, transparent 1px),
+    linear-gradient(to right, #ff9999 1px, transparent 1px);
+  background-size: 100% 1.65rem, 38px 100%;
+  background-position: 0 52px, 0 0;
+  border-left: none;
+  padding: 1.6rem 1.4rem 1.4rem 2.6rem;
+  box-shadow:
+    2px 3px 0 rgba(0,0,0,0.06),
+    4px 8px 20px rgba(0,0,0,0.15);
+  transform: rotate(0.6deg);
+}
+
+.scrapbook-page .card:nth-child(3n+2):hover {
+  transform: rotate(0.1deg) translateY(-3px);
+  box-shadow: 4px 10px 28px rgba(0,0,0,0.2);
+}
+
+/* Hole punches on notebook paper */
+.scrapbook-page .card:nth-child(3n+2)::before {
+  content: "";
+  position: absolute;
+  left: 14px;
+  top: 0;
+  bottom: 0;
+  width: 12px;
+  background:
+    radial-gradient(circle at 50% 22%, #c8a96e 40%, transparent 41%),
+    radial-gradient(circle at 50% 50%, #c8a96e 40%, transparent 41%),
+    radial-gradient(circle at 50% 78%, #c8a96e 40%, transparent 41%);
+  background-size: 12px 100%;
+}
+
+/* Pushpin on notebook pages */
+.scrapbook-page .card:nth-child(3n+2)::after {
+  content: "📌";
+  top: -8px;
+  right: 20px;
+}
+
+/* ── Index card — pink/blue (3rd, 6th, 9th…) ────────────────────────────── */
+
+.scrapbook-page .card:nth-child(3n) {
+  background: #fce7f3;
+  background-image: linear-gradient(#d1aac4 1px, transparent 1px);
+  background-size: 100% 1.65rem;
+  background-position: 0 56px;
+  border-top: 6px solid #db2777;
+  border-radius: 2px;
+  padding: 1.4rem 1.4rem 1.6rem;
+  box-shadow:
+    2px 3px 0 rgba(0,0,0,0.07),
+    5px 10px 18px rgba(0,0,0,0.16);
+  transform: rotate(-0.4deg);
+}
+
+.scrapbook-page .card:nth-child(3n):hover {
+  transform: rotate(0.2deg) translateY(-3px);
+  box-shadow: 4px 12px 26px rgba(0,0,0,0.2);
+}
+
+.scrapbook-page .card:nth-child(3n)::after {
+  content: "📎";
+  top: -4px;
+  left: 12px;
+  right: auto;
+  font-size: 1.3rem;
+}
+
+/* ── Washi tape strips on some cards ────────────────────────────────────── */
+
+.scrapbook-page .card:nth-child(4n+1)::after {
+  content: "";
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%) rotate(-2deg);
+  width: 72px;
+  height: 20px;
+  background: rgba(147, 197, 253, 0.55);
+  border-radius: 2px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+/* ── Hero summary card — big sticky ──────────────────────────────────────── */
+
+.scrapbook-page .hero-summary-card {
+  background: #fde68a !important;
+  background-image: linear-gradient(
+    to bottom right,
+    rgba(255,255,255,0.35) 0%,
+    transparent 60%
+  ) !important;
+  transform: rotate(1.4deg) !important;
+  border-top: none !important;
+  border: none !important;
+  box-shadow:
+    4px 5px 0 rgba(0,0,0,0.1),
+    8px 14px 24px rgba(0,0,0,0.2) !important;
+}
+
+/* ── Typography adjustments on scrapbook ─────────────────────────────────── */
+
+.scrapbook-page h1,
+.scrapbook-page h2 {
+  font-family: var(--font-display), serif;
+}
+
+.scrapbook-page .card h2 {
+  font-size: 1.15rem;
+  border-bottom: 1.5px solid rgba(0,0,0,0.08);
+  padding-bottom: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+/* ── Scrapbook page header area ──────────────────────────────────────────── */
+
+.scrapbook-page .dashboard-hero {
+  background: rgba(255,255,255,0.12);
+  border-radius: 8px;
+  padding: 1.5rem;
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255,255,255,0.2);
+}
+
+.scrapbook-page .dashboard-hero h1,
+.scrapbook-page .dashboard-hero p {
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+.scrapbook-page .dashboard-hero .eyebrow {
+  background: rgba(255,255,255,0.25);
+  color: #fff;
+}
+
+@media (max-width: 680px) {
+  .scrapbook-page .card:nth-child(3n+1),
+  .scrapbook-page .card:nth-child(3n+2),
+  .scrapbook-page .card:nth-child(3n) {
+    transform: none;
+  }
+}

@@ -28,7 +28,7 @@ export default async function DashboardPage({
   const timezone = data.viewerTimezone;
 
   return (
-    <main className="page-shell">
+    <main className="page-shell scrapbook-page">
       <div className="container stack-lg">
         <StatusBanner code={params?.status} />
 
