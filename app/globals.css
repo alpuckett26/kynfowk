@@ -1303,6 +1303,20 @@ h3 {
   align-items: center;
 }
 
+.home-cta-row-personal {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.home-greeting {
+  font-family: var(--font-handwriting, cursive);
+  font-size: 1.5rem;
+  color: var(--accent-warm, #c7663f);
+  margin: 0;
+  line-height: 1.2;
+}
+
 .home-cta-primary {
   font-size: 1rem;
   padding: 1rem 1.6rem;

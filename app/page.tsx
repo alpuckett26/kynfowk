@@ -1,10 +1,14 @@
 import Link from "next/link";
 
 import { SplashScreen } from "@/components/splash-screen";
-import { getHomepageStats } from "@/lib/data";
+import { getHomepageStats, getViewer, getViewerFamilyCircle } from "@/lib/data";
 
 export default async function HomePage() {
-  const stats = await getHomepageStats();
+  const [stats, viewer] = await Promise.all([getHomepageStats(), getViewer()]);
+  const family = viewer ? await getViewerFamilyCircle(viewer.id) : null;
+  const isSignedIn = !!viewer;
+  const hasCircle = !!family;
+  const firstName = family?.membership.display_name?.split(" ")[0] ?? null;
   return (
     <>
       <SplashScreen />
@@ -23,14 +27,31 @@ export default async function HomePage() {
               get on a video call together — then puts it on the calendar
               automatically. No back-and-forth. No forgotten plans.
             </p>
-            <div className="home-cta-row">
-              <Link className="button home-cta-primary" href="/auth/sign-up">
-                Start your Family Circle
-              </Link>
-              <Link className="button button-ghost home-cta-secondary" href="/auth/sign-in">
-                Sign in
-              </Link>
-            </div>
+            {hasCircle ? (
+              <div className="home-cta-row home-cta-row-personal">
+                <p className="home-greeting">
+                  What up, fam?{firstName ? ` (${firstName})` : ""}
+                </p>
+                <Link className="button home-cta-primary" href="/dashboard">
+                  Go to Dashboard
+                </Link>
+              </div>
+            ) : isSignedIn ? (
+              <div className="home-cta-row">
+                <Link className="button home-cta-primary" href="/onboarding">
+                  Finish setting up your Family Circle
+                </Link>
+              </div>
+            ) : (
+              <div className="home-cta-row">
+                <Link className="button home-cta-primary" href="/auth/sign-up">
+                  Start your Family Circle
+                </Link>
+                <Link className="button button-ghost home-cta-secondary" href="/auth/sign-in">
+                  Sign in
+                </Link>
+              </div>
+            )}
           </div>
 
           {/* ── Mock call detail (mirrors the actual call page UX) ── */}
@@ -228,9 +249,19 @@ export default async function HomePage() {
             <span className="eyebrow">Ready to reconnect?</span>
             <h2>Your family&apos;s next call is closer than you think.</h2>
             <p>Set up your Family Circle in under two minutes. No credit card. No commitment.</p>
-            <Link className="button home-cta-big" href="/auth/sign-up">
-              Start your Family Circle — it&apos;s free
-            </Link>
+            {hasCircle ? (
+              <Link className="button home-cta-big" href="/dashboard">
+                Back to your Family Circle →
+              </Link>
+            ) : isSignedIn ? (
+              <Link className="button home-cta-big" href="/onboarding">
+                Finish setting up your Family Circle
+              </Link>
+            ) : (
+              <Link className="button home-cta-big" href="/auth/sign-up">
+                Start your Family Circle — it&apos;s free
+              </Link>
+            )}
           </div>
         </section>
       </main>

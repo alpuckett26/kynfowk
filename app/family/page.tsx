@@ -25,7 +25,7 @@ export default async function FamilyPage({
         <section className="dashboard-hero">
           <div className="stack-md">
             <span className="eyebrow">{data.circle.name}</span>
-            <h1>Keep your Family Circle tidy and easy to trust.</h1>
+            <h1>We all we got!</h1>
             <p className="lede">
               Review who is active, who still needs an invite nudge, and which details should
               stay current before the next family call gets scheduled.
