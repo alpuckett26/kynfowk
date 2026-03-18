@@ -41,17 +41,39 @@ export async function AICallSuggestion({
     input = await getAISuggestionInput(userId);
   } catch (err) {
     console.error("[AICallSuggestion] getAISuggestionInput threw:", err);
-    return null;
+    input = null;
   }
 
+  // No circle or no members at all — don't render
   if (!input) return null;
+
+  const activeOthers = input.members.filter(
+    (m) => m.status === "active" && m.id !== input.viewerMembershipId
+  );
+
+  // Only the viewer is active — prompt them to invite family
+  if (activeOthers.length === 0) {
+    return (
+      <div className="ai-suggestion-card">
+        <div className="ai-suggestion-header">
+          <span className="ai-badge">✦ AI Suggested</span>
+          <h3 className="ai-suggestion-focus">Invite family to unlock suggestions</h3>
+        </div>
+        <p className="ai-suggestion-reason">
+          Once at least one family member joins your circle and sets their availability, the AI
+          will start recommending who to call and when — based on relationship closeness and how
+          long it&apos;s been since you last connected.
+        </p>
+      </div>
+    );
+  }
 
   let ai;
   try {
     ai = await getAICallSuggestion(input);
   } catch (err) {
     console.error("[AICallSuggestion] getAICallSuggestion threw:", err);
-    return null;
+    ai = null;
   }
 
   if (!ai) return null;
@@ -98,8 +120,8 @@ export async function AICallSuggestion({
         </div>
       ) : (
         <p className="meta ai-suggestion-no-slot">
-          No shared availability found yet — have your family members set their available windows
-          so a time can be matched.
+          No shared availability window yet — have your family members set their free hours so a
+          time can be matched.
         </p>
       )}
     </div>
