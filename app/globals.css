@@ -2157,6 +2157,10 @@ h3 {
   white-space: nowrap;
 }
 
+.ai-badge-data {
+  background: linear-gradient(90deg, #7c6af7, #e0a020) !important;
+}
+
 .ai-suggestion-focus {
   font-size: 1rem;
   font-weight: 700;

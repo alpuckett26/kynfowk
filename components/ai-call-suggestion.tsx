@@ -3,12 +3,12 @@ import { getAICallSuggestion, getAISuggestionInput } from "@/lib/ai-suggestions"
 import type { Suggestion } from "@/lib/types";
 import { formatDateTimeRange } from "@/lib/utils";
 
-// Find the suggestion whose participant set best overlaps the AI-recommended IDs
 function bestMatchingSuggestion(
   suggestions: Suggestion[],
   recommendedIds: string[]
 ): Suggestion | null {
-  if (!suggestions.length || !recommendedIds.length) return suggestions[0] ?? null;
+  if (!suggestions.length) return null;
+  if (!recommendedIds.length) return suggestions[0];
 
   const recommended = new Set(recommendedIds);
   let best: Suggestion | null = null;
@@ -36,21 +36,37 @@ export async function AICallSuggestion({
   suggestions: Suggestion[];
   timezone: string;
 }) {
-  const input = await getAISuggestionInput(userId);
+  let input;
+  try {
+    input = await getAISuggestionInput(userId);
+  } catch (err) {
+    console.error("[AICallSuggestion] getAISuggestionInput threw:", err);
+    return null;
+  }
+
   if (!input) return null;
 
-  const ai = await getAICallSuggestion(input);
-  if (!ai || !ai.reason) return null;
+  let ai;
+  try {
+    ai = await getAICallSuggestion(input);
+  } catch (err) {
+    console.error("[AICallSuggestion] getAICallSuggestion threw:", err);
+    return null;
+  }
+
+  if (!ai) return null;
 
   const match = bestMatchingSuggestion(suggestions, ai.participantIds);
   const suggestedNames = ai.participantIds
     .map((id) => input.members.find((m) => m.id === id)?.display_name)
-    .filter(Boolean);
+    .filter(Boolean) as string[];
 
   return (
     <div className="ai-suggestion-card">
       <div className="ai-suggestion-header">
-        <span className="ai-badge">✦ AI Suggested</span>
+        <span className={`ai-badge ${ai.isAI ? "" : "ai-badge-data"}`}>
+          {ai.isAI ? "✦ AI Suggested" : "✦ Suggested"}
+        </span>
         <h3 className="ai-suggestion-focus">{ai.focus}</h3>
       </div>
 
@@ -82,8 +98,8 @@ export async function AICallSuggestion({
         </div>
       ) : (
         <p className="meta ai-suggestion-no-slot">
-          No shared availability yet — ask your family members to update their windows so a time
-          can be found.
+          No shared availability found yet — have your family members set their available windows
+          so a time can be matched.
         </p>
       )}
     </div>
