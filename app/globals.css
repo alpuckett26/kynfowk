@@ -96,14 +96,14 @@ main {
 
 /* ── Chyron ───────────────────────────────────────────────────────────────── */
 .chyron {
-  background: var(--accent-warm);
-  color: #fff;
-  font-size: 0.72rem;
+  background: #2b1a0e;
+  color: #f5e6d3;
+  font-size: 0.85rem;
   font-family: var(--font-body);
-  letter-spacing: 0.03em;
+  letter-spacing: 0.04em;
   overflow: hidden;
   white-space: nowrap;
-  padding: 0.35rem 0;
+  padding: 0.45rem 0;
   position: relative;
   z-index: 9;
 }
