@@ -3,6 +3,7 @@ import { Fraunces, Manrope } from "next/font/google";
 
 import "@/app/globals.css";
 
+import { Chyron } from "@/components/chyron";
 import { InstallPrompt } from "@/components/install-prompt";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 import { PageTransition } from "@/components/page-transition";
@@ -48,6 +49,7 @@ export default function RootLayout({
         <PresenceTracker />
         <PageTransition />
         <SiteHeader />
+        <Chyron />
         {children}
         <MobileBottomNav />
         <InstallPrompt />

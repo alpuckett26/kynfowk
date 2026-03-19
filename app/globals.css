@@ -94,6 +94,35 @@ main {
   padding: 1rem 0;
 }
 
+/* ── Chyron ───────────────────────────────────────────────────────────────── */
+.chyron {
+  background: var(--accent-warm);
+  color: #fff;
+  font-size: 0.72rem;
+  font-family: var(--font-body);
+  letter-spacing: 0.03em;
+  overflow: hidden;
+  white-space: nowrap;
+  padding: 0.35rem 0;
+  position: relative;
+  z-index: 9;
+}
+
+.chyron-track {
+  display: inline-flex;
+  gap: 0;
+  animation: chyron-scroll 60s linear infinite;
+}
+
+.chyron-text {
+  padding-right: 4rem;
+}
+
+@keyframes chyron-scroll {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
 .nav,
 .header-actions {
   gap: 1rem;
