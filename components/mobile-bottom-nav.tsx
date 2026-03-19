@@ -1,3 +1,4 @@
+import { signOutAction } from "@/app/actions";
 import { getViewer } from "@/lib/data";
 
 export async function MobileBottomNav() {
@@ -22,6 +23,12 @@ export async function MobileBottomNav() {
         <span className="mobile-nav-icon">✱</span>
         <span>Settings</span>
       </a>
+      <form action={signOutAction}>
+        <button className="mobile-nav-item mobile-nav-signout" type="submit">
+          <span className="mobile-nav-icon">→</span>
+          <span>Sign out</span>
+        </button>
+      </form>
     </nav>
   );
 }
