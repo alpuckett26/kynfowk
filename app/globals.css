@@ -4270,6 +4270,23 @@ a.phonebook-detail:hover { text-decoration: underline; }
 
 .home-carousel-section { display: flex; flex-direction: column; gap: 1.5rem; }
 
+.carousel-empty {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius-lg);
+  padding: 2rem;
+  text-align: center;
+}
+
+.carousel-empty-text {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.carousel-empty-text a {
+  color: var(--accent-warm);
+  text-decoration: underline;
+}
+
 .carousel-shell {
   display: flex;
   flex-direction: column;

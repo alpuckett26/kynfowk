@@ -142,11 +142,20 @@ export default async function HomePage() {
         </div>
 
         {/* ── Family photo reel ─────────────────────────────────── */}
-        {carouselPhotos.length > 0 && (
+        {hasCircle && (
           <section className="home-section container home-carousel-section">
             <div className="home-section-label">Family reel</div>
             <h2 className="home-section-title">Your circle, in pictures.</h2>
-            <FamilyPhotoCarousel photos={carouselPhotos} />
+            {carouselPhotos.length > 0 ? (
+              <FamilyPhotoCarousel photos={carouselPhotos} />
+            ) : (
+              <div className="carousel-empty">
+                <p className="carousel-empty-text">
+                  No photos yet — add your first from the{" "}
+                  <a href="/dashboard">dashboard</a>.
+                </p>
+              </div>
+            )}
           </section>
         )}
 
