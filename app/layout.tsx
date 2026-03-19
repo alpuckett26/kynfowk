@@ -3,6 +3,7 @@ import { Fraunces, Manrope } from "next/font/google";
 
 import "@/app/globals.css";
 
+import { ChatWidget } from "@/components/chat-widget";
 import { Chyron } from "@/components/chyron";
 import { InstallPrompt } from "@/components/install-prompt";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
@@ -52,6 +53,7 @@ export default function RootLayout({
         <Chyron />
         {children}
         <MobileBottomNav />
+        <ChatWidget />
         <InstallPrompt />
       </body>
     </html>
