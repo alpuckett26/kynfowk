@@ -4297,32 +4297,35 @@ a.phonebook-detail:hover { text-decoration: underline; }
 .promo-reel {
   position: relative;
   width: 100%;
-  max-width: 100%;
-  border-radius: 0;
   overflow: hidden;
   background: #0d0d0d;
   aspect-ratio: 16 / 9;
   max-height: 70vh;
 }
 
-.promo-reel-video {
+/* Each slide stacks in the same position; only the active one is visible */
+.promo-slide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 1.1s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+
+.promo-slide-active {
+  opacity: 1;
+  pointer-events: auto;
+  position: relative; /* keeps the reel container sized */
+}
+
+.promo-slide-media {
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
-  opacity: 1;
-  transition: opacity 0.5s ease;
 }
 
-.promo-reel-fading {
-  opacity: 0;
-}
-
-.promo-reel-photo {
-  object-fit: cover;
-}
-
-.promo-reel-overlay {
+.promo-slide-overlay {
   position: absolute;
   inset: 0;
   display: flex;
@@ -4330,8 +4333,6 @@ a.phonebook-detail:hover { text-decoration: underline; }
   justify-content: flex-end;
   padding: 2rem;
   background: linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.1) 55%, transparent 100%);
-  opacity: 1;
-  transition: opacity 0.5s ease;
 }
 
 .promo-reel-brand {

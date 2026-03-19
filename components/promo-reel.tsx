@@ -24,7 +24,9 @@ type VideoSlide = { kind: "video"; src: string; fallback: string; headline: stri
 type PhotoSlide = { kind: "photo"; id: string; photoUrl: string; caption: string | null; displayName: string };
 type Slide = VideoSlide | PhotoSlide;
 
-function buildSlides(photos: Array<{ id: string; photoUrl: string; caption: string | null; displayName: string }>): Slide[] {
+function buildSlides(
+  photos: Array<{ id: string; photoUrl: string; caption: string | null; displayName: string }>
+): Slide[] {
   const photoSlides: PhotoSlide[] = photos.map((p) => ({ kind: "photo", ...p }));
   const slides: Slide[] = [];
   for (let i = 0; i < VIDEO_CLIPS.length; i++) {
@@ -44,89 +46,83 @@ interface PromoReelProps {
 export function PromoReel({ photos = [] }: PromoReelProps) {
   const slides = buildSlides(photos);
   const [index, setIndex] = useState(0);
-  const [visible, setVisible] = useState(true);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
+  const photoTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const advance = useCallback(() => {
-    setVisible(false);
-    timerRef.current = setTimeout(() => {
-      setIndex((i) => (i + 1) % slides.length);
-      setVisible(true);
-    }, 400);
+    setIndex((i) => (i + 1) % slides.length);
   }, [slides.length]);
+
+  // When active index changes: play the active video, pause all others
+  useEffect(() => {
+    slides.forEach((slide, i) => {
+      const el = videoRefs.current[i];
+      if (!el || slide.kind !== "video") return;
+      if (i === index) {
+        el.currentTime = 0;
+        el.play().catch(() => {});
+      } else {
+        el.pause();
+      }
+    });
+  }, [index, slides]);
 
   // Auto-advance photo slides after 5s
   useEffect(() => {
-    const slide = slides[index];
-    if (slide.kind !== "photo") return;
-    const t = setTimeout(advance, 5000);
-    return () => clearTimeout(t);
+    if (slides[index]?.kind !== "photo") return;
+    photoTimerRef.current = setTimeout(advance, 5000);
+    return () => clearTimeout(photoTimerRef.current);
   }, [index, slides, advance]);
 
-  // Play video when active slide is a video
-  useEffect(() => {
-    const slide = slides[index];
-    if (slide.kind !== "video") return;
-    const video = videoRef.current;
-    if (!video) return;
-    video.load();
-    video.play().catch(() => {});
-  }, [index, slides]);
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => clearTimeout(timerRef.current);
-  }, []);
-
-  const slide = slides[index];
-
-  function jumpTo(i: number) {
-    clearTimeout(timerRef.current);
-    setVisible(false);
-    setTimeout(() => { setIndex(i); setVisible(true); }, 400);
-  }
+  useEffect(() => () => clearTimeout(photoTimerRef.current), []);
 
   return (
     <div className="promo-reel">
-      {slide.kind === "video" ? (
-        <video
-          ref={videoRef}
-          key={slide.src}
-          className={`promo-reel-video${visible ? "" : " promo-reel-fading"}`}
-          muted
-          playsInline
-          autoPlay
-          onEnded={advance}
-        >
-          <source src={slide.src} type="video/mp4" />
-          <source src={slide.fallback} type="video/mp4" />
-        </video>
-      ) : (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          key={slide.id}
-          src={slide.photoUrl}
-          alt={slide.caption ?? `${slide.displayName} photo`}
-          className={`promo-reel-video promo-reel-photo${visible ? "" : " promo-reel-fading"}`}
-        />
-      )}
+      {slides.map((slide, i) => {
+        const active = i === index;
+        return (
+          <div
+            key={slide.kind === "video" ? slide.src : slide.id}
+            className={`promo-slide${active ? " promo-slide-active" : ""}`}
+          >
+            {slide.kind === "video" ? (
+              <video
+                ref={(el) => { videoRefs.current[i] = el; }}
+                className="promo-slide-media"
+                muted
+                playsInline
+                onEnded={active ? advance : undefined}
+              >
+                <source src={slide.src} type="video/mp4" />
+                <source src={slide.fallback} type="video/mp4" />
+              </video>
+            ) : (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={slide.photoUrl}
+                alt={slide.caption ?? `${slide.displayName} photo`}
+                className="promo-slide-media"
+              />
+            )}
 
-      <div className={`promo-reel-overlay${visible ? "" : " promo-reel-fading"}`}>
-        <p className="promo-reel-brand">Kynfowk</p>
-        {slide.kind === "video" ? (
-          <p className="promo-reel-headline">
-            {slide.headline.split("\n").map((line, i, arr) => (
-              <span key={i}>{line}{i < arr.length - 1 && <br />}</span>
-            ))}
-          </p>
-        ) : (
-          <>
-            <p className="promo-reel-headline">{slide.displayName}</p>
-            {slide.caption && <p className="promo-reel-sub">{slide.caption}</p>}
-          </>
-        )}
-      </div>
+            <div className="promo-slide-overlay">
+              <p className="promo-reel-brand">Kynfowk</p>
+              {slide.kind === "video" ? (
+                <p className="promo-reel-headline">
+                  {slide.headline.split("\n").map((line, j, arr) => (
+                    <span key={j}>{line}{j < arr.length - 1 && <br />}</span>
+                  ))}
+                </p>
+              ) : (
+                <>
+                  <p className="promo-reel-headline">{slide.displayName}</p>
+                  {slide.caption && <p className="promo-reel-sub">{slide.caption}</p>}
+                </>
+              )}
+            </div>
+          </div>
+        );
+      })}
 
       {slides.length > 1 && (
         <div className="promo-reel-dots">
@@ -134,7 +130,7 @@ export function PromoReel({ photos = [] }: PromoReelProps) {
             <button
               key={i}
               className={`promo-reel-dot${i === index ? " promo-reel-dot-active" : ""}`}
-              onClick={() => jumpTo(i)}
+              onClick={() => { clearTimeout(photoTimerRef.current); setIndex(i); }}
               aria-label={`Slide ${i + 1}`}
             />
           ))}
