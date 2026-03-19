@@ -37,6 +37,21 @@ async function signInWithProvider(provider: "google" | "apple" | "facebook") {
 export function AuthForm({ action, mode, defaultEmail }: AuthFormProps) {
   const [state, formAction, pending] = useActionState(action, initialState);
 
+  if (state.status === "success") {
+    return (
+      <div className="stack-md">
+        <div className="auth-email-sent">
+          <p className="auth-email-sent-icon">📬</p>
+          <p className="auth-email-sent-body">{state.message}</p>
+          <p className="microcopy">
+            Already confirmed?{" "}
+            <Link href="/auth/sign-in">Sign in here</Link>
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="stack-md">
       <div className="oauth-buttons">

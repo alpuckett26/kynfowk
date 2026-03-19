@@ -1573,3 +1573,80 @@ export async function getGameSuggestionsForCall(
     return { ...game, description: game.description ?? null, matchScore: score, matchReason: reason };
   }).sort((a, b) => b.matchScore - a.matchScore);
 }
+
+export interface InviteRescueItem {
+  membershipId: string;
+  inviteEmail: string;
+  displayName: string;
+  familyCircleId: string;
+  familyCircleName: string;
+  existingUserId: string;
+  existingUserName: string | null;
+  currentCircles: { id: string; name: string; status: string }[];
+}
+
+export async function getAdminInviteRescueData(): Promise<InviteRescueItem[]> {
+  const supabase = createSupabaseAdminClient();
+
+  // Pending invites where no user has claimed them yet
+  const { data: pendingInvites } = await supabase
+    .from("family_memberships")
+    .select("id, family_circle_id, invite_email, display_name, family_circles(name)")
+    .eq("status", "invited")
+    .is("user_id", null)
+    .not("invite_email", "is", null);
+
+  if (!pendingInvites?.length) return [];
+
+  const inviteEmails = pendingInvites.map((m) => m.invite_email!.toLowerCase());
+
+  // Find profiles that already exist for those invite emails
+  const { data: matchedProfiles } = await supabase
+    .from("profiles")
+    .select("id, email, full_name, family_memberships(family_circle_id, status, family_circles(name))")
+    .in("email", inviteEmails);
+
+  if (!matchedProfiles?.length) return [];
+
+  const profileByEmail = new Map(
+    matchedProfiles.map((p) => [p.email?.toLowerCase() ?? "", p])
+  );
+
+  const items: InviteRescueItem[] = [];
+  for (const invite of pendingInvites) {
+    const email = invite.invite_email!.toLowerCase();
+    const profile = profileByEmail.get(email);
+    if (!profile) continue;
+
+    const circleRecord = invite.family_circles as { name: string } | { name: string }[] | null;
+    const circleName = Array.isArray(circleRecord)
+      ? circleRecord[0]?.name ?? "Unknown"
+      : circleRecord?.name ?? "Unknown";
+
+    const memberships = (profile.family_memberships ?? []) as Array<{
+      family_circle_id: string;
+      status: string;
+      family_circles: { name: string } | { name: string }[] | null;
+    }>;
+
+    const currentCircles = memberships.map((m) => {
+      const cn = Array.isArray(m.family_circles)
+        ? m.family_circles[0]?.name ?? "Unknown"
+        : m.family_circles?.name ?? "Unknown";
+      return { id: m.family_circle_id, name: cn, status: m.status };
+    });
+
+    items.push({
+      membershipId: invite.id,
+      inviteEmail: invite.invite_email!,
+      displayName: invite.display_name,
+      familyCircleId: invite.family_circle_id,
+      familyCircleName: circleName,
+      existingUserId: profile.id,
+      existingUserName: profile.full_name,
+      currentCircles
+    });
+  }
+
+  return items;
+}

@@ -2,9 +2,10 @@ import type { Route } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import { AdminInviteRescue } from "@/components/admin-invite-rescue";
 import { AdminSweepForm } from "@/components/admin-sweep-form";
 import { Card } from "@/components/card";
-import { getAdminAnalyticsData, requireViewer } from "@/lib/data";
+import { getAdminAnalyticsData, getAdminInviteRescueData, requireViewer } from "@/lib/data";
 import { getAdminEmails, hasSupabaseServiceRoleEnv, isAdminEmail } from "@/lib/env";
 import { formatDateTime } from "@/lib/utils";
 
@@ -19,7 +20,10 @@ export default async function AdminPage() {
     redirect("/settings" as Route);
   }
 
-  const data = await getAdminAnalyticsData(user.id);
+  const [data, inviteRescueItems] = await Promise.all([
+    getAdminAnalyticsData(user.id),
+    getAdminInviteRescueData()
+  ]);
   const configuredAdmins = getAdminEmails();
 
   return (
@@ -105,6 +109,18 @@ export default async function AdminPage() {
                   product.
                 </p>
                 <AdminSweepForm />
+              </div>
+            </Card>
+
+            <Card>
+              <div className="stack-md">
+                <h2>Invite rescue</h2>
+                <p className="meta">
+                  Users listed here were invited to a Family Circle but signed up via a different
+                  path and were not automatically connected. Rescuing them claims the pending invite
+                  for their existing account.
+                </p>
+                <AdminInviteRescue items={inviteRescueItems} />
               </div>
             </Card>
 

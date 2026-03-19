@@ -23,7 +23,7 @@ import {
 } from "@/lib/utils";
 
 export interface AuthState {
-  status: "idle" | "error";
+  status: "idle" | "error" | "success";
   message?: string;
 }
 
@@ -232,6 +232,19 @@ export async function signUpAction(
         email
       }
     });
+
+    // If email confirmation is pending, the session is not yet active.
+    // Redirecting now would call getPostAuthRedirectPath without a real session,
+    // causing claimPendingInvitesForUser to fail silently under RLS — sending
+    // invited users to /onboarding instead of their Family Circle.
+    // The /auth/callback route handles claiming and redirect after confirmation.
+    if (!data.user.email_confirmed_at) {
+      return {
+        status: "success",
+        message: `We sent a confirmation link to ${email}. Click it to finish setting up your account — any Family Circle invitation will be connected automatically.`
+      };
+    }
+
     const redirectPath = await getPostAuthRedirectPath(data.user);
     redirect(redirectPath);
   }
@@ -2539,4 +2552,52 @@ export async function endGameSessionAction(
       duration_seconds: durationSeconds
     })
     .eq("id", sessionId);
+}
+
+export async function adminRescueInviteAction(
+  _state: { success: boolean; message: string },
+  formData: FormData
+): Promise<{ success: boolean; message: string }> {
+  const user = await requireViewer();
+  if (!isAdminEmail(user.email)) {
+    return { success: false, message: "Not authorized." };
+  }
+
+  const membershipId = String(formData.get("membershipId") ?? "").trim();
+  const targetUserId = String(formData.get("targetUserId") ?? "").trim();
+
+  if (!membershipId || !targetUserId) {
+    return { success: false, message: "Missing required fields." };
+  }
+
+  const admin = createSupabaseAdminClient();
+
+  // Verify the membership is still pending and unclaimed
+  const { data: membership, error: fetchError } = await admin
+    .from("family_memberships")
+    .select("id, status, user_id, invite_email, display_name, family_circle_id")
+    .eq("id", membershipId)
+    .eq("status", "invited")
+    .is("user_id", null)
+    .maybeSingle();
+
+  if (fetchError || !membership) {
+    return { success: false, message: "Invite not found or already claimed." };
+  }
+
+  // Claim the invite for the target user
+  const { error: updateError } = await admin
+    .from("family_memberships")
+    .update({ user_id: targetUserId, status: "active" })
+    .eq("id", membershipId)
+    .is("user_id", null);
+
+  if (updateError) {
+    return { success: false, message: `Failed to claim invite: ${updateError.message}` };
+  }
+
+  return {
+    success: true,
+    message: `Invite claimed — ${membership.display_name} (${membership.invite_email}) is now active in the Family Circle.`
+  };
 }
