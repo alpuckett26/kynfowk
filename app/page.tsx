@@ -1,6 +1,5 @@
 import Link from "next/link";
 
-import { FamilyPhotoCarousel } from "@/components/family-photo-carousel";
 import { PromoReel } from "@/components/promo-reel";
 import { SplashScreen } from "@/components/splash-screen";
 import {
@@ -144,15 +143,13 @@ export default async function HomePage() {
 
         {/* ── Family photo reel / promo ─────────────────────────── */}
         <section className="home-section container home-carousel-section">
-          {hasCircle && carouselPhotos.length > 0 ? (
+          {hasCircle && carouselPhotos.length > 0 && (
             <>
               <div className="home-section-label">Family reel</div>
               <h2 className="home-section-title">Your circle, in pictures.</h2>
-              <FamilyPhotoCarousel photos={carouselPhotos} />
             </>
-          ) : (
-            <PromoReel />
           )}
+          <PromoReel photos={carouselPhotos} />
         </section>
 
         {/* ── How it works ──────────────────────────────────────── */}

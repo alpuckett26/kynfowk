@@ -4308,6 +4308,10 @@ a.phonebook-detail:hover { text-decoration: underline; }
   opacity: 0;
 }
 
+.promo-reel-photo {
+  object-fit: cover;
+}
+
 .promo-reel-overlay {
   position: absolute;
   inset: 0;
