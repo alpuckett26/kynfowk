@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { FamilyPhotoCarousel } from "@/components/family-photo-carousel";
+import { PromoReel } from "@/components/promo-reel";
 import { SplashScreen } from "@/components/splash-screen";
 import {
   getCircleCarouselPhotos,
@@ -141,23 +142,18 @@ export default async function HomePage() {
           <span>✦ Private by design</span>
         </div>
 
-        {/* ── Family photo reel ─────────────────────────────────── */}
-        {hasCircle && (
-          <section className="home-section container home-carousel-section">
-            <div className="home-section-label">Family reel</div>
-            <h2 className="home-section-title">Your circle, in pictures.</h2>
-            {carouselPhotos.length > 0 ? (
+        {/* ── Family photo reel / promo ─────────────────────────── */}
+        <section className="home-section container home-carousel-section">
+          {hasCircle && carouselPhotos.length > 0 ? (
+            <>
+              <div className="home-section-label">Family reel</div>
+              <h2 className="home-section-title">Your circle, in pictures.</h2>
               <FamilyPhotoCarousel photos={carouselPhotos} />
-            ) : (
-              <div className="carousel-empty">
-                <p className="carousel-empty-text">
-                  No photos yet — add your first from the{" "}
-                  <a href="/dashboard">dashboard</a>.
-                </p>
-              </div>
-            )}
-          </section>
-        )}
+            </>
+          ) : (
+            <PromoReel />
+          )}
+        </section>
 
         {/* ── How it works ──────────────────────────────────────── */}
         <section className="home-section container">

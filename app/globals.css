@@ -4284,6 +4284,90 @@ a.phonebook-detail:hover { text-decoration: underline; }
 
 .home-carousel-section { display: flex; flex-direction: column; gap: 1.5rem; }
 
+/* ── Promo Reel ───────────────────────────────────────────────────────────── */
+.promo-reel {
+  position: relative;
+  width: 100%;
+  max-width: 720px;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: #0d0d0d;
+  aspect-ratio: 16 / 9;
+}
+
+.promo-reel-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  opacity: 1;
+  transition: opacity 0.5s ease;
+}
+
+.promo-reel-fading {
+  opacity: 0;
+}
+
+.promo-reel-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 2rem;
+  background: linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.1) 55%, transparent 100%);
+  opacity: 1;
+  transition: opacity 0.5s ease;
+}
+
+.promo-reel-brand {
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.6);
+  margin: 0 0 0.5rem;
+}
+
+.promo-reel-headline {
+  font-family: var(--font-display);
+  font-size: clamp(1.2rem, 3vw, 1.75rem);
+  font-weight: 600;
+  color: #fff;
+  line-height: 1.25;
+  margin: 0 0 0.6rem;
+}
+
+.promo-reel-sub {
+  font-size: 0.8rem;
+  color: rgba(255,255,255,0.55);
+  margin: 0;
+}
+
+.promo-reel-dots {
+  position: absolute;
+  bottom: 1rem;
+  right: 1.25rem;
+  display: flex;
+  gap: 0.35rem;
+}
+
+.promo-reel-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255,255,255,0.35);
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.2s;
+}
+
+.promo-reel-dot-active {
+  background: #fff;
+}
+
 .carousel-empty {
   border: 2px dashed var(--border);
   border-radius: var(--radius-lg);
