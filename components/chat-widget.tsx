@@ -12,7 +12,7 @@ export function ChatWidget() {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
-      content: "Hey! I'm Kin, your Kynfowk helper. What can I help you with today?",
+      content: "Hey! I'm Kyn, your Kynfowk helper. What can I help you with today?",
     },
   ]);
   const [input, setInput] = useState("");
@@ -99,7 +99,7 @@ export function ChatWidget() {
             <div className="chat-header-info">
               <span className="chat-avatar">K</span>
               <div>
-                <p className="chat-header-name">Kin</p>
+                <p className="chat-header-name">Kyn</p>
                 <p className="chat-header-sub">Kynfowk support</p>
               </div>
             </div>
@@ -142,7 +142,7 @@ export function ChatWidget() {
         onClick={() => setOpen((o) => !o)}
         aria-label={open ? "Close chat" : "Open support chat"}
       >
-        {open ? <>✕ <span>Close</span></> : <>💬 <span>Ask Kin</span></>}
+        {open ? <>✕ <span>Close</span></> : <>💬 <span>Ask Kyn</span></>}
       </button>
     </div>
   );
