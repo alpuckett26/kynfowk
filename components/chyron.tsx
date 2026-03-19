@@ -1,3 +1,7 @@
+"use client";
+
+import { useEffect, useState } from "react";
+
 const MESSAGES = [
   "🚧 Beta — thanks for being here early",
   "✦ New: in-call games are live — try trivia or word chain",
@@ -9,8 +13,28 @@ const MESSAGES = [
   "🔒 Private by design — your data never leaves your circle",
 ];
 
+function formatNow() {
+  const now = new Date();
+  return now.toLocaleString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+}
+
 export function Chyron() {
-  const text = MESSAGES.join("     ·     ");
+  const [datetime, setDatetime] = useState("");
+
+  useEffect(() => {
+    setDatetime(formatNow());
+    const id = setInterval(() => setDatetime(formatNow()), 60_000);
+    return () => clearInterval(id);
+  }, []);
+
+  const text = [`🕐 ${datetime}`, ...MESSAGES].join("     ·     ");
 
   return (
     <div className="chyron" aria-label="Kynfowk announcements" role="marquee">
