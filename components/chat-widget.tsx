@@ -142,7 +142,7 @@ export function ChatWidget() {
         onClick={() => setOpen((o) => !o)}
         aria-label={open ? "Close chat" : "Open support chat"}
       >
-        {open ? "✕" : "💬"}
+        {open ? <>✕ <span>Close</span></> : <>💬 <span>Ask Kin</span></>}
       </button>
     </div>
   );
