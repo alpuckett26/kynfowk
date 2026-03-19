@@ -35,8 +35,8 @@ const MESSAGES: Record<string, { title: string; body: string; tone: "success" | 
     tone: "warning"
   },
   "join-link-missing": {
-    title: "No join link yet",
-    body: "Add a meeting link to the scheduled call first so everyone has a place to gather.",
+    title: "Could not open call room",
+    body: "Head to the call detail page and tap \"Join live call\" to enter the built-in video room.",
     tone: "warning"
   },
   "completion-error": {

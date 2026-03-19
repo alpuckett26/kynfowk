@@ -41,7 +41,7 @@ export default async function CallDetailPage({
             <h1>{data.call.title}</h1>
             <p className="lede">
               {isManageableCall
-                ? "Everything your family needs for this upcoming moment lives here: the time, the join link, and the final step to close the loop."
+                ? "Everything your family needs for this upcoming moment lives here: the time, the built-in video room, and the final step to close the loop."
                 : isCompletedCall
                   ? "This page holds the shared details from a family call that already happened, from who joined to what mattered most."
                   : "This page keeps the record of a family call that is no longer active, along with the details your circle planned around."}
@@ -189,18 +189,6 @@ export default async function CallDetailPage({
                 </div>
               </div>
             </Card>
-
-            {data.call.needs_join_link_prompt ? (
-              <Card className="soft-callout warning-callout">
-                <div className="stack-sm">
-                  <h2>Join link still missing</h2>
-                  <p className="meta">
-                    This family moment is coming up soon. Add a join link so nobody is left
-                    wondering where to meet.
-                  </p>
-                </div>
-              </Card>
-            ) : null}
 
             {data.call.show_recovery_prompt ? (
               <Card className="soft-callout warning-callout">

@@ -881,20 +881,6 @@ export async function sweepFamilyCircleNotifications(
       });
     }
 
-    if (!call.meeting_url && msUntilStart <= 24 * 60 * 60 * 1000 && end >= now) {
-      notificationsCreated += await createNotifications(supabase, {
-        familyCircleId: input.familyCircleId,
-        callSessionId: call.id,
-        type: "missing_join_link_warning",
-        title: `Add a join link for ${call.title}`,
-        body: `This family call is coming up soon, but there is still no meeting link saved. A quick update keeps everyone from scrambling later.`,
-        ctaLabel: "Add join link",
-        ctaHref: `/calls/${call.id}`,
-        dedupeKeyPrefix: `missing-link:${call.id}`,
-        recipients
-      });
-    }
-
     if (end < now) {
       notificationsCreated += await createNotifications(supabase, {
         familyCircleId: input.familyCircleId,

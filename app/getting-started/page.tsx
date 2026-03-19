@@ -23,10 +23,10 @@ const STEPS = [
     cta: "Open dashboard"
   },
   {
-    title: "Add a join link",
-    body: "Once the call is on the calendar, open the call detail page and paste the Zoom, Meet, or shared link your circle will use.",
-    href: "/dashboard",
-    cta: "Find scheduled calls"
+    title: "Join your call",
+    body: "Once the call is on the calendar, open the call detail page and tap \"Join live call\" — Kynfowk's built-in video room is ready for your whole circle.",
+    href: "/calls",
+    cta: "View scheduled calls"
   },
   {
     title: "Enable reminders and install the app",

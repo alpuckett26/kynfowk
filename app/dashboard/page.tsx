@@ -159,17 +159,7 @@ export default async function DashboardPage({
                             {formatDateTime(call.scheduled_end, timezone)}
                           </p>
                           <p className="meta">{call.reminder_label}</p>
-                          {call.meeting_url ? (
-                            <p className="meta">
-                              {call.meeting_provider ?? "Join link"} is ready for the circle.
-                            </p>
-                          ) : null}
-                          {call.needs_join_link_prompt ? (
-                            <p className="form-message">
-                              This call is coming up soon. Add a join link so everyone knows
-                              where to gather.
-                            </p>
-                          ) : null}
+                          <p className="meta">Built-in video room is ready for the circle.</p>
                           {call.show_recovery_prompt ? (
                             <p className="form-message">
                               Did this call happen? Close it out so your Family Connections
@@ -205,18 +195,12 @@ export default async function DashboardPage({
                                 ? "Call active"
                                 : "Scheduled"}
                           </span>
-                          {call.meeting_url ? (
-                            <Link
-                              className="button"
-                              href={`/calls/${call.id}/join` as Route}
-                              rel="noreferrer noopener"
-                              target="_blank"
-                            >
-                              Join call
-                            </Link>
-                          ) : (
-                            <span className="meta">Add a join link before call time.</span>
-                          )}
+                          <Link
+                            className="button"
+                            href={`/calls/${call.id}/live` as Route}
+                          >
+                            Join call
+                          </Link>
                           <Link
                             className="button button-secondary"
                             href={`/calls/${call.id}/calendar` as Route}

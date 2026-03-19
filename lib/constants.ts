@@ -31,7 +31,7 @@ export const CASE_STUDIES = [
     challenge:
       "Margaret and Bill had retired to Florida while their three adult children spread across Seattle, Chicago, and Boston. Timezone math, back-to-back work meetings, and kids' soccer schedules meant calls either got pushed or forgotten entirely. Months would pass. Bill called it the \"we should do this more often\" family.",
     approach:
-      "Their daughter set up a Family Circle in under five minutes, invited everyone, and asked each person to mark a few open windows. Kynfowk surfaced Sunday evenings at 7 PM Eastern as the strongest overlap — a time that had always felt intuitively right but never quite happened. The call was booked with a Zoom link attached.",
+      "Their daughter set up a Family Circle in under five minutes, invited everyone, and asked each person to mark a few open windows. Kynfowk surfaced Sunday evenings at 7 PM Eastern as the strongest overlap — a time that had always felt intuitively right but never quite happened. The call was booked and the built-in video room was ready.",
     result:
       "Three months later the family had logged nine completed calls averaging 34 minutes each. Their Reconnection Streak reached 11 weeks. Margaret stopped beginning every conversation with \"it has been so long.\"",
     highlight: "Connection Score reached 47 pts in 90 days.",

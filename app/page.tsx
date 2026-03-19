@@ -136,7 +136,7 @@ export default async function HomePage() {
                 {/* Footer stat */}
                 <div className="home-mock-footer-stat">
                   <span className="home-mock-live-dot" />
-                  Kynfowk found this window · via Zoom · 4 members scheduled
+                  Kynfowk found this window · via Kynfowk · 4 members scheduled
                 </div>
 
               </div>
@@ -146,7 +146,7 @@ export default async function HomePage() {
 
         {/* ── Trust strip ───────────────────────────────────────── */}
         <div className="home-trust-strip container">
-          <span>✦ Works with Zoom, Meet &amp; FaceTime</span>
+          <span>✦ Built-in video room — no Zoom needed</span>
           <span>✦ Schedules itself around everyone</span>
           <span>✦ No ads, no noise</span>
           <span>✦ Private by design</span>
@@ -187,7 +187,7 @@ export default async function HomePage() {
               <div className="home-step-num">04</div>
               <div className="home-step-body">
                 <h3>Show up and connect</h3>
-                <p>Get a join link, hop on your video call, and let Kynfowk track the time you spent together.</p>
+                <p>Tap into the built-in video room and let Kynfowk track the time you spent together.</p>
               </div>
             </div>
           </div>
@@ -201,7 +201,7 @@ export default async function HomePage() {
             <div className="home-feature-card">
               <div className="home-feature-icon">🎥</div>
               <h3>Video call scheduling</h3>
-              <p>Kynfowk finds the window where everyone can show up, books the call, and sends you a join link — all automatically.</p>
+              <p>Kynfowk finds the window where everyone can show up, books the call, and has a built-in video room ready to go — all automatically.</p>
             </div>
             <div className="home-feature-card">
               <div className="home-feature-icon">📅</div>
