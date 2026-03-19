@@ -119,6 +119,12 @@ export function AuthForm({ action, mode, defaultEmail }: AuthFormProps) {
             {mode === "sign-up" ? "Sign in" : "Create one"}
           </Link>
         </p>
+
+        {mode === "sign-in" && (
+          <p className="microcopy">
+            <Link href="/auth/forgot-password">Forgot your password?</Link>
+          </p>
+        )}
       </form>
     </div>
   );

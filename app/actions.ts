@@ -289,6 +289,58 @@ export async function signOutAction() {
   redirect("/");
 }
 
+export interface ForgotPasswordState {
+  status: "idle" | "success" | "error";
+  message?: string;
+}
+
+export async function forgotPasswordAction(
+  _state: ForgotPasswordState,
+  formData: FormData
+): Promise<ForgotPasswordState> {
+  if (!hasSupabaseEnv()) return { status: "error", message: "Service unavailable." };
+
+  const email = String(formData.get("email") ?? "").trim();
+  if (!email) return { status: "error", message: "Email is required." };
+
+  const supabase = await createSupabaseServerClient();
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://kynfowk.vercel.app";
+
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${siteUrl}/auth/callback?type=recovery`
+  });
+
+  // Always return success to avoid email enumeration
+  if (error && error.message !== "Email not found") return { status: "error", message: error.message };
+
+  return { status: "success", message: "If that email is in our system, a reset link is on its way." };
+}
+
+export interface ResetPasswordState {
+  status: "idle" | "success" | "error";
+  message?: string;
+}
+
+export async function resetPasswordAction(
+  _state: ResetPasswordState,
+  formData: FormData
+): Promise<ResetPasswordState> {
+  if (!hasSupabaseEnv()) return { status: "error", message: "Service unavailable." };
+
+  const password = String(formData.get("password") ?? "");
+  const confirm = String(formData.get("confirm") ?? "");
+
+  if (password.length < 8) return { status: "error", message: "Password must be at least 8 characters." };
+  if (password !== confirm) return { status: "error", message: "Passwords do not match." };
+
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase.auth.updateUser({ password });
+
+  if (error) return { status: "error", message: error.message };
+
+  redirect("/dashboard");
+}
+
 export async function completeOnboardingAction(
   _state: OnboardingState,
   formData: FormData

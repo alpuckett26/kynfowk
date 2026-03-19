@@ -316,6 +316,11 @@ h3 {
   background: rgba(255, 227, 212, 0.9);
 }
 
+.form-message-success {
+  color: #1a4a2e;
+  background: rgba(198, 237, 213, 0.9);
+}
+
 .form-success {
   color: #1f5b42;
   background: rgba(226, 246, 235, 0.95);
