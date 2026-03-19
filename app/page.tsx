@@ -21,6 +21,17 @@ export default async function HomePage() {
       <SplashScreen />
 
       <main className="page-shell home-page">
+        {/* ── Promo reel / family photos ────────────────────────── */}
+        <section className="home-reel-section">
+          {hasCircle && carouselPhotos.length > 0 && (
+            <div className="home-reel-label container">
+              <div className="home-section-label">Family reel</div>
+              <h2 className="home-section-title">Your circle, in pictures.</h2>
+            </div>
+          )}
+          <PromoReel photos={carouselPhotos} />
+        </section>
+
         {/* ── Hero ──────────────────────────────────────────────── */}
         <section className="home-hero container">
           <div className="home-hero-copy">
@@ -140,17 +151,6 @@ export default async function HomePage() {
           <span>✦ No ads, no noise</span>
           <span>✦ Private by design</span>
         </div>
-
-        {/* ── Family photo reel / promo ─────────────────────────── */}
-        <section className="home-section container home-carousel-section">
-          {hasCircle && carouselPhotos.length > 0 && (
-            <>
-              <div className="home-section-label">Family reel</div>
-              <h2 className="home-section-title">Your circle, in pictures.</h2>
-            </>
-          )}
-          <PromoReel photos={carouselPhotos} />
-        </section>
 
         {/* ── How it works ──────────────────────────────────────── */}
         <section className="home-section container">

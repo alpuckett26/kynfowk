@@ -4285,14 +4285,24 @@ a.phonebook-detail:hover { text-decoration: underline; }
 .home-carousel-section { display: flex; flex-direction: column; gap: 1.5rem; }
 
 /* ── Promo Reel ───────────────────────────────────────────────────────────── */
+.home-reel-section {
+  width: 100%;
+}
+
+.home-reel-label {
+  padding-top: 2rem;
+  padding-bottom: 1rem;
+}
+
 .promo-reel {
   position: relative;
   width: 100%;
-  max-width: 720px;
-  border-radius: var(--radius-lg);
+  max-width: 100%;
+  border-radius: 0;
   overflow: hidden;
   background: #0d0d0d;
   aspect-ratio: 16 / 9;
+  max-height: 70vh;
 }
 
 .promo-reel-video {
