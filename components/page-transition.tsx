@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 
 export function PageTransition() {
   const pathname = usePathname();
-  const [phase, setPhase] = useState<"idle" | "entering" | "leaving">("idle");
+  const [phase, setPhase] = useState<"idle" | "showing" | "hiding">("idle");
   const prevPath = useRef(pathname);
   const t1 = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const t2 = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -17,9 +17,9 @@ export function PageTransition() {
     clearTimeout(t1.current);
     clearTimeout(t2.current);
 
-    setPhase("entering");
-    t1.current = setTimeout(() => setPhase("leaving"), 420);
-    t2.current = setTimeout(() => setPhase("idle"), 800);
+    setPhase("showing");
+    t1.current = setTimeout(() => setPhase("hiding"), 380);
+    t2.current = setTimeout(() => setPhase("idle"), 780);
 
     return () => {
       clearTimeout(t1.current);
@@ -30,19 +30,16 @@ export function PageTransition() {
   if (phase === "idle") return null;
 
   return (
-    <div className={`page-turn-overlay page-turn-${phase}`} aria-hidden>
-      <div className="page-turn-page">
-        <div className="page-turn-ruled" />
-        <div className="page-turn-margin" />
-        <div className="page-turn-content">
-          <span className="page-turn-brand">Kynfowk</span>
-          <span className="page-turn-tagline">Family Circle</span>
-        </div>
-        <div className="page-turn-holes">
-          <div className="page-turn-hole" />
-          <div className="page-turn-hole" />
-          <div className="page-turn-hole" />
-        </div>
+    <div className={`splash${phase === "hiding" ? " splash-fade" : ""}`} aria-hidden>
+      <div className="splash-inner">
+        <svg className="splash-tree" viewBox="0 0 24 28" fill="currentColor" aria-hidden>
+          <circle cx="12" cy="9" r="8" />
+          <circle cx="7"  cy="14" r="6" />
+          <circle cx="17" cy="14" r="6" />
+          <rect x="10" y="19" width="4" height="9" rx="1" />
+        </svg>
+        <span className="splash-brand">Kynfowk</span>
+        <span className="splash-tagline">Your Family Circle</span>
       </div>
     </div>
   );
