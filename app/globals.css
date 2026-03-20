@@ -3157,7 +3157,9 @@ h3 {
 }
 
 /* React Flow overrides — match app's parchment theme */
-.family-flow-canvas .react-flow__background {
+.family-flow-canvas .react-flow__pane,
+.family-flow-canvas .react-flow__renderer,
+.family-flow-canvas .react-flow {
   background: #faf7f2;
 }
 

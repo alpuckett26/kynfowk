@@ -5,7 +5,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ReactFlow,
   ReactFlowProvider,
-  Background,
   Controls,
   MiniMap,
   Panel,
@@ -429,6 +428,7 @@ type FlowNode = CircleFlowNode | MemberFlowNode;
 
 function CircleNodeComp({ data }: NodeProps<CircleFlowNode>) {
   const score = data.strengthScore;
+  const isEmpty = score === 0;
   const scoreColour = scoreToColour(score);
   const trackPath = arcPath(GAUGE_CX, GAUGE_CY, GAUGE_R, GAUGE_START_DEG, GAUGE_TOTAL_DEG);
   const scoreSweep = (score / 100) * GAUGE_TOTAL_DEG;
@@ -440,34 +440,50 @@ function CircleNodeComp({ data }: NodeProps<CircleFlowNode>) {
       <svg viewBox="0 0 120 120" width={120} height={120} style={{ display: "block" }}>
         {/* Background track */}
         <path d={trackPath} fill="none" stroke="#E5E7EB" strokeWidth={GAUGE_SW} strokeLinecap="round" />
-        {/* Score arc */}
+        {/* Score arc — hidden when score is 0 */}
         {scorePath && (
           <path d={scorePath} fill="none" stroke={scoreColour} strokeWidth={GAUGE_SW} strokeLinecap="round" />
         )}
         {/* Inner filled circle */}
         <circle cx={GAUGE_CX} cy={GAUGE_CY} r={innerR} fill="#7c6af7" />
-        {/* Score number */}
-        <text
-          x={GAUGE_CX}
-          y={GAUGE_CY - 5}
-          textAnchor="middle"
-          dominantBaseline="middle"
-          fontSize={22}
-          fontWeight={700}
-          fill="#fff"
-        >
-          {score}
-        </text>
-        {/* "pts" label */}
-        <text
-          x={GAUGE_CX}
-          y={GAUGE_CY + 14}
-          textAnchor="middle"
-          fontSize={10}
-          fill="rgba(255,255,255,0.7)"
-        >
-          pts
-        </text>
+        {isEmpty ? (
+          /* Empty state — no calls yet */
+          <text
+            x={GAUGE_CX}
+            y={GAUGE_CY}
+            textAnchor="middle"
+            dominantBaseline="middle"
+            fontSize={11}
+            fill="rgba(255,255,255,0.75)"
+          >
+            Start calling
+          </text>
+        ) : (
+          <>
+            {/* Score number */}
+            <text
+              x={GAUGE_CX}
+              y={GAUGE_CY - 5}
+              textAnchor="middle"
+              dominantBaseline="middle"
+              fontSize={22}
+              fontWeight={700}
+              fill="#fff"
+            >
+              {score}
+            </text>
+            {/* "pts" label */}
+            <text
+              x={GAUGE_CX}
+              y={GAUGE_CY + 14}
+              textAnchor="middle"
+              fontSize={10}
+              fill="rgba(255,255,255,0.7)"
+            >
+              pts
+            </text>
+          </>
+        )}
       </svg>
       <div className="flow-circle-node-name">{truncate(data.name, 18)}</div>
       <div className="flow-circle-node-meta">
@@ -564,7 +580,7 @@ function buildFlowNodes(
     allMemberIds.map((id) => getHealthState(healthMap[id]))
   );
 
-  // Circle header node sits above all member rows
+  // Circle header node sits above all member rows — zIndex ensures it renders over member nodes
   nodes.push({
     id: "__circle__",
     type: "circleNode",
@@ -572,6 +588,7 @@ function buildFlowNodes(
     data: { name: circleName, memberCount: totalMembers, healthState: circleHealth, strengthScore },
     selectable: false,
     draggable: false,
+    zIndex: 1000,
   } as CircleFlowNode);
 
   for (const row of layout.rows) {
@@ -657,7 +674,7 @@ function FamilyFlowInner({
         </Panel>
       )}
 
-      <Background gap={24} color="#e5ddd0" />
+      {/* Solid parchment background — no grid texture competing with nodes */}
       <Controls />
       <MiniMap
         nodeColor={(node) => {
