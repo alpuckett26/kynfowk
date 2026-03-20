@@ -206,6 +206,7 @@ export function CallRoom({
 
   useEffect(() => {
     let active = true;
+    const peers = peersRef.current;
 
     async function setup() {
       // Get local media
@@ -310,7 +311,6 @@ export function CallRoom({
 
     return () => {
       active = false;
-      const peers = peersRef.current;
       for (const peer of peers.values()) peer.connection.close();
       peers.clear();
       channelRef.current?.untrack();

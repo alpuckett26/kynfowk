@@ -3122,8 +3122,11 @@ h3 {
   width: 10px;
   height: 10px;
   border-radius: 50%;
+  /* Health-state items pass --legend-colour via inline style */
+  background: var(--legend-colour, #b0a898);
 }
 
+/* Keep tier-specific overrides for pages still using the old legend */
 .tree-legend-immediate::before  { background: var(--accent); }
 .tree-legend-secondary::before  { background: #7c6af7; }
 .tree-legend-extended::before   { background: #e0a020; }
@@ -3133,6 +3136,186 @@ h3 {
   background: #22c55e;
   box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.25);
   animation: online-pulse 2s ease-in-out infinite;
+}
+
+/* ── Family Flow Canvas (React Flow zoomable tree) ───────────────────────── */
+
+.family-flow-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.family-flow-canvas {
+  width: 100%;
+  height: 68vh;
+  min-height: 480px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1.5px solid rgba(121, 83, 55, 0.15);
+  background: #faf7f2;
+}
+
+/* React Flow overrides — match app's parchment theme */
+.family-flow-canvas .react-flow__background {
+  background: #faf7f2;
+}
+
+.family-flow-canvas .react-flow__controls {
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid rgba(121, 83, 55, 0.2);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.family-flow-canvas .react-flow__controls-button {
+  background: #fff8f0;
+  border-bottom: 1px solid rgba(121, 83, 55, 0.15);
+  color: var(--text);
+}
+
+.family-flow-canvas .react-flow__controls-button:hover {
+  background: #f0e8dc;
+}
+
+.family-flow-canvas .react-flow__minimap {
+  border-radius: 8px;
+  border: 1px solid rgba(121, 83, 55, 0.2);
+  overflow: hidden;
+}
+
+/* Remove default React Flow node border/shadow so our styles control */
+.family-flow-canvas .react-flow__node {
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.family-flow-canvas .react-flow__node.selected > div,
+.family-flow-canvas .react-flow__node:focus > div {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ── CircleNode ───────────────────────────────────────────────────── */
+
+.flow-circle-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  cursor: pointer;
+  user-select: none;
+}
+
+.flow-circle-node-name {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #2e2a24;
+  margin-top: 0.25rem;
+  letter-spacing: 0.01em;
+  max-width: 120px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.flow-circle-node-meta {
+  font-size: 0.72rem;
+  color: #8a7f72;
+  margin-top: 0.1rem;
+}
+
+/* ── MemberNode ───────────────────────────────────────────────────── */
+
+.flow-member-node {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 10px;
+  background: #fff8f0;
+  border: 1.5px solid rgba(121, 83, 55, 0.18);
+  /* Left border width reserved for health colour (set inline via borderLeftColor) */
+  border-left-width: 3px;
+  min-width: 160px;
+  max-width: 185px;
+  cursor: pointer;
+  transition: box-shadow 0.15s, border-color 0.15s;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+}
+
+.flow-member-node:hover {
+  box-shadow: 0 3px 10px rgba(0,0,0,0.12);
+  border-color: rgba(121, 83, 55, 0.35);
+}
+
+/* Special state overrides — health colour is always set inline via borderLeftColor */
+.flow-member-node.tree-member-viewer {
+  background: var(--accent);
+  /* viewer has accent background; health ring set inline overrides border-left colour */
+}
+
+.flow-member-node.tree-member-viewer .tree-member-name { color: #fff; }
+.flow-member-node.tree-member-viewer .tree-member-rel  { color: rgba(255,255,255,0.75); }
+
+/* Placeholder and deceased keep opacity/dash cues; health colour overrides left border */
+.flow-member-node.tree-member-placeholder { opacity: 0.85; }
+.flow-member-node.tree-member-deceased    { opacity: 0.7; }
+
+/* ── Flow: back-to-tree button (Panel overlay) ───────────────────────────── */
+
+.flow-back-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.45rem 0.9rem;
+  background: #fff8f0;
+  border: 1.5px solid rgba(121, 83, 55, 0.25);
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text);
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  transition: background 0.15s, box-shadow 0.15s;
+  margin: 0.5rem;
+}
+
+.flow-back-button:hover {
+  background: #f0e8dc;
+  box-shadow: 0 3px 12px rgba(0,0,0,0.14);
+}
+
+/* ── MemberNode expanded (circle view detail) ────────────────────────────── */
+
+.flow-member-node--expanded {
+  max-width: 210px;
+}
+
+.flow-member-node-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  margin-top: 0.3rem;
+  padding-top: 0.3rem;
+  border-top: 1px solid rgba(121, 83, 55, 0.1);
+}
+
+.flow-member-health-label {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  line-height: 1.2;
+}
+
+.flow-member-contact {
+  font-size: 0.65rem;
+  color: var(--muted);
+  line-height: 1.2;
 }
 
 /* ── Tree v2: top-down layout ────────────────────────────────────────────── */

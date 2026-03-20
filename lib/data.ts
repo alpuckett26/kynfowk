@@ -1193,6 +1193,94 @@ export async function getFamilyManagementData(userId: string): Promise<{
   };
 }
 
+// ---------------------------------------------------------------------------
+// Branch health: derive last-interaction date per member from completed calls.
+// No contact_logs table exists yet — call participation is the best proxy.
+// ---------------------------------------------------------------------------
+
+export async function getMemberHealthMap(
+  familyCircleId: string
+): Promise<Record<string, string | null>> {
+  const supabase = await createSupabaseServerClient();
+
+  const callsResponse = await supabase
+    .from("call_sessions")
+    .select("id, actual_ended_at, scheduled_end")
+    .eq("family_circle_id", familyCircleId)
+    .eq("status", "completed");
+
+  const calls = callsResponse.data ?? [];
+  if (calls.length === 0) return {};
+
+  const callIds = calls.map((c) => c.id);
+
+  // Build a lookup: call id → best available end date
+  const callDateById: Record<string, string> = {};
+  for (const call of calls) {
+    callDateById[call.id] = call.actual_ended_at ?? call.scheduled_end;
+  }
+
+  const participantsResponse = await supabase
+    .from("call_participants")
+    .select("membership_id, call_session_id")
+    .in("call_session_id", callIds);
+
+  // For each member keep the most-recent call date (lexicographic ISO sort is safe)
+  const healthMap: Record<string, string | null> = {};
+  for (const p of participantsResponse.data ?? []) {
+    const callDate = callDateById[p.call_session_id];
+    if (!callDate) continue;
+    const existing = healthMap[p.membership_id];
+    if (!existing || callDate > existing) {
+      healthMap[p.membership_id] = callDate;
+    }
+  }
+
+  return healthMap;
+}
+
+// ---------------------------------------------------------------------------
+// Strength Score: 0–100 derived from member health (60%) + call cadence (40%)
+// ---------------------------------------------------------------------------
+
+function healthScoreFromDate(lastContactAt: string | null | undefined): number {
+  if (!lastContactAt) return 0;
+  const days = (Date.now() - new Date(lastContactAt).getTime()) / 86_400_000;
+  if (days < 7)  return 100; // Thriving
+  if (days < 14) return 75;  // Healthy
+  if (days < 30) return 50;  // Quiet
+  if (days < 60) return 25;  // Drifting
+  return 0;                   // Dry
+}
+
+export async function getCircleStrengthScore(
+  familyCircleId: string,
+  healthMap: Record<string, string | null>
+): Promise<number> {
+  const supabase = await createSupabaseServerClient();
+
+  // Health component (60%): average health score across all members in the map
+  const memberDates = Object.values(healthMap);
+  const avgHealthScore =
+    memberDates.length > 0
+      ? memberDates.reduce((sum, d) => sum + healthScoreFromDate(d), 0) / memberDates.length
+      : 0;
+
+  // Call cadence component (40%): completed calls in the last 30 days, capped at 20
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 86_400_000).toISOString();
+  const callsResponse = await supabase
+    .from("call_sessions")
+    .select("id", { count: "exact", head: true })
+    .eq("family_circle_id", familyCircleId)
+    .eq("status", "completed")
+    .gte("scheduled_end", thirtyDaysAgo);
+
+  const callCount = callsResponse.count ?? 0;
+  const callScore = Math.min(callCount, 20) / 20 * 100;
+
+  return Math.round(Math.max(0, Math.min(100, 0.6 * avgHealthScore + 0.4 * callScore)));
+}
+
 function computeConnectionScore(
   completedCalls: Array<{ id: string; scheduled_start: string; actual_duration_minutes: number | null }>,
   participants: Array<{ membership_id: string; call_session_id: string; attended: boolean | null }>,

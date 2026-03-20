@@ -3,12 +3,14 @@ import Link from "next/link";
 import { Card } from "@/components/card";
 import { FamilyTreeCanvas } from "@/components/family-tree-canvas";
 import { buildTreeLayout } from "@/lib/relationship-classifier";
-import { getFamilyManagementData, requireViewer } from "@/lib/data";
+import { getFamilyManagementData, getCircleStrengthScore, getMemberHealthMap, requireViewer } from "@/lib/data";
 
 export default async function FamilyTreePage() {
   const user = await requireViewer();
   const data = await getFamilyManagementData(user.id);
   const layout = buildTreeLayout(data.members, data.viewer.membershipId);
+  const healthMap = await getMemberHealthMap(data.circle.id);
+  const strengthScore = await getCircleStrengthScore(data.circle.id, healthMap);
 
   return (
     <main className="page-shell">
@@ -31,8 +33,11 @@ export default async function FamilyTreePage() {
         </section>
 
         <FamilyTreeCanvas
+          circleName={data.circle.name}
           familyCircleId={data.circle.id}
+          healthMap={healthMap}
           layout={layout}
+          strengthScore={strengthScore}
           viewerMembershipId={data.viewer.membershipId}
         />
 
