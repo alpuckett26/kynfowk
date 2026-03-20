@@ -1256,7 +1256,7 @@ function healthScoreFromDate(lastContactAt: string | null | undefined): number {
 export async function getCircleStrengthScore(
   familyCircleId: string,
   healthMap: Record<string, string | null>
-): Promise<number> {
+): Promise<{ score: number; callCount: number }> {
   const supabase = await createSupabaseServerClient();
 
   // Health component (60%): average health score across all members in the map
@@ -1278,7 +1278,10 @@ export async function getCircleStrengthScore(
   const callCount = callsResponse.count ?? 0;
   const callScore = Math.min(callCount, 20) / 20 * 100;
 
-  return Math.round(Math.max(0, Math.min(100, 0.6 * avgHealthScore + 0.4 * callScore)));
+  return {
+    score: Math.round(Math.max(0, Math.min(100, 0.6 * avgHealthScore + 0.4 * callScore))),
+    callCount,
+  };
 }
 
 function computeConnectionScore(

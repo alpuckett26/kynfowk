@@ -1,7 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   ReactFlow,
   ReactFlowProvider,
@@ -371,6 +372,49 @@ function formatContact(lastContactAt: string | null): string {
 type ZoomLevel = "tree" | "circle";
 
 // ---------------------------------------------------------------------------
+// Long-press hook — fires callback after 500 ms hold; also wires right-click
+// ---------------------------------------------------------------------------
+
+function useLongPress(onTrigger: (clientX: number, clientY: number) => void, ms = 500) {
+  const cbRef = useRef(onTrigger);
+  useEffect(() => { cbRef.current = onTrigger; });
+
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const cancel = useCallback(() => {
+    if (timer.current) { clearTimeout(timer.current); timer.current = null; }
+  }, []);
+
+  return {
+    onTouchStart: useCallback((e: React.TouchEvent) => {
+      const { clientX, clientY } = e.touches[0];
+      timer.current = setTimeout(() => cbRef.current(clientX, clientY), ms);
+    }, [ms]),
+    onTouchEnd: cancel,
+    onTouchMove: cancel,
+    onContextMenu: useCallback((e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      cbRef.current(e.clientX, e.clientY);
+    }, []),
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Context menu context — lets node components open the menu without prop drilling
+// ---------------------------------------------------------------------------
+
+type OpenNodeMenu = (
+  nodeId: string,
+  type: "circle" | "member",
+  clientX: number,
+  clientY: number,
+  data: CircleNodeData | MemberNodeData
+) => void;
+
+const NodeMenuCtx = createContext<OpenNodeMenu>(() => {});
+
+// ---------------------------------------------------------------------------
 // SVG arc gauge helpers
 // ---------------------------------------------------------------------------
 
@@ -413,7 +457,13 @@ function truncate(str: string, max: number): string {
 // React Flow node types
 // ---------------------------------------------------------------------------
 
-type CircleNodeData = { name: string; memberCount: number; healthState: HealthState; strengthScore: number };
+type CircleNodeData = {
+  name: string;
+  memberCount: number;
+  healthState: HealthState;
+  strengthScore: number;
+  scoreBreakdown: { avgHealthPct: number; callsLast30d: number };
+};
 type MemberNodeData = {
   member: TreeMember;
   online: boolean;
@@ -426,7 +476,10 @@ type CircleFlowNode = Node<CircleNodeData, "circleNode">;
 type MemberFlowNode = Node<MemberNodeData, "memberNode">;
 type FlowNode = CircleFlowNode | MemberFlowNode;
 
-function CircleNodeComp({ data }: NodeProps<CircleFlowNode>) {
+function CircleNodeComp({ data, id }: NodeProps<CircleFlowNode>) {
+  const openMenu = useContext(NodeMenuCtx);
+  const lp = useLongPress((cx, cy) => openMenu(id, "circle", cx, cy, data));
+
   const score = data.strengthScore;
   const isEmpty = score === 0;
   const scoreColour = scoreToColour(score);
@@ -436,7 +489,7 @@ function CircleNodeComp({ data }: NodeProps<CircleFlowNode>) {
   const innerR = GAUGE_R - GAUGE_SW - 4;
 
   return (
-    <div className="flow-circle-node">
+    <div className="flow-circle-node" {...lp}>
       <svg viewBox="0 0 120 120" width={120} height={120} style={{ display: "block" }}>
         {/* Background track */}
         <path d={trackPath} fill="none" stroke="#E5E7EB" strokeWidth={GAUGE_SW} strokeLinecap="round" />
@@ -493,7 +546,10 @@ function CircleNodeComp({ data }: NodeProps<CircleFlowNode>) {
   );
 }
 
-function MemberNodeComp({ data }: NodeProps<MemberFlowNode>) {
+function MemberNodeComp({ data, id }: NodeProps<MemberFlowNode>) {
+  const openMenu = useContext(NodeMenuCtx);
+  const lp = useLongPress((cx, cy) => openMenu(id, "member", cx, cy, data));
+
   const { member, online, healthState, showDetail, lastContactAt } = data;
   const { colour } = HEALTH[healthState];
   const isDry = healthState === "dry";
@@ -517,10 +573,8 @@ function MemberNodeComp({ data }: NodeProps<MemberFlowNode>) {
   return (
     <div
       className={`flow-member-node ${stateClass}${showDetail ? " flow-member-node--expanded" : ""}`}
-      style={{
-        borderLeftColor: colour,
-        borderLeftStyle: isDry ? "dashed" : "solid",
-      }}
+      style={{ borderLeftColor: colour, borderLeftStyle: isDry ? "dashed" : "solid" }}
+      {...lp}
     >
       <div className="tree-member-avatar-wrap">
         <MemberAvatar member={member} size={showDetail ? 44 : 36} />
@@ -560,12 +614,17 @@ const ROW_HEIGHT = 150;
 const NODE_WIDTH = 195;
 const CIRCLE_NODE_W = 120;
 
+const HEALTH_SCORE_MAP: Record<HealthState, number> = {
+  thriving: 100, healthy: 75, quiet: 50, drifting: 25, dry: 0,
+};
+
 function buildFlowNodes(
   circleName: string,
   layout: TreeLayout,
   presenceMap: Record<string, string | null>,
   healthMap: Record<string, string | null>,
-  strengthScore: number
+  strengthScore: number,
+  callsLast30d: number
 ): FlowNode[] {
   const nodes: FlowNode[] = [];
 
@@ -580,12 +639,24 @@ function buildFlowNodes(
     allMemberIds.map((id) => getHealthState(healthMap[id]))
   );
 
+  // Average health % for the score breakdown tooltip
+  const healthScores = allMemberIds.map((id) => HEALTH_SCORE_MAP[getHealthState(healthMap[id])]);
+  const avgHealthPct = healthScores.length > 0
+    ? Math.round(healthScores.reduce((a, b) => a + b, 0) / healthScores.length)
+    : 0;
+
   // Circle header node sits above all member rows — zIndex ensures it renders over member nodes
   nodes.push({
     id: "__circle__",
     type: "circleNode",
     position: { x: -(CIRCLE_NODE_W / 2), y: 0 },
-    data: { name: circleName, memberCount: totalMembers, healthState: circleHealth, strengthScore },
+    data: {
+      name: circleName,
+      memberCount: totalMembers,
+      healthState: circleHealth,
+      strengthScore,
+      scoreBreakdown: { avgHealthPct, callsLast30d },
+    },
     selectable: false,
     draggable: false,
     zIndex: 1000,
@@ -614,6 +685,114 @@ function buildFlowNodes(
   }
 
   return nodes;
+}
+
+// ---------------------------------------------------------------------------
+// Context menu popover
+// ---------------------------------------------------------------------------
+
+type ContextMenuState = {
+  nodeId: string;
+  type: "circle" | "member";
+  clientX: number;
+  clientY: number;
+  data: CircleNodeData | MemberNodeData;
+} | null;
+
+function NodeContextMenu({
+  menu,
+  onClose,
+  onAction,
+}: {
+  menu: ContextMenuState;
+  onClose: () => void;
+  onAction: (action: string) => void;
+}) {
+  const [showBreakdown, setShowBreakdown] = useState(false);
+
+  // Reset breakdown state when menu changes
+  useEffect(() => { setShowBreakdown(false); }, [menu?.nodeId]);
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) { if (e.key === "Escape") onClose(); }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  useEffect(() => {
+    function onPointerDown(e: PointerEvent) {
+      if (!(e.target as Element).closest(".node-context-menu")) onClose();
+    }
+    document.addEventListener("pointerdown", onPointerDown);
+    return () => document.removeEventListener("pointerdown", onPointerDown);
+  }, [onClose]);
+
+  if (!menu) return null;
+
+  // Flip horizontally if too close to right edge
+  const flipLeft = menu.clientX > window.innerWidth / 2;
+
+  const style: React.CSSProperties = {
+    position: "fixed",
+    left: flipLeft ? menu.clientX - 8 : menu.clientX + 8,
+    top: menu.clientY + 8,
+    transform: flipLeft ? "translateX(-100%)" : undefined,
+    zIndex: 9999,
+  };
+
+  if (menu.type === "circle") {
+    const d = menu.data as CircleNodeData;
+    return (
+      <div className="node-context-menu" style={style}>
+        <button className="node-context-item" onClick={() => onAction("start-call")}>
+          📞 Start call
+        </button>
+        <button
+          className="node-context-item"
+          onClick={() => setShowBreakdown((v) => !v)}
+        >
+          📊 View score breakdown
+        </button>
+        {showBreakdown && (
+          <div className="node-context-breakdown">
+            <span>Avg health: <strong>{d.scoreBreakdown.avgHealthPct}%</strong></span>
+            <span>Calls (30d): <strong>{d.scoreBreakdown.callsLast30d}</strong></span>
+          </div>
+        )}
+        <button className="node-context-item" onClick={() => onAction("water")}>
+          💧 Water branch
+        </button>
+      </div>
+    );
+  }
+
+  const d = menu.data as MemberNodeData;
+  const firstName = d.member.display_name.split(" ")[0];
+  return (
+    <div className="node-context-menu" style={style}>
+      <button className="node-context-item" onClick={() => onAction("call-member")}>
+        📞 Call {firstName}
+      </button>
+      <button className="node-context-item" onClick={() => onAction("check-in")}>
+        ✅ Check in
+      </button>
+      <button className="node-context-item" onClick={() => onAction("view-card")}>
+        👤 View card
+      </button>
+      <button className="node-context-item" onClick={() => onAction("remind")}>
+        🔔 Send reminder
+      </button>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Toast
+// ---------------------------------------------------------------------------
+
+function Toast({ message }: { message: string | null }) {
+  if (!message) return null;
+  return <div className="node-toast">{message}</div>;
 }
 
 // ---------------------------------------------------------------------------
@@ -704,6 +883,7 @@ export function FamilyTreeCanvas({
   circleName,
   healthMap,
   strengthScore,
+  callsLast30d,
 }: {
   layout: TreeLayout;
   familyCircleId: string;
@@ -711,11 +891,55 @@ export function FamilyTreeCanvas({
   circleName: string;
   healthMap: Record<string, string | null>;
   strengthScore: number;
+  callsLast30d: number;
 }) {
+  const router = useRouter();
   const [selectedMember, setSelectedMember] = useState<TreeMember | null>(null);
   const [showAddPanel, setShowAddPanel] = useState(false);
   const [zoomLevel, setZoomLevel] = useState<ZoomLevel>("tree");
   const fitViewRef = useRef<FitViewFn | null>(null);
+
+  // ── Context menu ──────────────────────────────────────────────────────
+  const [contextMenu, setContextMenu] = useState<ContextMenuState>(null);
+  const closeMenu = useCallback(() => setContextMenu(null), []);
+  const openMenu = useCallback<OpenNodeMenu>(
+    (nodeId, type, clientX, clientY, data) => {
+      setContextMenu({ nodeId, type, clientX, clientY, data });
+    },
+    []
+  );
+
+  // ── Toast ─────────────────────────────────────────────────────────────
+  const [toastMsg, setToastMsg] = useState<string | null>(null);
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const showToast = useCallback((msg: string) => {
+    setToastMsg(msg);
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setToastMsg(null), 2500);
+  }, []);
+
+  // ── Menu action handler ───────────────────────────────────────────────
+  const handleMenuAction = useCallback(
+    (action: string) => {
+      closeMenu();
+      if (!contextMenu) return;
+
+      if (action === "start-call") {
+        router.push("/family");
+      } else if (action === "call-member") {
+        setSelectedMember((contextMenu.data as MemberNodeData).member);
+      } else if (action === "view-card") {
+        setSelectedMember((contextMenu.data as MemberNodeData).member);
+      } else if (action === "water") {
+        showToast("Check-in coming soon");
+      } else if (action === "check-in") {
+        showToast("Check-in coming soon");
+      } else if (action === "remind") {
+        showToast("Reminders coming soon");
+      }
+    },
+    [closeMenu, contextMenu, router, showToast]
+  );
 
   const [presenceMap, setPresenceMap] = useState<Record<string, string | null>>(() => {
     const map: Record<string, string | null> = {};
@@ -750,7 +974,7 @@ export function FamilyTreeCanvas({
 
   // Build nodes from layout (rebuilt only when layout/circleName/healthMap change)
   const initialNodes = useMemo(
-    () => buildFlowNodes(circleName, layout, presenceMap, healthMap, strengthScore),
+    () => buildFlowNodes(circleName, layout, presenceMap, healthMap, strengthScore, callsLast30d),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [circleName, layout, healthMap]
   );
@@ -839,7 +1063,7 @@ export function FamilyTreeCanvas({
   }
 
   return (
-    <>
+    <NodeMenuCtx.Provider value={openMenu}>
       <div className="family-flow-wrap">
         {/* Legend — health states */}
         <div className="tree-legend">
@@ -886,6 +1110,12 @@ export function FamilyTreeCanvas({
         </div>
       </div>
 
+      {/* Context menu popover */}
+      <NodeContextMenu menu={contextMenu} onClose={closeMenu} onAction={handleMenuAction} />
+
+      {/* Toast */}
+      <Toast message={toastMsg} />
+
       {selectedMember && (
         <MemberInfoPanel
           member={selectedMember}
@@ -894,6 +1124,6 @@ export function FamilyTreeCanvas({
           onClose={() => setSelectedMember(null)}
         />
       )}
-    </>
+    </NodeMenuCtx.Provider>
   );
 }

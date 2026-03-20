@@ -10,7 +10,7 @@ export default async function FamilyTreePage() {
   const data = await getFamilyManagementData(user.id);
   const layout = buildTreeLayout(data.members, data.viewer.membershipId);
   const healthMap = await getMemberHealthMap(data.circle.id);
-  const strengthScore = await getCircleStrengthScore(data.circle.id, healthMap);
+  const { score: strengthScore, callCount: callsLast30d } = await getCircleStrengthScore(data.circle.id, healthMap);
 
   return (
     <main className="page-shell">
@@ -33,6 +33,7 @@ export default async function FamilyTreePage() {
         </section>
 
         <FamilyTreeCanvas
+          callsLast30d={callsLast30d}
           circleName={data.circle.name}
           familyCircleId={data.circle.id}
           healthMap={healthMap}
