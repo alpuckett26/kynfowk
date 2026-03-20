@@ -19,6 +19,7 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 
+import { NatureCanvas } from "@/components/nature-canvas";
 import { addPlaceholderMemberAction, scheduleDirectCallAction } from "@/app/actions";
 import { RELATIONSHIP_OPTIONS, type TreeLayout, type TreeMember } from "@/lib/relationship-classifier";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
@@ -810,6 +811,7 @@ function FamilyFlowInner({
   zoomLevel,
   onBack,
   fitViewRef,
+  viewportRef,
 }: {
   nodes: FlowNode[];
   edges: Edge[];
@@ -819,6 +821,7 @@ function FamilyFlowInner({
   zoomLevel: ZoomLevel;
   onBack: () => void;
   fitViewRef: React.MutableRefObject<FitViewFn | null>;
+  viewportRef: React.MutableRefObject<{ x: number; y: number; zoom: number }>;
 }) {
   const { fitView } = useReactFlow<FlowNode>();
 
@@ -835,6 +838,8 @@ function FamilyFlowInner({
       onNodesChange={onNodesChange}
       onNodeClick={onNodeClick}
       onPaneClick={onPaneClick}
+      onMove={(_event, vp) => { viewportRef.current = vp; }}
+      onInit={(instance) => { setTimeout(() => { viewportRef.current = instance.getViewport(); }, 100); }}
       fitView
       fitViewOptions={{ padding: 0.25 }}
       minZoom={0.12}
@@ -898,6 +903,7 @@ export function FamilyTreeCanvas({
   const [showAddPanel, setShowAddPanel] = useState(false);
   const [zoomLevel, setZoomLevel] = useState<ZoomLevel>("tree");
   const fitViewRef = useRef<FitViewFn | null>(null);
+  const viewportRef = useRef<{ x: number; y: number; zoom: number }>({ x: 0, y: 0, zoom: 0.5 });
 
   // ── Context menu ──────────────────────────────────────────────────────
   const [contextMenu, setContextMenu] = useState<ContextMenuState>(null);
@@ -1083,6 +1089,7 @@ export function FamilyTreeCanvas({
 
         {/* React Flow canvas — ReactFlowProvider enables useReactFlow in FamilyFlowInner */}
         <div className="family-flow-canvas">
+          <NatureCanvas viewportRef={viewportRef} />
           <ReactFlowProvider>
             <FamilyFlowInner
               nodes={nodes}
@@ -1093,6 +1100,7 @@ export function FamilyTreeCanvas({
               zoomLevel={zoomLevel}
               onBack={zoomToTree}
               fitViewRef={fitViewRef}
+              viewportRef={viewportRef}
             />
           </ReactFlowProvider>
         </div>

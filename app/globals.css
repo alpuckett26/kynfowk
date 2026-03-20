@@ -1173,25 +1173,30 @@ h3 {
 
 /* ── Header tree shortcut ─────────────────────────────────────────────────── */
 
+.header-inner {
+  position: relative; /* anchor for absolute tree link */
+}
+
 .header-tree-link {
   position: absolute;
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
   color: var(--text);
-  opacity: 0.65;
+  opacity: 0.6;
   transition: opacity 150ms, transform 150ms;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 0.25rem;
   border-radius: 6px;
-  z-index: 1;
+  z-index: 20;
+  line-height: 0;
 }
 
 .header-tree-link:hover {
   opacity: 1;
-  transform: translate(-50%, -50%) scale(1.12);
+  transform: translate(-50%, -50%) scale(1.1);
 }
 
 @keyframes splashFadeIn {
@@ -3074,20 +3079,22 @@ h3 {
 }
 
 .family-flow-canvas {
+  position: relative;
   width: 100%;
   height: 68vh;
   min-height: 480px;
   border-radius: 12px;
   overflow: hidden;
   border: 1.5px solid rgba(121, 83, 55, 0.15);
-  background: #faf7f2;
+  background: #87CEEB; /* sky fallback before canvas paints */
 }
 
-/* React Flow overrides — match app's parchment theme */
+/* React Flow overrides — transparent so NatureCanvas shows through */
 .family-flow-canvas .react-flow__pane,
 .family-flow-canvas .react-flow__renderer,
-.family-flow-canvas .react-flow {
-  background: #faf7f2;
+.family-flow-canvas .react-flow,
+.family-flow-canvas .react-flow__container {
+  background: transparent !important;
 }
 
 .family-flow-canvas .react-flow__controls {

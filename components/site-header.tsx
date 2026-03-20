@@ -12,20 +12,27 @@ export async function SiteHeader() {
 
   return (
     <header className="site-header">
-      {user && (
-        <Link className="header-tree-link" href="/family/tree" aria-label="View family tree">
-          <svg viewBox="0 0 24 28" width="26" height="30" fill="currentColor" aria-hidden>
-            <circle cx="12" cy="9"  r="8" />
-            <circle cx="7"  cy="14" r="6" />
-            <circle cx="17" cy="14" r="6" />
-            <rect   x="10" y="19"  width="4" height="9" rx="1" />
-          </svg>
-        </Link>
-      )}
       <div className="container header-inner">
         <Link className="brand" href="/">
           Kynfowk
         </Link>
+
+        {user && (
+          <Link className="header-tree-link" href="/family/tree" aria-label="View family tree">
+            {/* Full oak-tree silhouette */}
+            <svg viewBox="0 0 56 72" width="38" height="49" fill="currentColor" aria-hidden>
+              {/* Canopy — overlapping rounded lobes */}
+              <circle cx="28" cy="22" r="20" />
+              <circle cx="11" cy="32" r="15" />
+              <circle cx="45" cy="32" r="15" />
+              <circle cx="28" cy="10" r="13" />
+              <circle cx="18" cy="14" r="11" />
+              <circle cx="38" cy="14" r="11" />
+              {/* Trunk */}
+              <path d="M23 46 Q22 52 20 72 L36 72 Q34 52 33 46 Z" />
+            </svg>
+          </Link>
+        )}
 
         <nav className="nav">
           {NAV_LINKS.map((link) => (
