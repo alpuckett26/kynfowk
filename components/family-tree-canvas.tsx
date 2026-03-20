@@ -19,6 +19,7 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 
+import { NatureCanvas } from "@/components/nature-canvas";
 import { addPlaceholderMemberAction, scheduleDirectCallAction } from "@/app/actions";
 import { RELATIONSHIP_OPTIONS, type TreeLayout, type TreeMember } from "@/lib/relationship-classifier";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
@@ -810,6 +811,7 @@ function FamilyFlowInner({
   zoomLevel,
   onBack,
   fitViewRef,
+  viewportRef,
 }: {
   nodes: FlowNode[];
   edges: Edge[];
@@ -819,10 +821,10 @@ function FamilyFlowInner({
   zoomLevel: ZoomLevel;
   onBack: () => void;
   fitViewRef: React.MutableRefObject<FitViewFn | null>;
+  viewportRef: React.MutableRefObject<{ x: number; y: number; zoom: number }>;
 }) {
   const { fitView } = useReactFlow<FlowNode>();
 
-  // Expose fitView to parent so it can trigger viewport transitions
   useEffect(() => {
     fitViewRef.current = fitView;
   }, [fitView, fitViewRef]);
@@ -835,6 +837,8 @@ function FamilyFlowInner({
       onNodesChange={onNodesChange}
       onNodeClick={onNodeClick}
       onPaneClick={onPaneClick}
+      onMove={(_e, vp) => { viewportRef.current = vp; }}
+      onInit={(inst) => { setTimeout(() => { viewportRef.current = inst.getViewport(); }, 100); }}
       fitView
       fitViewOptions={{ padding: 0.25 }}
       minZoom={0.12}
@@ -898,6 +902,7 @@ export function FamilyTreeCanvas({
   const [showAddPanel, setShowAddPanel] = useState(false);
   const [zoomLevel, setZoomLevel] = useState<ZoomLevel>("tree");
   const fitViewRef = useRef<FitViewFn | null>(null);
+  const viewportRef = useRef({ x: 0, y: 0, zoom: 0.5 });
 
   // ── Context menu ──────────────────────────────────────────────────────
   const [contextMenu, setContextMenu] = useState<ContextMenuState>(null);
@@ -1081,32 +1086,9 @@ export function FamilyTreeCanvas({
           <span className="tree-legend-item tree-legend-online">Online</span>
         </div>
 
-        {/* React Flow canvas — ReactFlowProvider enables useReactFlow in FamilyFlowInner */}
+        {/* React Flow canvas */}
         <div className="family-flow-canvas">
-          {/* Nature video background */}
-          <video
-            autoPlay
-            loop
-            muted
-            playsInline
-            ref={(el) => { if (el) el.playbackRate = 0.4; }}
-            src="/Video_Generation_and_Implementation.mp4"
-            style={{
-              position: "absolute",
-              inset: 0,
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-              pointerEvents: "none",
-            }}
-          />
-          {/* Soft overlay to keep node cards legible */}
-          <div style={{
-            position: "absolute",
-            inset: 0,
-            background: "rgba(255,252,245,0.18)",
-            pointerEvents: "none",
-          }} />
+          <NatureCanvas viewportRef={viewportRef} />
           <ReactFlowProvider>
             <FamilyFlowInner
               nodes={nodes}
@@ -1117,6 +1099,7 @@ export function FamilyTreeCanvas({
               zoomLevel={zoomLevel}
               onBack={zoomToTree}
               fitViewRef={fitViewRef}
+              viewportRef={viewportRef}
             />
           </ReactFlowProvider>
         </div>
