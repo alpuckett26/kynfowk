@@ -35,7 +35,10 @@ export const metadata: Metadata = {
 };
 
 export const viewport = {
-  themeColor: "#c7663f"
+  themeColor: "#c7663f",
+  // viewport-fit=cover lets content extend behind the notch/home indicator;
+  // safe-area CSS vars then push content back into the safe zone.
+  viewportFit: "cover" as const,
 };
 
 export default function RootLayout({

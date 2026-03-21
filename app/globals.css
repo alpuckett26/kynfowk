@@ -1,3 +1,11 @@
+/* Safe-area insets for Capacitor / notch devices */
+:root {
+  --sat: env(safe-area-inset-top,    0px);
+  --sar: env(safe-area-inset-right,  0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left,   0px);
+}
+
 :root {
   --bg: #fcf7f1;
   --surface: rgba(255, 250, 244, 0.86);
@@ -71,6 +79,8 @@ main {
   position: sticky;
   top: 0;
   z-index: 10;
+  /* Push header down below native status bar on Capacitor */
+  padding-top: var(--sat);
   backdrop-filter: blur(18px);
   background: rgba(252, 247, 241, 0.72);
   border-bottom: 1px solid rgba(121, 83, 55, 0.08);
