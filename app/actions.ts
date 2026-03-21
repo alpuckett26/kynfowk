@@ -317,10 +317,14 @@ export async function forgotPasswordAction(
   if (!email) return { status: "error", message: "Email is required." };
 
   const supabase = await createSupabaseServerClient();
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://kynfowk.vercel.app";
+  const siteUrl   = process.env.NEXT_PUBLIC_SITE_URL   ?? "https://kynfowk.vercel.app";
+  // When NEXT_PUBLIC_APP_SCHEME=kynfowk is set (native app live in stores),
+  // reset links open the app directly instead of the browser.
+  const appScheme = process.env.NEXT_PUBLIC_APP_SCHEME;
+  const callbackBase = appScheme ? `${appScheme}://` : `${siteUrl}/`;
 
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${siteUrl}/auth/callback?type=recovery`
+    redirectTo: `${callbackBase}auth/callback?type=recovery`
   });
 
   // Always return success to avoid email enumeration

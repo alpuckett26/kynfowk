@@ -5,6 +5,7 @@ import "@/app/globals.css";
 
 import { ChatWidget } from "@/components/chat-widget";
 import { Chyron } from "@/components/chyron";
+import { DeepLinkHandler } from "@/components/deep-link-handler";
 import { InstallPrompt } from "@/components/install-prompt";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 import { PageTransition } from "@/components/page-transition";
@@ -50,6 +51,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${fraunces.variable} ${manrope.variable}`}>
         <PwaBootstrap />
+        <DeepLinkHandler />
         <PresenceTracker />
         <PageTransition />
         <SiteHeader />
