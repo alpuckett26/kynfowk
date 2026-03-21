@@ -29,6 +29,11 @@ const config: CapacitorConfig = {
       resize: "body",
       resizeOnFullScreen: true,
     },
+    PushNotifications: {
+      // Show banner + badge + sound when the app is in the foreground (iOS).
+      // Android always shows a system notification regardless of this setting.
+      presentationOptions: ["badge", "sound", "alert"],
+    },
   },
 };
 
