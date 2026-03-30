@@ -18,7 +18,7 @@ workflows:
         XCODE_PROJECT: ios/App/App.xcodeproj
         XCODE_SCHEME: App
         BUNDLE_ID: com.kynfowk.app
-        APP_STORE_APPLE_ID: $APP_STORE_APPLE_ID   # set in Codemagic env vars
+        APP_STORE_APPLE_ID: "6761375113"
       node: 20.18.0
       xcode: latest
       cocoapods: default
