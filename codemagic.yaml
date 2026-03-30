@@ -59,7 +59,7 @@ workflows:
         submit_to_app_store: false   # flip to true when ready for full release
       email:
         recipients:
-          - $NOTIFY_EMAIL
+          - alpuckett26@gmail.com
         notify:
           success: true
           failure: true
@@ -119,7 +119,7 @@ workflows:
         submit_as_draft: false
       email:
         recipients:
-          - $NOTIFY_EMAIL
+          - alpuckett26@gmail.com
         notify:
           success: true
           failure: true
