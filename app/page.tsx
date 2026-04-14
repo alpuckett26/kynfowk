@@ -281,6 +281,46 @@ function FooterSection() {
   );
 }
 
+function GetStartedSection() {
+  return (
+    <section
+      id="get-started"
+      className="py-24 bg-gradient-to-br from-brand-50 to-warm-50"
+    >
+      <div className="mx-auto max-w-xl px-4 sm:px-6 text-center">
+        <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-brand-600">
+          Get started
+        </p>
+        <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl mb-4">
+          Your family&apos;s connection story starts here
+        </h2>
+        <p className="text-lg text-gray-500 mb-8">
+          Free to try. No credit card. Works on any device.
+        </p>
+        <form
+          className="flex flex-col sm:flex-row gap-3 justify-center"
+          onSubmit={(e) => e.preventDefault()}
+        >
+          <input
+            type="email"
+            placeholder="your@email.com"
+            className="flex-1 rounded-full border border-gray-300 px-5 py-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
+          />
+          <button
+            type="submit"
+            className="rounded-full bg-gradient-to-r from-brand-500 to-purple-600 px-7 py-3.5 text-white font-semibold shadow-md hover:shadow-lg hover:scale-105 transition-all text-sm"
+          >
+            Create your family →
+          </button>
+        </form>
+        <p className="mt-4 text-xs text-gray-400">
+          Join 2,400+ families already connected with Kynfowk
+        </p>
+      </div>
+    </section>
+  );
+}
+
 export default function LandingPage() {
   return (
     <>
@@ -290,6 +330,7 @@ export default function LandingPage() {
         <HowItWorksSection />
         <ConnectionFeaturesSection />
         <CaseStudiesSection />
+        <GetStartedSection />
       </main>
       <FooterSection />
     </>

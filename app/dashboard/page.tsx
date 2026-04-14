@@ -238,8 +238,8 @@ export default async function DashboardPage() {
                   Quick actions
                 </h3>
                 {[
-                  { label: "Schedule a call", icon: "📅", href: "#" },
-                  { label: "Invite a family member", icon: "➕", href: "#" },
+                  { label: "Schedule a call", icon: "📅", href: "/schedule" },
+                  { label: "Invite a family member", icon: "➕", href: "/invite" },
                   { label: "View family stories", icon: "💜", href: "/case-studies" },
                 ].map((a) => (
                   <Link

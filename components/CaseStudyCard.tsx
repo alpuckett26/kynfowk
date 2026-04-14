@@ -29,9 +29,8 @@ export function CaseStudyCard({ study, expanded = false }: CaseStudyCardProps) {
           <div
             className={cn(
               "flex-shrink-0 h-12 w-12 rounded-xl flex items-center justify-center text-2xl",
-              `bg-gradient-to-br ${study.accentColor} bg-opacity-10`
+              `bg-gradient-to-br ${study.accentColor} opacity-90`
             )}
-            style={{ background: undefined }}
           >
             <span>{study.iconEmoji}</span>
           </div>
