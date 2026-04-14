@@ -1,4 +1,4 @@
-import { caseStudies } from "@/data/case-studies";
+import { caseStudies } from "@kynfowk/data";
 
 describe("case studies data", () => {
   it("has exactly 5 case studies", () => {

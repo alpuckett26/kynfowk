@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { ConnectionsCounter } from "@/components/ConnectionsCounter";
-import type { ConnectionMetrics } from "@/lib/types";
+import type { ConnectionMetrics } from "@kynfowk/types";
 
 const baseMetrics: ConnectionMetrics = {
   completedCalls: 3,

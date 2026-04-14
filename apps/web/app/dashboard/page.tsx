@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ConnectionsCounter } from "@/components/ConnectionsCounter";
 import { getFamilyMetrics, getAllTimeStats } from "@/lib/connections";
 import { formatMinutes, formatNumber } from "@/lib/utils";
-import type { ConnectionMetrics } from "@/lib/types";
+import type { ConnectionMetrics } from "@kynfowk/types";
 
 // Demo family ID — in production this comes from auth session
 const DEMO_FAMILY_ID = "11111111-0000-0000-0000-000000000001";

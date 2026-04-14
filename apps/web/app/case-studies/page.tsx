@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { caseStudies } from "@/data/case-studies";
+import { caseStudies } from "@kynfowk/data";
 import { CaseStudyCard } from "@/components/CaseStudyCard";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { CaseStudiesSection } from "@/components/CaseStudiesSection";
+import { GetStartedForm } from "@/components/GetStartedForm";
 
 function Nav() {
   return (
@@ -297,22 +298,7 @@ function GetStartedSection() {
         <p className="text-lg text-gray-500 mb-8">
           Free to try. No credit card. Works on any device.
         </p>
-        <form
-          className="flex flex-col sm:flex-row gap-3 justify-center"
-          onSubmit={(e) => e.preventDefault()}
-        >
-          <input
-            type="email"
-            placeholder="your@email.com"
-            className="flex-1 rounded-full border border-gray-300 px-5 py-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
-          />
-          <button
-            type="submit"
-            className="rounded-full bg-gradient-to-r from-brand-500 to-purple-600 px-7 py-3.5 text-white font-semibold shadow-md hover:shadow-lg hover:scale-105 transition-all text-sm"
-          >
-            Create your family →
-          </button>
-        </form>
+        <GetStartedForm />
         <p className="mt-4 text-xs text-gray-400">
           Join 2,400+ families already connected with Kynfowk
         </p>

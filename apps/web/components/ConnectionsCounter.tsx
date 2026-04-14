@@ -2,7 +2,7 @@
 
 import { StatTile } from "@/components/ui/StatTile";
 import { formatMinutes, formatNumber, pluralize } from "@/lib/utils";
-import type { ConnectionMetrics } from "@/lib/types";
+import type { ConnectionMetrics } from "@kynfowk/types";
 
 interface ConnectionsCounterProps {
   metrics: ConnectionMetrics;

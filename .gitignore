@@ -1,0 +1,31 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Next.js
+apps/web/.next/
+apps/web/out/
+
+# Expo
+apps/native/.expo/
+apps/native/dist/
+
+# Env files
+.env
+.env.local
+.env.*.local
+
+# Build outputs
+dist/
+build/
+
+# Misc
+.DS_Store
+*.pem
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Turbo
+.turbo/
