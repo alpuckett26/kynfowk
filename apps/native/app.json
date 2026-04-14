@@ -2,7 +2,11 @@
   "expo": {
     "name": "Kynfowk",
     "slug": "kynfowk",
+    "owner": "kynfowk",
     "version": "1.0.0",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -15,10 +19,12 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.kynfowk.app",
+      "buildNumber": "1",
       "infoPlist": {
         "NSCameraUsageDescription": "Kynfowk needs camera access for family video calls.",
         "NSMicrophoneUsageDescription": "Kynfowk needs microphone access for family video calls.",
-        "NSUserNotificationsUsageDescription": "Kynfowk sends reminders before your scheduled family calls."
+        "NSUserNotificationsUsageDescription": "Kynfowk sends reminders before your scheduled family calls.",
+        "NSPhotoLibraryUsageDescription": "Kynfowk accesses photos to set your profile picture."
       }
     },
     "android": {
@@ -27,6 +33,7 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.kynfowk.app",
+      "versionCode": 1,
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO",
@@ -44,7 +51,6 @@
       [
         "expo-notifications",
         {
-          "icon": "./assets/notification-icon.png",
           "color": "#d946ef",
           "sounds": []
         }
@@ -52,13 +58,26 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "Kynfowk needs camera access for family video calls."
+          "cameraPermission": "Kynfowk needs camera access for family video calls.",
+          "microphonePermission": "Kynfowk needs microphone access for family video calls."
         }
+      ],
+      [
+        "@livekit/react-native",
+        {}
       ]
     ],
     "scheme": "kynfowk",
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "your-eas-project-id"
+      }
+    },
+    "updates": {
+      "url": "https://u.expo.dev/your-eas-project-id"
     }
   }
 }
