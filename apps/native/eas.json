@@ -7,18 +7,13 @@
       "developmentClient": true,
       "distribution": "internal",
       "ios": {
-        "simulator": false,
         "resourceClass": "m-medium"
       },
       "android": {
         "buildType": "apk"
-      }
-    },
-    "simulator": {
-      "developmentClient": true,
-      "distribution": "internal",
-      "ios": {
-        "simulator": true
+      },
+      "env": {
+        "EXPO_PUBLIC_APP_ENV": "development"
       }
     },
     "preview": {
@@ -28,16 +23,43 @@
       },
       "android": {
         "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_APP_ENV": "preview"
       }
     },
-    "production": {
+    "testflight": {
+      "distribution": "store",
       "autoIncrement": true,
       "ios": {
         "resourceClass": "m-medium"
+      },
+      "env": {
+        "EXPO_PUBLIC_APP_ENV": "production"
+      }
+    },
+    "production": {
+      "distribution": "store",
+      "autoIncrement": true,
+      "ios": {
+        "resourceClass": "m-medium"
+      },
+      "android": {
+        "buildType": "app-bundle"
+      },
+      "env": {
+        "EXPO_PUBLIC_APP_ENV": "production"
       }
     }
   },
   "submit": {
+    "testflight": {
+      "ios": {
+        "appleId": "your-apple-id@email.com",
+        "ascAppId": "your-app-store-connect-app-id",
+        "appleTeamId": "your-apple-team-id"
+      }
+    },
     "production": {
       "ios": {
         "appleId": "your-apple-id@email.com",
