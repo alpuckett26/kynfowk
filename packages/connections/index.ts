@@ -1,13 +1,13 @@
-import { createClient } from "@/lib/supabase/server";
-import type { ConnectionMetrics, FamilyConnectionStats } from "@/lib/types";
-import { getWeekStart } from "@/lib/utils";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { ConnectionMetrics, FamilyConnectionStats } from "@kynfowk/types";
+import { getWeekStart } from "@kynfowk/utils";
 
 // ─── Fetch current-week metrics for a family ─────────────────────────────────
 
 export async function getFamilyMetrics(
+  supabase: SupabaseClient,
   familyId: string
 ): Promise<ConnectionMetrics> {
-  const supabase = createClient();
   const weekStart = getWeekStart().toISOString().split("T")[0];
 
   const { data, error } = await supabase
@@ -23,7 +23,6 @@ export async function getFamilyMetrics(
 
   const row = data as FamilyConnectionStats | null;
 
-  // Also count reconnections and elder calls this week
   const { data: events } = await supabase
     .from("connection_events")
     .select("event_type")
@@ -59,10 +58,9 @@ export interface CallSummaryMetrics {
 }
 
 export async function getCallSummary(
+  supabase: SupabaseClient,
   callId: string
 ): Promise<CallSummaryMetrics> {
-  const supabase = createClient();
-
   const { data: call } = await supabase
     .from("calls")
     .select("duration_seconds, participant_count")
@@ -79,7 +77,6 @@ export async function getCallSummary(
     score_delta: number;
   }[];
 
-  // Deduplicate events across participants (one label per event type)
   const seen = new Set<string>();
   const deduped = evtList.filter((e) => {
     if (seen.has(e.event_type)) return false;
@@ -115,9 +112,10 @@ export interface AllTimeStats {
   longestStreak: number;
 }
 
-export async function getAllTimeStats(familyId: string): Promise<AllTimeStats> {
-  const supabase = createClient();
-
+export async function getAllTimeStats(
+  supabase: SupabaseClient,
+  familyId: string
+): Promise<AllTimeStats> {
   const { data } = await supabase
     .from("family_connection_stats")
     .select("completed_calls, total_minutes, connection_score, streak_weeks")

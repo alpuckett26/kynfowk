@@ -1,0 +1,17 @@
+{
+  "name": "@kynfowk/connections",
+  "version": "0.0.1",
+  "private": true,
+  "main": "./index.ts",
+  "types": "./index.ts",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "dependencies": {
+    "@kynfowk/types": "*",
+    "@kynfowk/utils": "*"
+  },
+  "peerDependencies": {
+    "@supabase/supabase-js": "^2.39.3"
+  }
+}

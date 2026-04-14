@@ -1,4 +1,4 @@
-import type { CaseStudy } from "@/lib/types";
+import type { CaseStudy } from "@kynfowk/types";
 
 export const caseStudies: CaseStudy[] = [
   {

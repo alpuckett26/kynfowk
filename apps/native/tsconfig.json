@@ -1,0 +1,14 @@
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "paths": {
+      "@/*": ["./*"],
+      "@kynfowk/types": ["../../packages/types/index.ts"],
+      "@kynfowk/utils": ["../../packages/utils/index.ts"],
+      "@kynfowk/connections": ["../../packages/connections/index.ts"],
+      "@kynfowk/data": ["../../packages/data/index.ts"]
+    }
+  },
+  "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.d.ts", "expo-env.d.ts"]
+}
