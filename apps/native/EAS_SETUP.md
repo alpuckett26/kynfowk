@@ -4,108 +4,96 @@ Build and ship Kynfowk to TestFlight from any computer — no Mac required.
 
 ---
 
-## Prerequisites
+## Current status (already done)
 
-- [ ] Node.js 18+
-- [ ] Expo account — [expo.dev](https://expo.dev) (free)
-- [ ] Apple Developer account ($99/yr) — [developer.apple.com](https://developer.apple.com)
-- [ ] App created in App Store Connect — [appstoreconnect.apple.com](https://appstoreconnect.apple.com)
+| Item | Status |
+|------|--------|
+| EAS project created | ✅ `@ahype/kynfowk` (ID: `8d4e3725-0286-4a06-81e1-411f265674d4`) |
+| App Store Connect API key | ✅ Stored in EAS as `V49U67RZ3A` |
+| Android APK build | ✅ Queued — [view build](https://expo.dev/accounts/ahype/projects/kynfowk/builds/28e10671-afe2-4a54-a022-9f5c4f380fd7) |
+| iOS credentials | ⏳ Needs one interactive step (see below) |
 
 ---
 
-## One-time setup
+## iOS — one-time credential setup (run from your laptop)
 
-### 1. Install EAS CLI
+The App Store Connect API key is already stored in EAS. You just need one
+interactive session to let EAS use it to generate your Distribution Certificate
+and Provisioning Profile.
+
 ```bash
+# Install EAS CLI if you don't have it
 npm install -g eas-cli
+
+# Log in to the ahype Expo account
 eas login
-```
+# username: ahype  email: aaron@lectricash.com
 
-### 2. Pull the branch
-```bash
-git clone <repo>
-cd kynfowk
-git checkout claude/connections-case-studies-JswK1
+# Navigate to the native app
 cd apps/native
-npm install
+
+# Trigger the iOS build interactively (one time only)
+eas build --platform ios --profile testflight
 ```
 
-### 3. Link to your Expo project
+When prompted, EAS will offer to use the stored API key `V49U67RZ3A` — say **yes**.
+It will connect to Apple, create the Distribution Certificate + Provisioning Profile,
+store them in EAS, and submit the cloud build.
+
+**After this one run, all future iOS builds are fully automated** (no Mac required):
 ```bash
-eas init
+eas build --platform ios --profile testflight --non-interactive
 ```
-This fills in `extra.eas.projectId` in `app.json` automatically.
 
-### 4. Create your app in App Store Connect
-1. Go to [appstoreconnect.apple.com](https://appstoreconnect.apple.com)
-2. Click **+** → New App
-3. Platform: iOS
-4. Bundle ID: `com.kynfowk.app`
-5. Copy the **App ID** (numeric, e.g. `1234567890`)
+---
 
-### 5. Fill in your credentials in eas.json
-Replace the placeholder values in `eas.json` under `submit`:
+## Submit to TestFlight (after iOS build completes)
+
+```bash
+eas submit --platform ios --profile testflight --latest
+```
+- Appears in TestFlight within ~10 min after Apple processes it
+- App Store Connect → TestFlight → Internal Testing → add your Apple ID → install on iPhone
+
+### Fill in submit credentials first
+
+Edit `eas.json` and replace placeholder values:
 ```json
-"appleId": "you@youremail.com",
-"ascAppId": "1234567890",
-"appleTeamId": "ABCD1234EF"
+"appleId": "your-actual-apple-id@email.com",
+"ascAppId": "your-numeric-app-id-from-app-store-connect",
+"appleTeamId": "your-10-char-team-id"
 ```
 
 Find your **Team ID** at [developer.apple.com/account](https://developer.apple.com/account) → Membership.
 
-### 6. Set your env vars
-Copy `.env.example` to `.env.local` and fill in your Supabase and LiveKit values:
+Find the **App ID** (numeric) in App Store Connect → My Apps → select app → App Information → Apple ID.
+
+---
+
+## Subsequent builds (fully automated)
+
 ```bash
-cp .env.example .env.local
+# iOS + submit to TestFlight in one command
+eas build --platform ios --profile testflight --auto-submit --non-interactive
+
+# Android APK
+eas build --platform android --profile preview --non-interactive
 ```
 
 ---
 
-## Build + ship to TestFlight
-
-### Step 1 — Build in the cloud
-```bash
-eas build --platform ios --profile testflight
-```
-- EAS builds on their Mac servers (~15 min)
-- You'll get a build link when done
-
-### Step 2 — Submit to TestFlight
-```bash
-eas submit --platform ios --profile testflight --latest
-```
-- Uploads the IPA to App Store Connect
-- Appears in TestFlight within ~10 min (after Apple processing)
-
-### Step 3 — Add testers in TestFlight
-1. App Store Connect → TestFlight → Internal Testing
-2. Add your Apple ID as a tester
-3. Open TestFlight on your iPhone → install Kynfowk
-
----
-
-## Subsequent builds
-
-After the first build, every update is just:
-```bash
-eas build --platform ios --profile testflight --auto-submit
-```
-`--auto-submit` builds AND submits in one command.
-
----
-
-## Build profiles explained
+## Build profiles
 
 | Profile | Distribution | Use for |
 |---------|-------------|---------|
 | `development` | Internal (ad hoc) | Dev client — live reload on device |
-| `preview` | Internal (ad hoc) | Quick team review builds |
+| `preview` | Internal (ad hoc) | Quick team review, APK direct install |
 | `testflight` | App Store | TestFlight testing |
 | `production` | App Store | App Store submission |
 
 ---
 
-## Android (no Apple account needed)
+## Android — no Apple account needed
 
 ```bash
 eas build --platform android --profile preview
