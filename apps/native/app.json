@@ -63,10 +63,6 @@
           "cameraPermission": "Kynfowk needs camera access for family video calls.",
           "microphonePermission": "Kynfowk needs microphone access for family video calls."
         }
-      ],
-      [
-        "@livekit/react-native",
-        {}
       ]
     ],
     "scheme": "kynfowk",
