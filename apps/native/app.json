@@ -26,7 +26,8 @@
         "NSCameraUsageDescription": "Kynfowk needs camera access for family video calls.",
         "NSMicrophoneUsageDescription": "Kynfowk needs microphone access for family video calls.",
         "NSUserNotificationsUsageDescription": "Kynfowk sends reminders before your scheduled family calls.",
-        "NSPhotoLibraryUsageDescription": "Kynfowk accesses photos to set your profile picture."
+        "NSPhotoLibraryUsageDescription": "Kynfowk accesses photos to set your profile picture.",
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
