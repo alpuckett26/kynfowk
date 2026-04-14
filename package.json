@@ -15,8 +15,7 @@
     "build:web": "turbo build --filter=@kynfowk/web"
   },
   "devDependencies": {
-    "turbo": "^1.12.4",
-    "ajv": "^8.18.0"
+    "turbo": "^1.12.4"
   },
   "packageManager": "npm@10.2.4",
   "engines": {
