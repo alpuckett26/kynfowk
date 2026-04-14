@@ -2,7 +2,7 @@
   "expo": {
     "name": "Kynfowk",
     "slug": "kynfowk",
-    "owner": "kynfowk",
+    "owner": "ahype",
     "version": "1.0.0",
     "runtimeVersion": {
       "policy": "appVersion"
@@ -15,7 +15,9 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.kynfowk.app",
@@ -73,11 +75,14 @@
     },
     "extra": {
       "eas": {
-        "projectId": "your-eas-project-id"
+        "projectId": "8d4e3725-0286-4a06-81e1-411f265674d4"
+      },
+      "router": {
+        "origin": false
       }
     },
     "updates": {
-      "url": "https://u.expo.dev/your-eas-project-id"
+      "url": "https://u.expo.dev/8d4e3725-0286-4a06-81e1-411f265674d4"
     }
   }
 }

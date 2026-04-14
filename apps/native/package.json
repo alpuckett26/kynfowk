@@ -46,5 +46,8 @@
   },
   "jest": {
     "preset": "jest-expo"
+  },
+  "overrides": {
+    "ajv": "^8.12.0"
   }
 }
