@@ -10,6 +10,8 @@ apps/web/out/
 # Expo
 apps/native/.expo/
 apps/native/dist/
+apps/native/android/
+apps/native/ios/
 
 # Env files
 .env

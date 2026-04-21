@@ -5,17 +5,18 @@ workflows:
     instance_type: linux_x2
     environment:
       node: 18.19.0
+      java: 17
       vars:
         EXPO_PUBLIC_APP_ENV: preview
     cache:
       cache_paths:
         - $HOME/.npm
-        - $CM_BUILD_DIR/node_modules
+        - $HOME/.gradle/caches
     scripts:
       - name: Install root deps
         script: npm install --legacy-peer-deps
 
-      - name: Prebuild Android native code
+      - name: Prebuild Android
         working_directory: apps/native
         script: npx expo prebuild --platform android --clean --no-install
 
@@ -25,8 +26,7 @@ workflows:
           chmod +x gradlew
           ./gradlew assembleRelease \
             -PreactNativeArchitectures=arm64-v8a \
-            --no-daemon \
-            --stacktrace
+            --no-daemon
 
     artifacts:
       - apps/native/android/app/build/outputs/apk/release/app-release.apk
@@ -50,22 +50,20 @@ workflows:
       vars:
         EXPO_PUBLIC_APP_ENV: production
         BUNDLE_ID: com.kynfowk.app
-        XCODE_WORKSPACE: apps/native/ios/Kynfowk.xcworkspace
+        XCODE_WORKSPACE: ios/Kynfowk.xcworkspace
         XCODE_SCHEME: Kynfowk
-      app_store_connect:
-        api_key: $APP_STORE_CONNECT_PRIVATE_KEY
-        key_id: $APP_STORE_CONNECT_KEY_IDENTIFIER
-        issuer_id: $APP_STORE_CONNECT_ISSUER_ID
+        APP_STORE_CONNECT_ISSUER_ID: Encrypted(...)
+        APP_STORE_CONNECT_KEY_IDENTIFIER: Encrypted(...)
+        APP_STORE_CONNECT_PRIVATE_KEY: Encrypted(...)
     cache:
       cache_paths:
         - $HOME/.npm
-        - $CM_BUILD_DIR/node_modules
         - $HOME/Library/Caches/CocoaPods
     scripts:
       - name: Install root deps
         script: npm install --legacy-peer-deps
 
-      - name: Prebuild iOS native code
+      - name: Prebuild iOS
         working_directory: apps/native
         script: npx expo prebuild --platform ios --clean --no-install
 
@@ -73,25 +71,32 @@ workflows:
         working_directory: apps/native/ios
         script: pod install
 
-      - name: Set build number
+      - name: Set up keychain and fetch signing files
+        working_directory: apps/native
         script: |
-          BUILD_NUMBER=$(date +%s)
-          agvtool new-version -all $BUILD_NUMBER
-        working_directory: apps/native/ios
+          keychain initialize
+          app-store-connect fetch-signing-files $BUNDLE_ID \
+            --type IOS_APP_STORE \
+            --create
+          keychain add-certificates
+          xcode-project use-profiles
 
       - name: Build IPA
+        working_directory: apps/native
         script: |
-          xcode-project use-profiles
           xcode-project build-ipa \
             --workspace "$XCODE_WORKSPACE" \
             --scheme "$XCODE_SCHEME"
 
     artifacts:
       - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
 
     publishing:
       app_store_connect:
-        auth: integration
+        api_key: $APP_STORE_CONNECT_PRIVATE_KEY
+        key_id: $APP_STORE_CONNECT_KEY_IDENTIFIER
+        issuer_id: $APP_STORE_CONNECT_ISSUER_ID
         submit_to_testflight: true
       email:
         recipients:
