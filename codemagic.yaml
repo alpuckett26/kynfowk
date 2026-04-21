@@ -1,0 +1,101 @@
+workflows:
+  android-apk:
+    name: Android APK
+    max_build_duration: 60
+    instance_type: linux_x2
+    environment:
+      node: 18.19.0
+      vars:
+        EXPO_PUBLIC_APP_ENV: preview
+    cache:
+      cache_paths:
+        - $HOME/.npm
+        - $CM_BUILD_DIR/node_modules
+    scripts:
+      - name: Install root deps
+        script: npm install --legacy-peer-deps
+
+      - name: Prebuild Android native code
+        working_directory: apps/native
+        script: npx expo prebuild --platform android --clean --no-install
+
+      - name: Build APK
+        working_directory: apps/native/android
+        script: |
+          chmod +x gradlew
+          ./gradlew assembleRelease \
+            -PreactNativeArchitectures=arm64-v8a \
+            --no-daemon \
+            --stacktrace
+
+    artifacts:
+      - apps/native/android/app/build/outputs/apk/release/app-release.apk
+
+    publishing:
+      email:
+        recipients:
+          - aaron@lectricash.com
+        notify:
+          success: true
+          failure: true
+
+  ios-testflight:
+    name: iOS TestFlight
+    max_build_duration: 90
+    instance_type: mac_mini_m2
+    environment:
+      node: 18.19.0
+      xcode: latest
+      cocoapods: default
+      vars:
+        EXPO_PUBLIC_APP_ENV: production
+        BUNDLE_ID: com.kynfowk.app
+        XCODE_WORKSPACE: apps/native/ios/Kynfowk.xcworkspace
+        XCODE_SCHEME: Kynfowk
+      app_store_connect:
+        api_key: $APP_STORE_CONNECT_PRIVATE_KEY
+        key_id: $APP_STORE_CONNECT_KEY_IDENTIFIER
+        issuer_id: $APP_STORE_CONNECT_ISSUER_ID
+    cache:
+      cache_paths:
+        - $HOME/.npm
+        - $CM_BUILD_DIR/node_modules
+        - $HOME/Library/Caches/CocoaPods
+    scripts:
+      - name: Install root deps
+        script: npm install --legacy-peer-deps
+
+      - name: Prebuild iOS native code
+        working_directory: apps/native
+        script: npx expo prebuild --platform ios --clean --no-install
+
+      - name: Install CocoaPods
+        working_directory: apps/native/ios
+        script: pod install
+
+      - name: Set build number
+        script: |
+          BUILD_NUMBER=$(date +%s)
+          agvtool new-version -all $BUILD_NUMBER
+        working_directory: apps/native/ios
+
+      - name: Build IPA
+        script: |
+          xcode-project use-profiles
+          xcode-project build-ipa \
+            --workspace "$XCODE_WORKSPACE" \
+            --scheme "$XCODE_SCHEME"
+
+    artifacts:
+      - build/ios/ipa/*.ipa
+
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
+      email:
+        recipients:
+          - aaron@lectricash.com
+        notify:
+          success: true
+          failure: true
