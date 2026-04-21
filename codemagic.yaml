@@ -47,14 +47,13 @@ workflows:
       node: 18.19.0
       xcode: latest
       cocoapods: default
+      groups:
+        - ios
       vars:
         EXPO_PUBLIC_APP_ENV: production
         BUNDLE_ID: com.kynfowk.app
         XCODE_WORKSPACE: ios/Kynfowk.xcworkspace
         XCODE_SCHEME: Kynfowk
-        APP_STORE_CONNECT_ISSUER_ID: Encrypted(...)
-        APP_STORE_CONNECT_KEY_IDENTIFIER: Encrypted(...)
-        APP_STORE_CONNECT_PRIVATE_KEY: Encrypted(...)
     cache:
       cache_paths:
         - $HOME/.npm
