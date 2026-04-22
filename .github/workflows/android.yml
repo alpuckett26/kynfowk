@@ -1,0 +1,46 @@
+name: Android APK
+
+on:
+  push:
+    branches: [main, 'claude/**']
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '18.18.2'
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: temurin
+
+      - name: Install deps
+        run: npm install --legacy-peer-deps
+
+      - name: Prebuild Android
+        working-directory: apps/native
+        env:
+          EXPO_PUBLIC_APP_ENV: preview
+        run: npx expo prebuild --platform android --clean --no-install
+
+      - name: Build APK
+        working-directory: apps/native/android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleRelease \
+            -PreactNativeArchitectures=arm64-v8a \
+            --no-daemon
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: app-release-apk
+          path: apps/native/android/app/build/outputs/apk/release/app-release.apk
+          retention-days: 7
