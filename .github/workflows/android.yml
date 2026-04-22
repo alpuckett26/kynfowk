@@ -52,7 +52,7 @@ jobs:
             -PMYAPP_UPLOAD_STORE_PASSWORD=${{ secrets.ANDROID_STORE_PASSWORD }} \
             -PMYAPP_UPLOAD_KEY_ALIAS=${{ secrets.ANDROID_KEY_ALIAS }} \
             -PMYAPP_UPLOAD_KEY_PASSWORD=${{ secrets.ANDROID_KEY_PASSWORD }} \
-            -PreactNativeArchitectures=arm64-v8a \
+            -PreactNativeArchitectures=arm64-v8a,armeabi-v7a \
             --no-daemon
 
       - uses: actions/upload-artifact@v4
