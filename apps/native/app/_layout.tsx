@@ -4,11 +4,7 @@ import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import * as SplashScreen from "expo-splash-screen";
 import { View, Text, ScrollView } from "react-native";
-import { registerGlobals } from "@livekit/react-native";
 import { registerForPushNotifications } from "@/lib/notifications";
-
-// Required by LiveKit before any WebRTC code runs
-registerGlobals();
 
 SplashScreen.preventAutoHideAsync();
 
