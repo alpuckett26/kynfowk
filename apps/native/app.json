@@ -37,6 +37,7 @@
       },
       "package": "com.kynfowk.app",
       "versionCode": 1,
+      "jsEngine": "jsc",
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO",
