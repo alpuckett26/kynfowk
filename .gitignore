@@ -31,3 +31,6 @@ yarn-error.log*
 
 # Turbo
 .turbo/
+
+# EAS local build credentials (never commit)
+apps/native/credentials.json

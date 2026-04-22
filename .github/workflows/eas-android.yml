@@ -1,0 +1,73 @@
+name: EAS Android APK
+
+on:
+  push:
+    branches: [main, 'claude/**']
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '18.18.2'
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: temurin
+
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Install deps
+        run: npm install --legacy-peer-deps
+
+      - name: Decode keystore and write credentials.json
+        working-directory: apps/native
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > /tmp/kynfowk-release.keystore
+          node -e "
+            const fs = require('fs');
+            fs.writeFileSync('credentials.json', JSON.stringify({
+              android: {
+                keystore: {
+                  keystorePath: '/tmp/kynfowk-release.keystore',
+                  keystorePassword: process.env.KEYSTORE_PASSWORD,
+                  keyAlias: process.env.KEY_ALIAS,
+                  keyPassword: process.env.KEY_PASSWORD
+                }
+              }
+            }, null, 2));
+            console.log('credentials.json written');
+          "
+
+      - name: Build Android APK (EAS local)
+        working-directory: apps/native
+        env:
+          EXPO_PUBLIC_APP_ENV: preview
+          EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
+          EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
+          EXPO_PUBLIC_LIVEKIT_URL: ${{ secrets.EXPO_PUBLIC_LIVEKIT_URL }}
+          EXPO_PUBLIC_APP_URL: ${{ secrets.EXPO_PUBLIC_APP_URL }}
+          EXPO_PUBLIC_PROJECT_ID: ${{ secrets.EXPO_PUBLIC_PROJECT_ID }}
+        run: |
+          eas build --platform android --profile preview \
+            --local --output ./build.apk --non-interactive
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: eas-android-apk
+          path: apps/native/build.apk
+          retention-days: 7
