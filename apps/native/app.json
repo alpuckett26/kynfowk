@@ -26,8 +26,7 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.kynfowk.app",
-      "versionCode": 1,
-      "jsEngine": "jsc"
+      "versionCode": 1
     },
     "web": {
       "favicon": "./assets/favicon.png"

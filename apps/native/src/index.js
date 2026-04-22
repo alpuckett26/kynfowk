@@ -1,18 +1,15 @@
 import { AppRegistry } from 'react-native';
-import { View, Text, Alert } from 'react-native';
-import { useEffect } from 'react';
+import { View, Text } from 'react-native';
+import * as SplashScreen from 'expo-splash-screen';
 
-// Plain React Native — no expo-router, no SafeAreaProvider, no NavigationContainer.
-// If this shows the red screen it proves expo-router is the crash cause.
+// Force-hide splash immediately at module load — don't wait for useEffect
+SplashScreen.hideAsync();
+
 function App() {
-  useEffect(() => {
-    Alert.alert('Works!', 'Plain React Native rendered successfully.');
-  }, []);
-
   return (
     <View style={{ flex: 1, backgroundColor: '#dc2626', justifyContent: 'center', alignItems: 'center' }}>
-      <Text style={{ color: '#fff', fontSize: 28, fontWeight: 'bold' }}>Kynfowk</Text>
-      <Text style={{ color: '#fca5a5', fontSize: 16, marginTop: 8 }}>Plain RN — no router</Text>
+      <Text style={{ color: '#fff', fontSize: 28, fontWeight: 'bold' }}>IT WORKS</Text>
+      <Text style={{ color: '#fca5a5', fontSize: 16, marginTop: 8 }}>Red = app is rendering</Text>
     </View>
   );
 }
