@@ -4,9 +4,6 @@
     "slug": "kynfowk",
     "owner": "ahype",
     "version": "1.0.0",
-    "runtimeVersion": {
-      "policy": "appVersion"
-    },
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -21,14 +18,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.kynfowk.app",
-      "buildNumber": "1",
-      "infoPlist": {
-        "NSCameraUsageDescription": "Kynfowk needs camera access for family video calls.",
-        "NSMicrophoneUsageDescription": "Kynfowk needs microphone access for family video calls.",
-        "NSUserNotificationsUsageDescription": "Kynfowk sends reminders before your scheduled family calls.",
-        "NSPhotoLibraryUsageDescription": "Kynfowk accesses photos to set your profile picture.",
-        "ITSAppUsesNonExemptEncryption": false
-      }
+      "buildNumber": "1"
     },
     "android": {
       "adaptiveIcon": {
@@ -37,20 +27,12 @@
       },
       "package": "com.kynfowk.app",
       "versionCode": 1,
-      "jsEngine": "jsc",
-      "permissions": [
-        "android.permission.CAMERA",
-        "android.permission.RECORD_AUDIO",
-        "android.permission.RECEIVE_BOOT_COMPLETED",
-        "android.permission.VIBRATE",
-        "android.permission.POST_NOTIFICATIONS"
-      ]
+      "jsEngine": "jsc"
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "expo-router",
       [
         "expo-build-properties",
         {
@@ -58,37 +40,13 @@
             "minSdkVersion": 24
           }
         }
-      ],
-      "expo-font",
-      [
-        "expo-notifications",
-        {
-          "color": "#d946ef",
-          "sounds": []
-        }
-      ],
-      [
-        "expo-camera",
-        {
-          "cameraPermission": "Kynfowk needs camera access for family video calls.",
-          "microphonePermission": "Kynfowk needs microphone access for family video calls."
-        }
       ]
     ],
     "scheme": "kynfowk",
-    "experiments": {
-      "typedRoutes": true
-    },
     "extra": {
       "eas": {
         "projectId": "8d4e3725-0286-4a06-81e1-411f265674d4"
-      },
-      "router": {
-        "origin": false
       }
-    },
-    "updates": {
-      "url": "https://u.expo.dev/8d4e3725-0286-4a06-81e1-411f265674d4"
     }
   }
 }
