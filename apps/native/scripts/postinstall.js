@@ -3,28 +3,80 @@
 const fs = require('fs');
 const path = require('path');
 
-const fixes = [
-  {
-    file: path.resolve(__dirname, '../../../node_modules/expo-modules-core/android/ExpoModulesCorePlugin.gradle'),
-    from: 'from components.release',
-    to: 'from components.named("release")',
-    description: 'Fix Gradle 8 compatibility: components.release → components.named("release")',
-  },
-];
+const gradleFile = path.resolve(__dirname, '../../../node_modules/expo-modules-core/android/ExpoModulesCorePlugin.gradle');
 
-let patched = 0;
-for (const fix of fixes) {
-  if (!fs.existsSync(fix.file)) {
-    console.log(`[postinstall] Skip (not found): ${path.basename(fix.file)}`);
-    continue;
-  }
-  const content = fs.readFileSync(fix.file, 'utf8');
-  if (content.includes(fix.from)) {
-    fs.writeFileSync(fix.file, content.replace(fix.from, fix.to));
-    console.log(`[postinstall] Patched: ${fix.description}`);
-    patched++;
-  } else if (content.includes(fix.to)) {
-    console.log(`[postinstall] Already patched: ${path.basename(fix.file)}`);
-  }
+if (!fs.existsSync(gradleFile)) {
+  console.log('[postinstall] Skip (not found): ExpoModulesCorePlugin.gradle');
+  process.exit(0);
 }
-console.log(`[postinstall] Done (${patched} patches applied).`);
+
+let content = fs.readFileSync(gradleFile, 'utf8');
+
+// AGP 8 registers SoftwareComponents lazily (after all afterEvaluate blocks),
+// so components.release and components.named("release") both throw at
+// afterEvaluate time with "SoftwareComponent with name 'release' not found".
+// Fix: use findByName (returns null instead of throwing) and skip the
+// publication when the component isn't available. For an app build, maven
+// publishing is irrelevant — only the APK output matters.
+
+const originalBlock = `  afterEvaluate {
+    publishing {
+      publications {
+        release(MavenPublication) {
+          from components.release
+        }
+      }
+      repositories {
+        maven {
+          url = mavenLocal().url
+        }
+      }
+    }
+  }`;
+
+const previouslyPatchedBlock = `  afterEvaluate {
+    publishing {
+      publications {
+        release(MavenPublication) {
+          from components.named("release")
+        }
+      }
+      repositories {
+        maven {
+          url = mavenLocal().url
+        }
+      }
+    }
+  }`;
+
+const fixedBlock = `  afterEvaluate {
+    def releaseComp = components.findByName("release")
+    if (releaseComp) {
+      publishing {
+        publications {
+          release(MavenPublication) {
+            from releaseComp
+          }
+        }
+        repositories {
+          maven {
+            url = mavenLocal().url
+          }
+        }
+      }
+    }
+  }`;
+
+if (content.includes('findByName("release")')) {
+  console.log('[postinstall] Already patched: ExpoModulesCorePlugin.gradle');
+} else if (content.includes(originalBlock)) {
+  fs.writeFileSync(gradleFile, content.replace(originalBlock, fixedBlock));
+  console.log('[postinstall] Patched: Fix AGP 8.x SoftwareComponent timing in useExpoPublishing()');
+} else if (content.includes(previouslyPatchedBlock)) {
+  fs.writeFileSync(gradleFile, content.replace(previouslyPatchedBlock, fixedBlock));
+  console.log('[postinstall] Patched: Fix AGP 8.x SoftwareComponent timing in useExpoPublishing()');
+} else {
+  console.log('[postinstall] Warning: Could not find pattern in ExpoModulesCorePlugin.gradle — patch skipped');
+}
+
+console.log('[postinstall] Done.');
