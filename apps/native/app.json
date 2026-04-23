@@ -33,7 +33,6 @@
     },
     "plugins": [
       "expo-router",
-      "expo-font",
       [
         "expo-build-properties",
         {
@@ -44,9 +43,6 @@
       ]
     ],
     "scheme": "kynfowk",
-    "experiments": {
-      "typedRoutes": true
-    },
     "extra": {
       "eas": {
         "projectId": "8d4e3725-0286-4a06-81e1-411f265674d4"
