@@ -12,7 +12,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '18.18.2'
+          node-version: '20'
           cache: npm
 
       - uses: actions/setup-java@v4
@@ -36,6 +36,24 @@ jobs:
       - name: Prebuild Android
         working-directory: apps/native
         run: npx expo prebuild --platform android --clean --no-install
+
+      - name: Force bundleInDebug so debug APK is self-contained
+        working-directory: apps/native/android/app
+        run: |
+          # RN 0.73 build.gradle has a `react { ... }` block with commented-out
+          # bundleInDebug. Uncomment and set true so assembleDebug bundles JS
+          # into the APK — otherwise debug APK tries to load from Metro and
+          # shows "Unable to load script" on standalone install.
+          if grep -q "bundleInDebug" build.gradle; then
+            sed -i 's|// *bundleInDebug *=.*|bundleInDebug = true|' build.gradle
+            sed -i 's|// *bundleInDebug *:.*|bundleInDebug: true,|' build.gradle
+          fi
+          # Fallback: inject inside the react { } block if no commented flag exists
+          if ! grep -q "bundleInDebug" build.gradle; then
+            sed -i '/^react {/a\    bundleInDebug = true' build.gradle
+          fi
+          echo "--- build.gradle react block ---"
+          grep -A 20 "^react {" build.gradle || true
 
       - name: Decode release keystore
         run: |
