@@ -1,7 +1,7 @@
+import { useState, useEffect } from "react";
 import { View, Text, ScrollView, StyleSheet } from "react-native";
 import { ConnectionsCounter } from "@/components/ConnectionsCounter";
 import { UpcomingCallCard } from "@/components/UpcomingCallCard";
-import { supabase } from "@/lib/supabase";
 import type { ConnectionMetrics } from "@kynfowk/types";
 
 const DEMO_METRICS: ConnectionMetrics = {
@@ -14,15 +14,21 @@ const DEMO_METRICS: ConnectionMetrics = {
   elderCalls: 2,
 };
 
-const supabaseCheck = typeof supabase;
-const supabaseFromCheck = typeof supabase?.from;
+function useTrivialHook() {
+  const [counter, setCounter] = useState(0);
+  useEffect(() => {
+    setCounter(1);
+  }, []);
+  return counter;
+}
 
 export default function HomeScreen() {
+  const counter = useTrivialHook();
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.title}>Home (supabase imported, no hook)</Text>
-      <Text style={styles.marker}>supabase typeof: {supabaseCheck}</Text>
-      <Text style={styles.marker}>supabase.from typeof: {supabaseFromCheck}</Text>
+      <Text style={styles.title}>Home (trivial inline hook, no supabase)</Text>
+      <Text style={styles.marker}>counter: {counter} (should be 1 after effect)</Text>
       <ConnectionsCounter metrics={DEMO_METRICS} />
       <UpcomingCallCard
         title="Sunday catch-up"
