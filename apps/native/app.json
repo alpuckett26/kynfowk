@@ -37,7 +37,8 @@
         "expo-build-properties",
         {
           "android": {
-            "minSdkVersion": 24
+            "minSdkVersion": 24,
+            "jsEngine": "jsc"
           }
         }
       ]
