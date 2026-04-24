@@ -174,7 +174,15 @@ export default async function DashboardPage() {
           Family Stories
         </Link>
         {family.signedIn ? (
-          <SignOutLink />
+          <>
+            <Link
+              href="/profile"
+              className="hidden text-gray-500 transition-colors hover:text-gray-800 sm:block"
+            >
+              Profile
+            </Link>
+            <SignOutLink />
+          </>
         ) : (
           <>
             <div className="flex items-center gap-1.5 rounded-full border border-green-200 bg-green-50 px-3 py-1.5 text-xs font-medium text-green-700">

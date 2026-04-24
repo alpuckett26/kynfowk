@@ -124,6 +124,12 @@ async function MemberList() {
                   <p className="truncate text-xs text-gray-400">{m.phone}</p>
                 )}
               </div>
+              <Link
+                href={`/family/${m.id}/edit`}
+                className="text-xs font-medium text-brand-600 transition-colors hover:text-brand-700"
+              >
+                Edit
+              </Link>
             </li>
           ))}
         </ul>

@@ -1,9 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
 export type InviteFormState = { ok: boolean; message: string };
+export type MemberFormState = { ok: boolean; message: string };
 
 /** Loose phone validation — accept anything that looks roughly phone-shaped. */
 const PHONE_RE = /^[+\d\s\-().]{7,20}$/;
@@ -72,4 +74,71 @@ export async function inviteFamilyMember(
 
   revalidatePath("/family");
   return { ok: true, message: `Invited ${displayName}.` };
+}
+
+/**
+ * Server action: update an existing family member's display name,
+ * email, phone, or elder status. RLS (007) scopes this to members
+ * of the caller's family.
+ */
+export async function updateFamilyMember(
+  _prev: MemberFormState,
+  formData: FormData
+): Promise<MemberFormState> {
+  const memberId = String(formData.get("member_id") ?? "");
+  const displayName = String(formData.get("display_name") ?? "").trim();
+  const email = String(formData.get("email") ?? "").trim().toLowerCase();
+  const phone = String(formData.get("phone") ?? "").trim();
+  const isElder = formData.get("is_elder") === "on";
+
+  if (!memberId) return { ok: false, message: "Missing member id." };
+  if (!displayName) return { ok: false, message: "Display name is required." };
+  if (!email && !phone) {
+    return {
+      ok: false,
+      message: "A member needs at least an email or a phone number.",
+    };
+  }
+  if (phone && !PHONE_RE.test(phone)) {
+    return { ok: false, message: "That doesn't look like a phone number." };
+  }
+
+  const supabase = createClient();
+  const { error } = await supabase
+    .from("family_members")
+    .update({
+      display_name: displayName,
+      email: email || null,
+      phone: phone || null,
+      is_elder: isElder,
+    })
+    .eq("id", memberId);
+
+  if (error) {
+    if (error.code === "23505") {
+      return {
+        ok: false,
+        message: "That email is already on another family member.",
+      };
+    }
+    return { ok: false, message: error.message };
+  }
+
+  revalidatePath("/family");
+  return { ok: true, message: "Saved." };
+}
+
+/**
+ * Server action: remove an unclaimed invitee from the family.
+ * RLS (007) restricts deletes to rows where user_id is null, so
+ * real signed-in members cannot be removed by this action.
+ */
+export async function removeFamilyMember(formData: FormData): Promise<void> {
+  const memberId = String(formData.get("member_id") ?? "");
+  if (!memberId) return;
+
+  const supabase = createClient();
+  await supabase.from("family_members").delete().eq("id", memberId);
+  revalidatePath("/family");
+  redirect("/family");
 }
