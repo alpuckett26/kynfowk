@@ -237,20 +237,13 @@ export default async function DashboardPage() {
                 <h3 className="text-base font-semibold text-gray-900">
                   Quick actions
                 </h3>
-                {[
-                  { label: "Schedule a call", icon: "📅", href: "/schedule" },
-                  { label: "Invite a family member", icon: "➕", href: "/invite" },
-                  { label: "View family stories", icon: "💜", href: "/case-studies" },
-                ].map((a) => (
-                  <Link
-                    key={a.label}
-                    href={a.href}
-                    className="flex items-center gap-3 rounded-xl border border-gray-100 bg-white px-4 py-3 text-sm font-medium text-gray-700 hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700 transition-all shadow-sm"
-                  >
-                    <span className="text-base">{a.icon}</span>
-                    {a.label}
-                  </Link>
-                ))}
+                <Link
+                  href="/case-studies"
+                  className="flex items-center gap-3 rounded-xl border border-gray-100 bg-white px-4 py-3 text-sm font-medium text-gray-700 hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700 transition-all shadow-sm"
+                >
+                  <span className="text-base">💜</span>
+                  View family stories
+                </Link>
               </div>
             </div>
           </div>

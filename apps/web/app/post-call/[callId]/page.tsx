@@ -82,7 +82,9 @@ export default function PostCallPage({
       return;
     }
 
-    fetchCallSummary(params.callId).then(setMetrics);
+    fetchCallSummary(params.callId)
+      .then(setMetrics)
+      .catch(() => setMetrics(DEMO_SUMMARY));
   }, [params.callId]);
 
   if (!metrics) {
