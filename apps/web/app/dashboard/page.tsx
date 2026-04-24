@@ -1,86 +1,12 @@
 import Link from "next/link";
 import { ConnectionsCounter } from "@/components/ConnectionsCounter";
+import { TopNav } from "@/components/TopNav";
 import { getFamilyMetrics, getAllTimeStats } from "@/lib/connections";
 import { formatMinutes, formatNumber } from "@/lib/utils";
-import type { ConnectionMetrics } from "@kynfowk/types";
 
 // Demo family ID — in production this comes from auth session
 const DEMO_FAMILY_ID = "11111111-0000-0000-0000-000000000001";
 const DEMO_FAMILY_NAME = "Henderson";
-
-// ─── Fallback metrics when Supabase is not configured ────────────────────────
-const DEMO_METRICS: ConnectionMetrics = {
-  completedCalls: 3,
-  totalMinutes: 122,
-  uniqueMembersThisWeek: 4,
-  streakWeeks: 4,
-  connectionScore: 28,
-  firstReconnections: 1,
-  elderCalls: 2,
-};
-
-async function loadMetrics(): Promise<{
-  weekly: ConnectionMetrics;
-  allTime: Awaited<ReturnType<typeof getAllTimeStats>>;
-}> {
-  // If Supabase env vars are not present, serve demo data
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
-    return {
-      weekly: DEMO_METRICS,
-      allTime: {
-        totalCalls: 47,
-        totalMinutes: 2340,
-        totalScore: 210,
-        bestWeekScore: 28,
-        longestStreak: 8,
-      },
-    };
-  }
-
-  try {
-    const [weekly, allTime] = await Promise.all([
-      getFamilyMetrics(DEMO_FAMILY_ID),
-      getAllTimeStats(DEMO_FAMILY_ID),
-    ]);
-    return { weekly, allTime };
-  } catch {
-    return {
-      weekly: DEMO_METRICS,
-      allTime: {
-        totalCalls: 47,
-        totalMinutes: 2340,
-        totalScore: 210,
-        bestWeekScore: 28,
-        longestStreak: 8,
-      },
-    };
-  }
-}
-
-function DashboardNav() {
-  return (
-    <header className="bg-white border-b border-gray-100 sticky top-0 z-30">
-      <div className="mx-auto max-w-5xl px-4 sm:px-6 flex h-16 items-center justify-between">
-        <Link href="/" className="flex items-center gap-2 font-bold text-lg">
-          <span className="text-xl">💜</span>
-          <span>Kynfowk</span>
-        </Link>
-        <div className="flex items-center gap-3 text-sm">
-          <Link
-            href="/case-studies"
-            className="text-gray-500 hover:text-gray-800 transition-colors hidden sm:block"
-          >
-            Family Stories
-          </Link>
-          <div className="flex items-center gap-1.5 rounded-full bg-green-50 border border-green-200 px-3 py-1.5 text-green-700 font-medium text-xs">
-            <span className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
-            Demo mode
-          </div>
-        </div>
-      </div>
-    </header>
-  );
-}
 
 function UpcomingCalls() {
   const calls = [
@@ -187,11 +113,25 @@ function AllTimePanel({
 }
 
 export default async function DashboardPage() {
-  const { weekly, allTime } = await loadMetrics();
+  const [weekly, allTime] = await Promise.all([
+    getFamilyMetrics(DEMO_FAMILY_ID),
+    getAllTimeStats(DEMO_FAMILY_ID),
+  ]);
 
   return (
     <>
-      <DashboardNav />
+      <TopNav width="narrow">
+        <Link
+          href="/case-studies"
+          className="hidden text-gray-500 transition-colors hover:text-gray-800 sm:block"
+        >
+          Family Stories
+        </Link>
+        <div className="flex items-center gap-1.5 rounded-full border border-green-200 bg-green-50 px-3 py-1.5 text-xs font-medium text-green-700">
+          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-green-500" />
+          Demo mode
+        </div>
+      </TopNav>
       <main className="min-h-screen bg-gray-50">
         <div className="mx-auto max-w-5xl px-4 sm:px-6 py-8 space-y-8">
           {/* Page header */}

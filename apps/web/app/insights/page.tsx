@@ -11,29 +11,6 @@ export const metadata: Metadata = {
 
 const DEMO_FAMILY_ID = "11111111-0000-0000-0000-000000000001";
 
-async function loadStats() {
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
-    return {
-      totalCalls: 47,
-      totalMinutes: 2340,
-      totalScore: 210,
-      bestWeekScore: 28,
-      longestStreak: 8,
-    };
-  }
-  try {
-    return await getAllTimeStats(DEMO_FAMILY_ID);
-  } catch {
-    return {
-      totalCalls: 47,
-      totalMinutes: 2340,
-      totalScore: 210,
-      bestWeekScore: 28,
-      longestStreak: 8,
-    };
-  }
-}
-
 const milestones = [
   { threshold: 10, label: "10 calls completed", icon: "📞" },
   { threshold: 100, label: "100 minutes of family time", icon: "⏱️", isMinutes: true },
@@ -43,7 +20,7 @@ const milestones = [
 ];
 
 export default async function InsightsPage() {
-  const stats = await loadStats();
+  const stats = await getAllTimeStats(DEMO_FAMILY_ID);
 
   return (
     <>

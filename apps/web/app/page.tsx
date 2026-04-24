@@ -1,31 +1,31 @@
 import Link from "next/link";
 import { CaseStudiesSection } from "@/components/CaseStudiesSection";
 import { GetStartedForm } from "@/components/GetStartedForm";
+import { TopNav } from "@/components/TopNav";
+import { Footer } from "@/components/Footer";
 
 function Nav() {
   return (
-    <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100">
-      <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex h-16 items-center justify-between">
-        <Link href="/" className="flex items-center gap-2 font-bold text-xl">
-          <span className="text-2xl">💜</span>
-          <span>Kynfowk</span>
-        </Link>
-        <div className="hidden sm:flex items-center gap-6 text-sm font-medium text-gray-600">
-          <Link href="#how-it-works" className="hover:text-gray-900 transition-colors">
-            How it works
-          </Link>
-          <Link href="#case-studies" className="hover:text-gray-900 transition-colors">
-            Stories
-          </Link>
-          <Link
-            href="/dashboard"
-            className="rounded-full bg-brand-600 px-4 py-2 text-white hover:bg-brand-700 transition-colors"
-          >
-            Open Dashboard
-          </Link>
-        </div>
-      </nav>
-    </header>
+    <TopNav blur>
+      <Link
+        href="#how-it-works"
+        className="hidden text-gray-600 transition-colors hover:text-gray-900 sm:block"
+      >
+        How it works
+      </Link>
+      <Link
+        href="#case-studies"
+        className="hidden text-gray-600 transition-colors hover:text-gray-900 sm:block"
+      >
+        Stories
+      </Link>
+      <Link
+        href="/dashboard"
+        className="rounded-full bg-brand-600 px-4 py-2 text-white transition-colors hover:bg-brand-700"
+      >
+        Open Dashboard
+      </Link>
+    </TopNav>
   );
 }
 
@@ -257,31 +257,6 @@ function ConnectionFeaturesSection() {
   );
 }
 
-function FooterSection() {
-  return (
-    <footer className="bg-white border-t border-gray-100 py-12">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-2 font-bold text-lg">
-          <span className="text-2xl">💜</span>
-          <span>Kynfowk</span>
-        </div>
-        <p className="text-sm text-gray-500">
-          Built with love for families everywhere. &copy;{" "}
-          {new Date().getFullYear()} Kynfowk
-        </p>
-        <div className="flex gap-4 text-sm text-gray-500">
-          <Link href="/case-studies" className="hover:text-gray-700 transition-colors">
-            Stories
-          </Link>
-          <Link href="/dashboard" className="hover:text-gray-700 transition-colors">
-            Dashboard
-          </Link>
-        </div>
-      </div>
-    </footer>
-  );
-}
-
 function GetStartedSection() {
   return (
     <section
@@ -318,7 +293,7 @@ export default function LandingPage() {
         <CaseStudiesSection />
         <GetStartedSection />
       </main>
-      <FooterSection />
+      <Footer />
     </>
   );
 }

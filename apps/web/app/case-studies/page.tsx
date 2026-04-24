@@ -3,6 +3,8 @@ import Link from "next/link";
 import { caseStudies } from "@kynfowk/data";
 import { CaseStudyCard } from "@/components/CaseStudyCard";
 import { SectionHeader } from "@/components/ui/SectionHeader";
+import { TopNav } from "@/components/TopNav";
+import { Footer } from "@/components/Footer";
 
 export const metadata: Metadata = {
   title: "Family Stories",
@@ -37,21 +39,14 @@ function StatsBar() {
 export default function CaseStudiesPage() {
   return (
     <>
-      {/* Nav */}
-      <header className="sticky top-0 z-50 bg-white/90 backdrop-blur border-b border-gray-100">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex h-16 items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 font-bold text-lg">
-            <span className="text-xl">💜</span>
-            <span>Kynfowk</span>
-          </Link>
-          <Link
-            href="/dashboard"
-            className="rounded-full bg-brand-600 px-4 py-2 text-white text-sm font-medium hover:bg-brand-700 transition-colors"
-          >
-            Open Dashboard
-          </Link>
-        </div>
-      </header>
+      <TopNav blur>
+        <Link
+          href="/dashboard"
+          className="rounded-full bg-brand-600 px-4 py-2 text-white transition-colors hover:bg-brand-700"
+        >
+          Open Dashboard
+        </Link>
+      </TopNav>
 
       <main>
         {/* Hero */}
@@ -103,13 +98,7 @@ export default function CaseStudiesPage() {
         </section>
       </main>
 
-      {/* Footer */}
-      <footer className="bg-gray-50 border-t border-gray-100 py-10 text-center">
-        <p className="text-sm text-gray-500">
-          &copy; {new Date().getFullYear()} Kynfowk. Built with love for
-          families everywhere.
-        </p>
-      </footer>
+      <Footer />
     </>
   );
 }
