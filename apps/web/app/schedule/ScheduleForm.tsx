@@ -6,11 +6,16 @@ import { scheduleCall, type ScheduleFormState } from "./actions";
 
 const initial: ScheduleFormState = { ok: false, message: "" };
 
+export type SelectableMember = {
+  id: string;
+  display_name: string;
+  is_elder: boolean;
+};
+
 /** Round to the next half-hour for the default scheduled-at value. */
 function nextHalfHourLocalString(): string {
   const d = new Date();
   d.setMinutes(d.getMinutes() < 30 ? 30 : 60, 0, 0);
-  // Format as YYYY-MM-DDTHH:mm in local time for <input type="datetime-local">
   const pad = (n: number) => String(n).padStart(2, "0");
   return (
     d.getFullYear() +
@@ -25,7 +30,13 @@ function nextHalfHourLocalString(): string {
   );
 }
 
-export function ScheduleForm() {
+export function ScheduleForm({
+  members,
+  selfMemberId,
+}: {
+  members: SelectableMember[];
+  selfMemberId: string | null;
+}) {
   const [state, setState] = useState<ScheduleFormState>(initial);
   const [isPending, startTransition] = useTransition();
   const [defaultWhen] = useState(nextHalfHourLocalString);
@@ -52,7 +63,7 @@ export function ScheduleForm() {
             htmlFor="title"
             className="mb-1.5 block text-sm font-medium text-gray-700"
           >
-            What's the call?
+            What&apos;s the call?
           </label>
           <input
             id="title"
@@ -80,6 +91,50 @@ export function ScheduleForm() {
             defaultValue={defaultWhen}
             className="w-full rounded-xl border border-gray-300 px-4 py-2.5 text-sm focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-200"
           />
+        </div>
+
+        <div>
+          <p className="mb-1.5 text-sm font-medium text-gray-700">Who&apos;s coming?</p>
+          {members.length === 0 ? (
+            <p className="rounded-xl border border-dashed border-gray-200 px-4 py-3 text-xs text-gray-500">
+              No family members yet.{" "}
+              <Link
+                href="/family"
+                className="font-medium text-brand-600 hover:text-brand-700"
+              >
+                Invite someone
+              </Link>{" "}
+              first.
+            </p>
+          ) : (
+            <div className="divide-y divide-gray-100 overflow-hidden rounded-xl border border-gray-200">
+              {members.map((m) => (
+                <label
+                  key={m.id}
+                  className="flex cursor-pointer items-center gap-3 px-4 py-2.5 hover:bg-gray-50"
+                >
+                  <input
+                    type="checkbox"
+                    name="invited"
+                    value={m.id}
+                    defaultChecked={m.id === selfMemberId}
+                    className="h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-400"
+                  />
+                  <span className="flex-1 text-sm text-gray-800">
+                    {m.display_name}
+                    {m.id === selfMemberId && (
+                      <span className="ml-1.5 text-xs text-gray-400">(you)</span>
+                    )}
+                  </span>
+                  {m.is_elder && (
+                    <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-amber-700">
+                      Elder
+                    </span>
+                  )}
+                </label>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:justify-end">

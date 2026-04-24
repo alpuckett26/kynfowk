@@ -24,6 +24,8 @@ export type UpcomingCall = {
   title: string;
   /** ISO timestamp. */
   scheduledAt: string;
+  /** How many family members are invited (length of invited_member_ids). */
+  participantCount: number;
 };
 
 // ─── Demo-mode fallbacks ────────────────────────────────────────────────────
@@ -75,8 +77,8 @@ function demoUpcoming(): UpcomingCall[] {
     return d.toISOString();
   };
   return [
-    { id: DEMO_CALL_ID, title: "Sunday catch-up", scheduledAt: day(3, 18) },
-    { id: DEMO_CALL_ID, title: "Check-in with Gran", scheduledAt: day(6, 11) },
+    { id: DEMO_CALL_ID, title: "Sunday catch-up", scheduledAt: day(3, 18), participantCount: 4 },
+    { id: DEMO_CALL_ID, title: "Check-in with Gran", scheduledAt: day(6, 11), participantCount: 2 },
   ];
 }
 
@@ -179,7 +181,7 @@ export async function getUpcomingCalls(): Promise<UpcomingCall[]> {
     const supabase = createClient();
     const { data } = await supabase
       .from("calls")
-      .select("id, title, scheduled_at")
+      .select("id, title, scheduled_at, invited_member_ids")
       .eq("family_id", family.id)
       .eq("status", "scheduled")
       .gte("scheduled_at", new Date().toISOString())
@@ -190,12 +192,14 @@ export async function getUpcomingCalls(): Promise<UpcomingCall[]> {
       id: string;
       title: string | null;
       scheduled_at: string;
+      invited_member_ids: string[] | null;
     }[];
 
     return rows.map((c) => ({
       id: c.id,
       title: c.title ?? "Family call",
       scheduledAt: c.scheduled_at,
+      participantCount: (c.invited_member_ids ?? []).length,
     }));
   } catch {
     return [];

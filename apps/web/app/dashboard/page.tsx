@@ -74,6 +74,13 @@ function UpcomingCalls({ calls }: { calls: UpcomingCall[] }) {
                   </p>
                   <p className="text-xs text-gray-500">
                     {dateFmt.format(when)} at {timeFmt.format(when)}
+                    {c.participantCount > 0 && (
+                      <>
+                        {" · "}
+                        {c.participantCount}{" "}
+                        {c.participantCount === 1 ? "member" : "members"}
+                      </>
+                    )}
                   </p>
                 </div>
               </div>
