@@ -6,6 +6,8 @@ import {
   getFamilyMetrics,
   getAllTimeStats,
   getCurrentFamily,
+  getUpcomingCalls,
+  type UpcomingCall,
 } from "@/lib/connections";
 import { signOut } from "@/app/login/actions";
 import { formatMinutes, formatNumber } from "@/lib/utils";
@@ -16,41 +18,75 @@ export const metadata: Metadata = {
     "Your family's connection score, upcoming calls, and weekly stats — all in one place.",
 };
 
-function UpcomingCalls() {
-  const calls = [
-    { name: "Sunday catch-up", date: "Sun, Mar 16", time: "6:00 PM", who: "All 4 members" },
-    { name: "Check-in with Gran", date: "Wed, Mar 19", time: "11:00 AM", who: "Margaret + David" },
-  ];
+const dateFmt = new Intl.DateTimeFormat("en-US", {
+  weekday: "short",
+  month: "short",
+  day: "numeric",
+});
+const timeFmt = new Intl.DateTimeFormat("en-US", {
+  hour: "numeric",
+  minute: "2-digit",
+});
 
+function UpcomingCalls({ calls }: { calls: UpcomingCall[] }) {
   return (
     <section aria-labelledby="upcoming-heading" className="space-y-3">
-      <h3 id="upcoming-heading" className="text-base font-semibold text-gray-900">
-        Upcoming calls
-      </h3>
-      {calls.map((c) => (
-        <div
-          key={c.name}
-          className="flex items-center justify-between rounded-xl border border-gray-100 bg-white p-4 shadow-sm"
+      <div className="flex items-center justify-between">
+        <h3
+          id="upcoming-heading"
+          className="text-base font-semibold text-gray-900"
         >
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-brand-50 flex items-center justify-center text-lg flex-shrink-0">
-              📅
-            </div>
-            <div>
-              <p className="font-medium text-gray-900 text-sm">{c.name}</p>
-              <p className="text-xs text-gray-500">
-                {c.date} at {c.time} · {c.who}
-              </p>
-            </div>
-          </div>
+          Upcoming calls
+        </h3>
+        <Link
+          href="/schedule"
+          className="text-xs font-medium text-brand-600 transition-colors hover:text-brand-700"
+        >
+          + Schedule
+        </Link>
+      </div>
+
+      {calls.length === 0 ? (
+        <div className="rounded-xl border border-dashed border-gray-200 bg-white p-6 text-center">
+          <p className="text-sm text-gray-500">No upcoming calls yet.</p>
           <Link
-            href={`/post-call/demo-call-id`}
-            className="text-xs font-medium text-brand-600 hover:text-brand-700 bg-brand-50 rounded-lg px-3 py-1.5 transition-colors"
+            href="/schedule"
+            className="mt-3 inline-block rounded-full bg-brand-600 px-4 py-2 text-xs font-medium text-white transition-colors hover:bg-brand-700"
           >
-            Join →
+            Schedule one
           </Link>
         </div>
-      ))}
+      ) : (
+        calls.map((c) => {
+          const when = new Date(c.scheduledAt);
+          return (
+            <div
+              key={c.id}
+              className="flex items-center justify-between rounded-xl border border-gray-100 bg-white p-4 shadow-sm"
+            >
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-brand-50 text-lg">
+                  📅
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-900">
+                    {c.title}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {dateFmt.format(when)} at {timeFmt.format(when)}
+                  </p>
+                </div>
+              </div>
+              <Link
+                href={`/post-call/${c.id}`}
+                className="rounded-lg bg-brand-50 px-3 py-1.5 text-xs font-medium text-brand-600 transition-colors hover:text-brand-700"
+              >
+                Join →
+              </Link>
+            </div>
+          );
+        })
+      )}
     </section>
   );
 }
@@ -121,10 +157,11 @@ function AllTimePanel({
 }
 
 export default async function DashboardPage() {
-  const [family, weekly, allTime] = await Promise.all([
+  const [family, weekly, allTime, upcoming] = await Promise.all([
     getCurrentFamily(),
     getFamilyMetrics(),
     getAllTimeStats(),
+    getUpcomingCalls(),
   ]);
 
   return (
@@ -186,7 +223,7 @@ export default async function DashboardPage() {
                 metrics={weekly}
                 familyName={family.name}
               />
-              <UpcomingCalls />
+              <UpcomingCalls calls={upcoming} />
             </div>
 
             {/* Right: all-time stats */}
@@ -198,6 +235,13 @@ export default async function DashboardPage() {
                 <h3 className="text-base font-semibold text-gray-900">
                   Quick actions
                 </h3>
+                <Link
+                  href="/schedule"
+                  className="flex items-center gap-3 rounded-xl border border-gray-100 bg-white px-4 py-3 text-sm font-medium text-gray-700 hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700 transition-all shadow-sm"
+                >
+                  <span className="text-base">📅</span>
+                  Schedule a call
+                </Link>
                 <Link
                   href="/case-studies"
                   className="flex items-center gap-3 rounded-xl border border-gray-100 bg-white px-4 py-3 text-sm font-medium text-gray-700 hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700 transition-all shadow-sm"

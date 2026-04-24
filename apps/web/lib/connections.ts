@@ -17,6 +17,15 @@ import { createClient } from "@/lib/supabase/server";
 // Re-export the shared types so pages can `import { CallSummaryMetrics } from "@/lib/connections"`.
 export type { CallSummaryMetrics, AllTimeStats };
 
+/** A scheduled call surfaced on the dashboard. Web-side shape only —
+ * the schema's `calls` row has more, but the dashboard only needs these. */
+export type UpcomingCall = {
+  id: string;
+  title: string;
+  /** ISO timestamp. */
+  scheduledAt: string;
+};
+
 // ─── Demo-mode fallbacks ────────────────────────────────────────────────────
 // Returned when NEXT_PUBLIC_SUPABASE_URL is unset, the user is not signed in,
 // or a Supabase query throws. Lets every page render believable data without
@@ -56,6 +65,20 @@ const DEMO_FAMILY_NAME = "Henderson";
 
 /** Sentinel callId that always returns the demo summary, even with a live DB. */
 export const DEMO_CALL_ID = "demo-call-id";
+
+function demoUpcoming(): UpcomingCall[] {
+  // Anchored relative to "now" so the demo data never looks stale.
+  const day = (offsetDays: number, hour: number, min = 0) => {
+    const d = new Date();
+    d.setDate(d.getDate() + offsetDays);
+    d.setHours(hour, min, 0, 0);
+    return d.toISOString();
+  };
+  return [
+    { id: DEMO_CALL_ID, title: "Sunday catch-up", scheduledAt: day(3, 18) },
+    { id: DEMO_CALL_ID, title: "Check-in with Gran", scheduledAt: day(6, 11) },
+  ];
+}
 
 function isDemoMode() {
   return !process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -141,5 +164,40 @@ export async function getCallSummary(
     return await _getCallSummary(createClient(), callId);
   } catch {
     return DEMO_CALL_SUMMARY;
+  }
+}
+
+/**
+ * Upcoming scheduled calls for the current user's family. Returns demo
+ * data when not signed in. Limit 5 for the dashboard surface.
+ */
+export async function getUpcomingCalls(): Promise<UpcomingCall[]> {
+  const family = await getCurrentFamily();
+  if (!family.signedIn) return demoUpcoming();
+
+  try {
+    const supabase = createClient();
+    const { data } = await supabase
+      .from("calls")
+      .select("id, title, scheduled_at")
+      .eq("family_id", family.id)
+      .eq("status", "scheduled")
+      .gte("scheduled_at", new Date().toISOString())
+      .order("scheduled_at", { ascending: true })
+      .limit(5);
+
+    const rows = (data ?? []) as {
+      id: string;
+      title: string | null;
+      scheduled_at: string;
+    }[];
+
+    return rows.map((c) => ({
+      id: c.id,
+      title: c.title ?? "Family call",
+      scheduledAt: c.scheduled_at,
+    }));
+  } catch {
+    return [];
   }
 }
