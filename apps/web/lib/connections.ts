@@ -40,6 +40,21 @@ const DEMO_ALL_TIME: AllTimeStats = {
   longestStreak: 8,
 };
 
+const DEMO_CALL_SUMMARY: CallSummaryMetrics = {
+  durationMinutes: 45,
+  participantCount: 4,
+  scoreEarned: 5,
+  events: [
+    "Connection made",
+    "Quality time (10+ min)",
+    "Group connection (3+ members)",
+    "Elder included",
+  ],
+};
+
+/** Sentinel callId that always returns the demo summary, even with a live DB. */
+export const DEMO_CALL_ID = "demo-call-id";
+
 function isDemoMode() {
   return !process.env.NEXT_PUBLIC_SUPABASE_URL;
 }
@@ -71,5 +86,10 @@ export async function getAllTimeStats(
 export async function getCallSummary(
   callId: string
 ): Promise<CallSummaryMetrics> {
-  return _getCallSummary(createClient(), callId);
+  if (isDemoMode() || callId === DEMO_CALL_ID) return DEMO_CALL_SUMMARY;
+  try {
+    return await _getCallSummary(createClient(), callId);
+  } catch {
+    return DEMO_CALL_SUMMARY;
+  }
 }
