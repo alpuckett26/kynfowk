@@ -11,7 +11,7 @@ const config: Config = {
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/$1",
   },
-  setupFilesAfterFramework: ["<rootDir>/jest.setup.ts"],
+  setupFilesAfterEach: ["<rootDir>/jest.setup.ts"],
 };
 
 export default createJestConfig(config);
