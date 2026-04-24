@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getAllTimeStats } from "@/lib/connections";
+import { getAllTimeStats, getCurrentFamily } from "@/lib/connections";
 import { StatTile } from "@/components/ui/StatTile";
 import { formatMinutes, formatNumber } from "@/lib/utils";
 
@@ -8,8 +8,6 @@ export const metadata: Metadata = {
   title: "Family Insights",
   description: "Your all-time family connection stats and milestones.",
 };
-
-const DEMO_FAMILY_ID = "11111111-0000-0000-0000-000000000001";
 
 const milestones = [
   { threshold: 10, label: "10 calls completed", icon: "📞" },
@@ -20,7 +18,10 @@ const milestones = [
 ];
 
 export default async function InsightsPage() {
-  const stats = await getAllTimeStats(DEMO_FAMILY_ID);
+  const [family, stats] = await Promise.all([
+    getCurrentFamily(),
+    getAllTimeStats(),
+  ]);
 
   return (
     <>
@@ -42,7 +43,7 @@ export default async function InsightsPage() {
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Family Insights</h1>
             <p className="mt-1 text-sm text-gray-500">
-              Your Henderson family connection legacy, all time
+              Your {family.name} family connection legacy, all time
             </p>
           </div>
 

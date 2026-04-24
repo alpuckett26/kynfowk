@@ -2,7 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ConnectionsCounter } from "@/components/ConnectionsCounter";
 import { TopNav } from "@/components/TopNav";
-import { getFamilyMetrics, getAllTimeStats } from "@/lib/connections";
+import {
+  getFamilyMetrics,
+  getAllTimeStats,
+  getCurrentFamily,
+} from "@/lib/connections";
+import { signOut } from "@/app/login/actions";
 import { formatMinutes, formatNumber } from "@/lib/utils";
 
 export const metadata: Metadata = {
@@ -10,10 +15,6 @@ export const metadata: Metadata = {
   description:
     "Your family's connection score, upcoming calls, and weekly stats — all in one place.",
 };
-
-// Demo family ID — in production this comes from auth session
-const DEMO_FAMILY_ID = "11111111-0000-0000-0000-000000000001";
-const DEMO_FAMILY_NAME = "Henderson";
 
 function UpcomingCalls() {
   const calls = [
@@ -120,9 +121,10 @@ function AllTimePanel({
 }
 
 export default async function DashboardPage() {
-  const [weekly, allTime] = await Promise.all([
-    getFamilyMetrics(DEMO_FAMILY_ID),
-    getAllTimeStats(DEMO_FAMILY_ID),
+  const [family, weekly, allTime] = await Promise.all([
+    getCurrentFamily(),
+    getFamilyMetrics(),
+    getAllTimeStats(),
   ]);
 
   return (
@@ -134,10 +136,22 @@ export default async function DashboardPage() {
         >
           Family Stories
         </Link>
-        <div className="flex items-center gap-1.5 rounded-full border border-green-200 bg-green-50 px-3 py-1.5 text-xs font-medium text-green-700">
-          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-green-500" />
-          Demo mode
-        </div>
+        {family.signedIn ? (
+          <SignOutLink />
+        ) : (
+          <>
+            <div className="flex items-center gap-1.5 rounded-full border border-green-200 bg-green-50 px-3 py-1.5 text-xs font-medium text-green-700">
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-green-500" />
+              Demo mode
+            </div>
+            <Link
+              href="/login"
+              className="rounded-full bg-brand-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-700"
+            >
+              Sign in
+            </Link>
+          </>
+        )}
       </TopNav>
       <main className="min-h-screen bg-gray-50">
         <div className="mx-auto max-w-5xl px-4 sm:px-6 py-8 space-y-8">
@@ -145,7 +159,7 @@ export default async function DashboardPage() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">
-                {DEMO_FAMILY_NAME} Family
+                {family.name} Family
               </h1>
               <p className="text-sm text-gray-500 mt-0.5">
                 {new Date().toLocaleDateString("en-US", {
@@ -170,7 +184,7 @@ export default async function DashboardPage() {
             <div className="lg:col-span-2 space-y-8">
               <ConnectionsCounter
                 metrics={weekly}
-                familyName={DEMO_FAMILY_NAME}
+                familyName={family.name}
               />
               <UpcomingCalls />
             </div>
@@ -197,5 +211,18 @@ export default async function DashboardPage() {
         </div>
       </main>
     </>
+  );
+}
+
+function SignOutLink() {
+  return (
+    <form action={signOut}>
+      <button
+        type="submit"
+        className="text-gray-500 transition-colors hover:text-gray-800"
+      >
+        Sign out
+      </button>
+    </form>
   );
 }
