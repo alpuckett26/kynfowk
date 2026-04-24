@@ -6,25 +6,19 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Home (tap-triggered setState)</Text>
+      <Text style={styles.title}>HOME TAB RENDERING</Text>
       <Text style={styles.marker}>counter: {counter}</Text>
       <Pressable style={styles.button} onPress={() => setCounter((c) => c + 1)}>
-        <Text style={styles.buttonText}>Tap to increment</Text>
+        <Text style={styles.buttonText}>TAP TO INCREMENT</Text>
       </Pressable>
-      <Text style={styles.hint}>
-        If tapping crashes: setState is broken at any time.{"\n"}
-        If tapping increments: only mount-driven setState crashes;
-        we can ship with tap/button-triggered state updates.
-      </Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f9fafb", paddingTop: 80, paddingHorizontal: 20, gap: 16 },
-  title: { fontSize: 18, fontWeight: "700", color: "#111827" },
-  marker: { fontSize: 14, color: "#059669", fontFamily: "monospace" },
-  button: { backgroundColor: "#d946ef", borderRadius: 12, padding: 16, alignItems: "center" },
-  buttonText: { color: "#ffffff", fontSize: 14, fontWeight: "700" },
-  hint: { fontSize: 12, color: "#6b7280", marginTop: 16 },
+  container: { flex: 1, backgroundColor: "#ff00ff", paddingTop: 80, paddingHorizontal: 20, gap: 20, alignItems: "center" },
+  title: { fontSize: 28, fontWeight: "900", color: "#ffffff", textAlign: "center" },
+  marker: { fontSize: 24, color: "#ffff00", fontFamily: "monospace", fontWeight: "900" },
+  button: { backgroundColor: "#000000", borderRadius: 12, paddingHorizontal: 24, paddingVertical: 16 },
+  buttonText: { color: "#00ff00", fontSize: 18, fontWeight: "900" },
 });

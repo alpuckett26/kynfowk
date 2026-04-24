@@ -29,18 +29,12 @@ export function ErrorBoundary({ error }: { error: Error }) {
 }
 
 export default function RootLayout() {
-  useEffect(() => {
-    SplashScreen.hideAsync().catch(() => {});
-  }, []);
-
+  useEffect(() => { SplashScreen.hideAsync().catch(() => {}); }, []);
   return (
-    <View style={s.rootFallback}>
-      <Text style={s.rootFallbackText}>ROOT LAYOUT RENDERED (if you see bright green, Stack failed to mount)</Text>
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="auth" />
-      </Stack>
-    </View>
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="auth" />
+    </Stack>
   );
 }
 
@@ -48,6 +42,4 @@ const s = StyleSheet.create({
   err: { flex: 1, backgroundColor: "#dc2626", justifyContent: "center", alignItems: "center", padding: 24 },
   title: { color: "#fff", fontSize: 20, fontWeight: "700" },
   msg: { color: "#fca5a5", fontSize: 13, textAlign: "center", marginTop: 8 },
-  rootFallback: { flex: 1, backgroundColor: "#00ff00" },
-  rootFallbackText: { position: "absolute", top: 40, left: 12, right: 12, fontSize: 10, color: "#000", backgroundColor: "#ffff00", padding: 4, zIndex: 999 },
 });
