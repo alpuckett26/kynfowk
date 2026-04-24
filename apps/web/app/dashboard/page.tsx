@@ -85,7 +85,7 @@ function UpcomingCalls({ calls }: { calls: UpcomingCall[] }) {
                 </div>
               </div>
               <Link
-                href={`/post-call/${c.id}`}
+                href={`/call/${c.id}`}
                 className="rounded-lg bg-brand-50 px-3 py-1.5 text-xs font-medium text-brand-600 transition-colors hover:text-brand-700"
               >
                 Join →
