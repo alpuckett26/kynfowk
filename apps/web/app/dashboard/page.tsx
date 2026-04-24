@@ -1,8 +1,15 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { ConnectionsCounter } from "@/components/ConnectionsCounter";
 import { TopNav } from "@/components/TopNav";
 import { getFamilyMetrics, getAllTimeStats } from "@/lib/connections";
 import { formatMinutes, formatNumber } from "@/lib/utils";
+
+export const metadata: Metadata = {
+  title: "Dashboard",
+  description:
+    "Your family's connection score, upcoming calls, and weekly stats — all in one place.",
+};
 
 // Demo family ID — in production this comes from auth session
 const DEMO_FAMILY_ID = "11111111-0000-0000-0000-000000000001";

@@ -9,7 +9,10 @@ const jakartaSans = Plus_Jakarta_Sans({
   weight: ["600", "700", "800"],
 });
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://kynfowk.com";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: {
     default: "Kynfowk — Keep Your Family Close",
     template: "%s | Kynfowk",
@@ -21,6 +24,13 @@ export const metadata: Metadata = {
     description:
       "Schedule family calls effortlessly, track connection milestones, and celebrate every moment together.",
     type: "website",
+    url: siteUrl,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Kynfowk — Keep Your Family Close",
+    description:
+      "Schedule family calls effortlessly, track connection milestones, and celebrate every moment together.",
   },
 };
 
