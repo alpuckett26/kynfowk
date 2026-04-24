@@ -37,22 +37,36 @@ jobs:
         working-directory: apps/native
         run: npx expo prebuild --platform android --clean --no-install
 
-      - name: Force debug APK to bundle JS (RN 0.73 way)
+      - name: Disable R8 / proguard for release — isolate minification as crash cause
         working-directory: apps/native/android/app
         run: |
-          # In RN 0.73, the react-native-gradle-plugin ReactExtension no longer
-          # has bundleInDebug. Instead, `debuggableVariants` is a list of
-          # variants that skip JS bundling (default: ["debug"]). Clearing it
-          # forces every variant — including debug — to bundle JS into the APK.
-          if grep -q "debuggableVariants" build.gradle; then
-            # Replace any existing setting with an empty list
-            sed -i 's|debuggableVariants *= *.*|debuggableVariants = []|' build.gradle
-          else
-            # Inject into the react { } block
-            sed -i '/^react {/a\    debuggableVariants = []' build.gradle
-          fi
-          echo "--- build.gradle react block ---"
-          grep -A 20 "^react {" build.gradle || true
+          # Release APK currently loads JS and renders initial screen fine,
+          # but any React re-render crashes white. Most likely cause in release
+          # vs debug: R8 (proguard replacement) mangling some class that
+          # RN's bridge or a native module depends on.
+          #
+          # Force release buildType to minifyEnabled false and shrinkResources false
+          # so release builds like debug internally but still has JS bundled.
+          # We keep Hermes-vs-JSC setting from app.json (currently JSC).
+          sed -i 's|minifyEnabled true|minifyEnabled false|g' build.gradle
+          sed -i 's|shrinkResources true|shrinkResources false|g' build.gradle
+          echo "--- build.gradle release block ---"
+          grep -A 10 "release {" build.gradle || true
+
+      - name: Bundle JS for debug APK (expo export:embed)
+        working-directory: apps/native
+        run: |
+          # RN 0.73 dropped bundleInDebug. Bundle JS manually and drop it
+          # into the exact location gradle packages from.
+          mkdir -p android/app/src/main/assets
+          mkdir -p android/app/src/main/res
+          npx expo export:embed \
+            --platform android \
+            --dev false \
+            --entry-file node_modules/expo-router/entry.js \
+            --bundle-output android/app/src/main/assets/index.android.bundle \
+            --assets-dest android/app/src/main/res || echo "[warn] export:embed failed — debug APK may show 'Unable to load script'"
+          ls -la android/app/src/main/assets/ || true
 
       - name: Decode release keystore
         run: |
