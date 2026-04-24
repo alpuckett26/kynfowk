@@ -233,10 +233,15 @@ export async function getUpcomingCalls(): Promise<UpcomingCall[]> {
 }
 
 /**
- * Past calls (completed, missed, or in-progress with scheduled_at in the
- * past) for the current user's family, newest first. Returns demo data
- * for unauthenticated users. Limited to 50 — large enough for a useful
- * history page, small enough to render fast without pagination.
+ * Past calls for the current user's family, newest first. Includes:
+ *   - completed / missed / in_progress (any time)
+ *   - scheduled but with scheduled_at in the past (i.e. orphaned —
+ *     never joined and never marked). Surfacing these lets the
+ *     history page show "Mark completed / missed" actions.
+ *
+ * Returns demo data for unauthenticated users. Limited to 50 — large
+ * enough for a useful history page, small enough to render fast
+ * without pagination.
  */
 export async function getCallHistory(): Promise<PastCall[]> {
   const family = await getCurrentFamily();
@@ -250,7 +255,7 @@ export async function getCallHistory(): Promise<PastCall[]> {
         "id, title, scheduled_at, duration_seconds, invited_member_ids, status"
       )
       .eq("family_id", family.id)
-      .in("status", ["completed", "missed", "in_progress"])
+      .lte("scheduled_at", new Date().toISOString())
       .order("scheduled_at", { ascending: false })
       .limit(50);
 
