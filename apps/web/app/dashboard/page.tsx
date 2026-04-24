@@ -243,6 +243,13 @@ export default async function DashboardPage() {
                   Schedule a call
                 </Link>
                 <Link
+                  href="/family"
+                  className="flex items-center gap-3 rounded-xl border border-gray-100 bg-white px-4 py-3 text-sm font-medium text-gray-700 hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700 transition-all shadow-sm"
+                >
+                  <span className="text-base">👥</span>
+                  Manage family
+                </Link>
+                <Link
                   href="/case-studies"
                   className="flex items-center gap-3 rounded-xl border border-gray-100 bg-white px-4 py-3 text-sm font-medium text-gray-700 hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700 transition-all shadow-sm"
                 >
