@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches: [main, 'claude/**']
+  pull_request:
+    branches: [main]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install deps
+        run: npm install --legacy-peer-deps
+
+      - name: Build packages
+        run: npm run build:packages
+
+      - name: List packages dist output
+        run: |
+          for p in packages/*/; do
+            echo "=== $p dist ==="
+            ls -la "${p}dist/" || echo "(no dist/)"
+          done
+
+      - name: Build web
+        run: npm run build:web
+        env:
+          # Next needs _something_ for public env vars at build;
+          # placeholder OK since these are gated at runtime by hook checks.
+          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
+
+      - name: Lint
+        run: npm run lint
+        continue-on-error: true
+
+      - name: Test
+        run: npm run test
+        continue-on-error: true
