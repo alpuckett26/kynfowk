@@ -28,6 +28,16 @@ export type UpcomingCall = {
   participantCount: number;
 };
 
+/** Past-call surface for /history. */
+export type PastCall = {
+  id: string;
+  title: string;
+  scheduledAt: string;
+  durationMinutes: number | null;
+  participantCount: number;
+  status: "completed" | "missed" | "in_progress" | "scheduled";
+};
+
 // ─── Demo-mode fallbacks ────────────────────────────────────────────────────
 // Returned when NEXT_PUBLIC_SUPABASE_URL is unset, the user is not signed in,
 // or a Supabase query throws. Lets every page render believable data without
@@ -67,6 +77,22 @@ const DEMO_FAMILY_NAME = "Henderson";
 
 /** Sentinel callId that always returns the demo summary, even with a live DB. */
 export const DEMO_CALL_ID = "demo-call-id";
+
+function demoPast(): PastCall[] {
+  const day = (offsetDays: number, hour: number) => {
+    const d = new Date();
+    d.setDate(d.getDate() - offsetDays);
+    d.setHours(hour, 0, 0, 0);
+    return d.toISOString();
+  };
+  return [
+    { id: DEMO_CALL_ID, title: "Sunday catch-up", scheduledAt: day(2, 18), durationMinutes: 47, participantCount: 4, status: "completed" },
+    { id: DEMO_CALL_ID, title: "Quick check-in with Gran", scheduledAt: day(5, 11), durationMinutes: 18, participantCount: 2, status: "completed" },
+    { id: DEMO_CALL_ID, title: "Birthday call", scheduledAt: day(9, 19), durationMinutes: 62, participantCount: 5, status: "completed" },
+    { id: DEMO_CALL_ID, title: "Tuesday evening", scheduledAt: day(14, 19), durationMinutes: null, participantCount: 0, status: "missed" },
+    { id: DEMO_CALL_ID, title: "Sunday catch-up", scheduledAt: day(16, 18), durationMinutes: 33, participantCount: 4, status: "completed" },
+  ];
+}
 
 function demoUpcoming(): UpcomingCall[] {
   // Anchored relative to "now" so the demo data never looks stale.
@@ -200,6 +226,51 @@ export async function getUpcomingCalls(): Promise<UpcomingCall[]> {
       title: c.title ?? "Family call",
       scheduledAt: c.scheduled_at,
       participantCount: (c.invited_member_ids ?? []).length,
+    }));
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Past calls (completed, missed, or in-progress with scheduled_at in the
+ * past) for the current user's family, newest first. Returns demo data
+ * for unauthenticated users. Limited to 50 — large enough for a useful
+ * history page, small enough to render fast without pagination.
+ */
+export async function getCallHistory(): Promise<PastCall[]> {
+  const family = await getCurrentFamily();
+  if (!family.signedIn) return demoPast();
+
+  try {
+    const supabase = createClient();
+    const { data } = await supabase
+      .from("calls")
+      .select(
+        "id, title, scheduled_at, duration_seconds, invited_member_ids, status"
+      )
+      .eq("family_id", family.id)
+      .in("status", ["completed", "missed", "in_progress"])
+      .order("scheduled_at", { ascending: false })
+      .limit(50);
+
+    const rows = (data ?? []) as {
+      id: string;
+      title: string | null;
+      scheduled_at: string;
+      duration_seconds: number | null;
+      invited_member_ids: string[] | null;
+      status: PastCall["status"];
+    }[];
+
+    return rows.map((c) => ({
+      id: c.id,
+      title: c.title ?? "Family call",
+      scheduledAt: c.scheduled_at,
+      durationMinutes:
+        c.duration_seconds != null ? Math.round(c.duration_seconds / 60) : null,
+      participantCount: (c.invited_member_ids ?? []).length,
+      status: c.status,
     }));
   } catch {
     return [];
