@@ -47,6 +47,6 @@ jobs:
         continue-on-error: true
 
       - name: Test
-        run: CI=true npm run test -- --watchAll=false
+        run: CI=true npm run test
         timeout-minutes: 3
         continue-on-error: true
