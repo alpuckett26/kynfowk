@@ -7,12 +7,6 @@ node_modules/
 apps/web/.next/
 apps/web/out/
 
-# Expo
-apps/native/.expo/
-apps/native/dist/
-apps/native/android/
-apps/native/ios/
-
 # Env files
 .env
 .env.local
@@ -31,6 +25,3 @@ yarn-error.log*
 
 # Turbo
 .turbo/
-
-# EAS local build credentials (never commit)
-apps/native/credentials.json

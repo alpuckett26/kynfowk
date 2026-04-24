@@ -10,12 +10,14 @@
     "build": "turbo build",
     "lint": "turbo lint",
     "test": "turbo test",
+    "clean": "rm -rf node_modules packages/*/dist apps/web/.next .turbo",
     "dev:web": "turbo dev --filter=@kynfowk/web",
-    "dev:native": "turbo dev --filter=@kynfowk/native",
-    "build:web": "turbo build --filter=@kynfowk/web"
+    "build:web": "turbo build --filter=@kynfowk/web",
+    "build:packages": "turbo build --filter='./packages/*'"
   },
   "devDependencies": {
-    "turbo": "^1.12.4"
+    "turbo": "^1.12.4",
+    "typescript": "^5.3.3"
   },
   "packageManager": "npm@10.2.4",
   "engines": {
