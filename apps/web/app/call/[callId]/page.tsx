@@ -50,7 +50,7 @@ export default async function CallPage({
   const cfg = getLiveKitConfig()!;
   const { data: me } = await supabase
     .from("family_members")
-    .select("display_name")
+    .select("id, display_name")
     .eq("user_id", user.id)
     .maybeSingle();
 
@@ -67,6 +67,21 @@ export default async function CallPage({
     .update({ status: "in_progress", started_at: new Date().toISOString() })
     .eq("id", params.callId)
     .eq("status", "scheduled");
+
+  // Record this user's participation. The connection-score trigger
+  // (002_connection_score_function.sql, on_call_completed) iterates
+  // call_participants when status flips to 'completed' to insert
+  // connection_events — without a row here, no score is awarded.
+  // Idempotent via the unique(call_id, member_id) constraint.
+  if (me?.id) {
+    await supabase.from("call_participants").upsert(
+      {
+        call_id: params.callId,
+        member_id: me.id,
+      },
+      { onConflict: "call_id,member_id", ignoreDuplicates: true }
+    );
+  }
 
   return <CallRoom url={cfg.url} token={token} callId={params.callId} />;
 }
