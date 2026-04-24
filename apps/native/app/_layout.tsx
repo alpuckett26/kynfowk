@@ -1,22 +1,10 @@
 import { useEffect } from "react";
-import { View, Text, Alert, StyleSheet } from "react-native";
-import { Stack } from "expo-router";
+import { View, Text, StyleSheet } from "react-native";
+import { Slot } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 
 SplashScreen.preventAutoHideAsync();
 SplashScreen.hideAsync().catch(() => {});
-
-declare const global: { ErrorUtils?: { getGlobalHandler: () => Function; setGlobalHandler: (h: Function) => void } };
-const eu = global.ErrorUtils;
-if (eu) {
-  const original = eu.getGlobalHandler();
-  eu.setGlobalHandler((error: Error & { name?: string }, isFatal: boolean) => {
-    const msg = `${error?.name ?? "Error"}: ${error?.message ?? String(error)}\n\nFatal: ${isFatal}\n\n${(error?.stack ?? "no stack").slice(0, 800)}`;
-    try { Alert.alert("Caught JS error", msg); } catch {}
-    try { console.error("DIAGNOSTIC GLOBAL ERROR:", msg); } catch {}
-    original(error, isFatal);
-  });
-}
 
 export function ErrorBoundary({ error }: { error: Error }) {
   useEffect(() => { SplashScreen.hideAsync().catch(() => {}); }, []);
@@ -30,12 +18,7 @@ export function ErrorBoundary({ error }: { error: Error }) {
 
 export default function RootLayout() {
   useEffect(() => { SplashScreen.hideAsync().catch(() => {}); }, []);
-  return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="(tabs)" />
-      <Stack.Screen name="auth" />
-    </Stack>
-  );
+  return <Slot />;
 }
 
 const s = StyleSheet.create({
