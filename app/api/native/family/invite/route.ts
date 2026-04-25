@@ -73,7 +73,7 @@ export async function POST(request: Request) {
       acceptUrl.searchParams.set("email", inviteEmail);
       if (relationshipLabel) acceptUrl.searchParams.set("relationship", relationshipLabel);
 
-      const inviteResponse = await admin.auth.admin.inviteUserByEmail(inviteEmail, {
+      const inviteCall = admin.auth.admin.inviteUserByEmail(inviteEmail, {
         data: {
           full_name: displayName,
           family_circle_name: family.circle.name,
@@ -82,6 +82,22 @@ export async function POST(request: Request) {
         },
         redirectTo: acceptUrl.toString(),
       });
+      const timeoutMs = 8000;
+      const inviteResponse = await Promise.race([
+        inviteCall,
+        new Promise<{ error: { message: string }; data: null }>((resolve) =>
+          setTimeout(
+            () =>
+              resolve({
+                error: {
+                  message: `Supabase Auth invite did not respond in ${timeoutMs}ms (likely SMTP/redirect-allow-list config).`,
+                },
+                data: null,
+              }),
+            timeoutMs
+          )
+        ),
+      ]);
       if (inviteResponse.error) {
         const msg = inviteResponse.error.message;
         const lower = msg.toLowerCase();

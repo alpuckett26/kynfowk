@@ -41,16 +41,33 @@ export async function apiFetch<T = unknown>(
   }
 
   const url = path.startsWith("http") ? path : `${BASE_URL}${path}`;
-  const res = await fetch(url, {
-    method: opts.method ?? "GET",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    },
-    body: opts.body ? JSON.stringify(opts.body) : undefined,
-    signal: opts.signal,
-  });
+
+  // Belt-and-suspenders client timeout so the UI never hangs forever
+  // on a slow server (e.g. Supabase Auth invite-email hang).
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 20_000);
+  const signal = opts.signal ?? controller.signal;
+
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      method: opts.method ?? "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: opts.body ? JSON.stringify(opts.body) : undefined,
+      signal,
+    });
+  } catch (error) {
+    clearTimeout(timeout);
+    if (error instanceof Error && error.name === "AbortError") {
+      throw new ApiError("Request timed out", 0, null);
+    }
+    throw error;
+  }
+  clearTimeout(timeout);
 
   const contentType = res.headers.get("content-type") ?? "";
   const payload = contentType.includes("application/json")
