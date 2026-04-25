@@ -306,3 +306,32 @@ export interface AddPlaceholderResponse {
   success: true;
   membershipId: string;
 }
+
+export type NotificationReadFilter = "all" | "unread" | "read";
+
+export interface NotificationTypeCount {
+  type: NotificationType;
+  count: number;
+}
+
+export interface NotificationsResponse {
+  notifications: NotificationItem[];
+  unreadCount: number;
+  totalCount: number;
+  typeCounts: NotificationTypeCount[];
+  preferences: NotificationPreferenceSettings;
+  filters: { read: NotificationReadFilter; type: NotificationType | "all" };
+}
+
+export interface SaveNotificationPrefsBody {
+  inAppEnabled: boolean;
+  emailEnabled: boolean;
+  weeklyDigestEnabled: boolean;
+  reminder24hEnabled: boolean;
+  reminder15mEnabled: boolean;
+  startingNowEnabled: boolean;
+  pushEnabled: boolean;
+  quietHoursStart: number | null;
+  quietHoursEnd: number | null;
+  timezone: string;
+}
