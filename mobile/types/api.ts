@@ -282,6 +282,8 @@ export interface InviteMemberResponse {
   success: true;
   membershipId: string;
   alreadyClaimed: boolean;
+  inviteEmailSent: boolean;
+  inviteEmailWarning: string | null;
 }
 
 export interface UpdateMemberBody {

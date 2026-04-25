@@ -31,11 +31,20 @@ export default function InviteMemberScreen() {
         inviteEmail: email.trim(),
         relationshipLabel: relationship.trim() || undefined,
       });
-      setMessage(
-        res.alreadyClaimed
-          ? "Added — but that email already has an account, so they may need to sign in instead of accepting an invite."
-          : "Invite sent. They'll get an email with a link to join."
-      );
+      const lines: string[] = [];
+      if (res.alreadyClaimed) {
+        lines.push(
+          "Added — but that email already has an account, so they may need to sign in instead of accepting an invite."
+        );
+      } else if (res.inviteEmailSent) {
+        lines.push("Invite sent. They'll get an email with a link to join.");
+      } else {
+        lines.push("Member added to the circle.");
+      }
+      if (res.inviteEmailWarning) {
+        lines.push(`Email not delivered: ${res.inviteEmailWarning}`);
+      }
+      setMessage(lines.join("\n\n"));
       setDisplayName("");
       setEmail("");
       setRelationship("");

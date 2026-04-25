@@ -62,6 +62,8 @@ export async function POST(request: Request) {
     }
 
     let alreadyClaimed = false;
+    let inviteEmailWarning: string | null = null;
+    let inviteEmailSent = false;
     if (hasSupabaseServiceRoleEnv()) {
       const admin = createSupabaseAdminClient();
       const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://kynfowk.vercel.app";
@@ -81,11 +83,20 @@ export async function POST(request: Request) {
         redirectTo: acceptUrl.toString(),
       });
       if (inviteResponse.error) {
-        const msg = inviteResponse.error.message.toLowerCase();
-        if (msg.includes("already") || msg.includes("exists")) {
+        const msg = inviteResponse.error.message;
+        const lower = msg.toLowerCase();
+        if (lower.includes("already") || lower.includes("exists")) {
           alreadyClaimed = true;
+        } else {
+          inviteEmailWarning = msg;
+          console.error("[invite] Supabase Auth invite error:", msg);
         }
+      } else {
+        inviteEmailSent = true;
       }
+    } else {
+      inviteEmailWarning =
+        "Server isn't configured to send invite emails (SUPABASE_SERVICE_ROLE_KEY missing).";
     }
 
     await supabase.from("family_activity").insert({
@@ -99,6 +110,8 @@ export async function POST(request: Request) {
       success: true,
       membershipId: memberInsert.data.id,
       alreadyClaimed,
+      inviteEmailSent,
+      inviteEmailWarning,
     });
   } catch (error) {
     return nativeErrorResponse(error);
