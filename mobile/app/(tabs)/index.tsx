@@ -7,74 +7,45 @@ import { ListItem, SectionHeader } from "@/components/ListItem";
 import { Badge } from "@/components/Badge";
 import { Button } from "@/components/Button";
 import { EmptyState } from "@/components/EmptyState";
+import { StatGrid, StatTile } from "@/components/StatTile";
+import { HighlightCard } from "@/components/HighlightCard";
 import { colors, fontSize, fontWeight, spacing } from "@/lib/theme";
-import { formatDate, formatTime } from "@/lib/format";
-import { supabase } from "@/lib/supabase";
-
-type UpcomingCall = {
-  id: string;
-  title: string;
-  scheduled_start: string;
-  scheduled_end: string;
-  status: string;
-};
+import { formatDate, formatTime, relativeTime } from "@/lib/format";
+import { fetchDashboard } from "@/lib/dashboard";
+import { ApiError } from "@/lib/api";
+import type {
+  DashboardSnapshot,
+  DashboardUpcomingCall,
+  Suggestion,
+} from "@/types/api";
 
 type State =
   | { kind: "loading" }
-  | { kind: "no-family"; email: string }
-  | {
-      kind: "ok";
-      email: string;
-      circleName: string;
-      circleId: string;
-      upcoming: UpcomingCall[];
-      error: string | null;
-    };
+  | { kind: "needs-onboarding"; email: string | null }
+  | { kind: "error"; message: string }
+  | { kind: "ok"; snapshot: DashboardSnapshot };
 
 export default function HomeScreen() {
   const [state, setState] = useState<State>({ kind: "loading" });
   const [refreshing, setRefreshing] = useState(false);
 
   const load = useCallback(async () => {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) return;
-
-    const { data: membership } = await supabase
-      .from("family_memberships")
-      .select("family_circle_id, family_circles(name)")
-      .eq("user_id", user.id)
-      .eq("status", "active")
-      .order("created_at", { ascending: true })
-      .limit(1)
-      .maybeSingle<{
-        family_circle_id: string;
-        family_circles: { name: string } | null;
-      }>();
-
-    if (!membership?.family_circle_id) {
-      setState({ kind: "no-family", email: user.email ?? "" });
-      return;
+    try {
+      const res = await fetchDashboard();
+      if (res.needsOnboarding) {
+        setState({ kind: "needs-onboarding", email: null });
+        return;
+      }
+      setState({ kind: "ok", snapshot: res.snapshot });
+    } catch (error) {
+      const message =
+        error instanceof ApiError
+          ? error.message
+          : error instanceof Error
+            ? error.message
+            : "Couldn't load dashboard";
+      setState({ kind: "error", message });
     }
-
-    const { data: calls, error } = await supabase
-      .from("call_sessions")
-      .select("id, title, scheduled_start, scheduled_end, status")
-      .eq("family_circle_id", membership.family_circle_id)
-      .in("status", ["scheduled", "live", "in_progress"])
-      .gte("scheduled_end", new Date().toISOString())
-      .order("scheduled_start", { ascending: true })
-      .limit(5);
-
-    setState({
-      kind: "ok",
-      email: user.email ?? "",
-      circleName: membership.family_circles?.name ?? "Your circle",
-      circleId: membership.family_circle_id,
-      upcoming: (calls ?? []) as UpcomingCall[],
-      error: error?.message ?? null,
-    });
   }, []);
 
   useEffect(() => {
@@ -88,70 +59,313 @@ export default function HomeScreen() {
   }, [load]);
 
   if (state.kind === "loading") {
-    return <Screen scroll={false}><EmptyState title="Loading…" /></Screen>;
+    return (
+      <Screen scroll={false}>
+        <EmptyState title="Loading…" description="Pulling your family's latest." />
+      </Screen>
+    );
   }
 
-  if (state.kind === "no-family") {
+  if (state.kind === "error") {
     return (
-      <Screen>
-        <View style={styles.header}>
-          <Text style={styles.eyebrow}>Welcome</Text>
-          <Text style={styles.title}>Kynfowk</Text>
-          <Text style={styles.muted}>{state.email}</Text>
-        </View>
+      <Screen onRefresh={onRefresh} refreshing={refreshing}>
         <EmptyState
-          title="You aren't part of a family circle yet"
-          description="Finish setup at kynfowk.vercel.app — onboarding from the app is coming in a later milestone."
+          title="Couldn't load the dashboard"
+          description={state.message}
+          action={<Button label="Try again" variant="secondary" onPress={() => void load()} />}
         />
       </Screen>
     );
   }
 
+  if (state.kind === "needs-onboarding") {
+    return (
+      <Screen onRefresh={onRefresh} refreshing={refreshing}>
+        <View style={styles.header}>
+          <Text style={styles.eyebrow}>Welcome</Text>
+          <Text style={styles.title}>Kynfowk</Text>
+        </View>
+        <EmptyState
+          title="You aren't part of a family circle yet"
+          description="Finish onboarding at kynfowk.vercel.app — in-app onboarding lands in M12."
+        />
+      </Screen>
+    );
+  }
+
+  const snap = state.snapshot;
+
   return (
-    <Screen refreshing={refreshing} onRefresh={onRefresh}>
+    <Screen onRefresh={onRefresh} refreshing={refreshing}>
       <View style={styles.header}>
-        <Text style={styles.eyebrow}>Family circle</Text>
-        <Text style={styles.title}>{state.circleName}</Text>
+        <Text style={styles.eyebrow}>{snap.circle.name}</Text>
+        <Text style={styles.title}>Keep your rhythm in view</Text>
+        {snap.circle.description ? (
+          <Text style={styles.lede}>{snap.circle.description}</Text>
+        ) : null}
       </View>
 
       <Card>
-        <SectionHeader title="Upcoming" />
-        {state.error ? (
-          <Card style={styles.errorCard} padded={false}>
-            <Text style={styles.errorText}>Couldn't load calls: {state.error}</Text>
-          </Card>
-        ) : state.upcoming.length === 0 ? (
+        <Text style={styles.cardLabel}>Family circle readiness</Text>
+        <Text style={styles.bigStat}>{snap.readiness.completionRate}% ready</Text>
+        <Text style={styles.cardMeta}>
+          {snap.readiness.withAvailability} of {snap.readiness.activeMembers} active
+          members have availability shared
+          {snap.readiness.invitedMembers > 0
+            ? `. ${snap.readiness.invitedMembers} invited member${snap.readiness.invitedMembers === 1 ? "" : "s"} pending.`
+            : "."}
+        </Text>
+        <View style={styles.pillRow}>
+          <Badge label={`${snap.upcomingCalls.length} upcoming`} />
+          <Badge label={`${snap.stats.completedCalls} completed`} />
+        </View>
+      </Card>
+
+      <StatGrid>
+        <StatTile label="Connection score" value={snap.stats.connectionScore} />
+        <StatTile label="Time together" value={`${snap.stats.totalMinutes} min`} />
+        <StatTile
+          label="This week"
+          value={snap.stats.uniqueConnectedThisWeek}
+          hint="people connected"
+        />
+        <StatTile
+          label="Weekly streak"
+          value={snap.stats.weeklyStreak}
+          hint={snap.stats.weeklyStreak === 1 ? "week" : "weeks"}
+        />
+      </StatGrid>
+
+      {snap.highlights.length > 0 ? (
+        <View style={styles.highlights}>
+          {snap.highlights.map((h, i) => (
+            <HighlightCard key={`${h.title}-${i}`} highlight={h} />
+          ))}
+        </View>
+      ) : null}
+
+      <Card>
+        <SectionHeader
+          title="Upcoming"
+          action={
+            <Button
+              label="Schedule"
+              variant="ghost"
+              onPress={() => router.push("/schedule")}
+            />
+          }
+        />
+        {snap.upcomingCalls.length === 0 ? (
           <EmptyState
-            title="No upcoming calls"
-            description="Schedule a call from the Schedule tab to see it here."
-            action={
-              <Button
-                label="Schedule a call"
-                variant="secondary"
-                onPress={() => router.push("/schedule")}
-              />
-            }
+            title="No call on the books yet"
+            description="Use the suggestions below to protect your next moment."
           />
         ) : (
           <View style={{ gap: spacing.sm }}>
-            {state.upcoming.map((call) => {
-              const start = new Date(call.scheduled_start);
-              const isLive =
-                call.status === "live" || call.status === "in_progress";
-              return (
-                <ListItem
-                  key={call.id}
-                  title={call.title}
-                  meta={`${formatDate(start.toISOString())} · ${formatTime(start.toISOString())}`}
-                  trailing={isLive ? <Badge label="Live" tone="live" /> : <Badge label="Scheduled" />}
-                  onPress={() => {}}
-                />
-              );
-            })}
+            {snap.upcomingCalls.map((call) => (
+              <UpcomingCallRow key={call.id} call={call} />
+            ))}
+          </View>
+        )}
+      </Card>
+
+      <Card>
+        <SectionHeader title="Best times to connect" />
+        {snap.suggestions.length === 0 ? (
+          <EmptyState
+            title="Need more overlap"
+            description="Get two members' availability into the system and shared windows will appear."
+          />
+        ) : (
+          <View style={{ gap: spacing.sm }}>
+            {snap.suggestions.slice(0, 3).map((s) => (
+              <SuggestionRow key={s.start_at} suggestion={s} />
+            ))}
+          </View>
+        )}
+      </Card>
+
+      <Card>
+        <SectionHeader title="Recently completed" />
+        {snap.completedCalls.length === 0 ? (
+          <EmptyState
+            title="No completed calls yet"
+            description="Once a call wraps, it shows up here as a memory."
+          />
+        ) : (
+          <View style={{ gap: spacing.sm }}>
+            {snap.completedCalls.map((c) => (
+              <ListItem
+                key={c.id}
+                title={c.title}
+                meta={`${formatDate(c.scheduled_start)} · ${c.attended_count} joined`}
+                trailing={
+                  <Badge
+                    tone="success"
+                    label={`${c.actual_duration_minutes ?? 0} min`}
+                  />
+                }
+              />
+            ))}
+          </View>
+        )}
+      </Card>
+
+      {snap.latestRecap ? (
+        <Card>
+          <SectionHeader title="Latest recap" />
+          <Text style={styles.recapTitle}>{snap.latestRecap.title}</Text>
+          <Text style={styles.cardMeta}>
+            {formatDate(snap.latestRecap.scheduledStart)} ·{" "}
+            {snap.latestRecap.actualDurationMinutes} min
+          </Text>
+          {snap.latestRecap.highlight ? (
+            <View style={styles.recapBlock}>
+              <Text style={styles.recapLabel}>Highlight</Text>
+              <Text style={styles.recapText}>{snap.latestRecap.highlight}</Text>
+            </View>
+          ) : null}
+          {snap.latestRecap.summary ? (
+            <View style={styles.recapBlock}>
+              <Text style={styles.recapLabel}>Summary</Text>
+              <Text style={styles.recapText}>{snap.latestRecap.summary}</Text>
+            </View>
+          ) : null}
+          {snap.latestRecap.nextStep ? (
+            <View style={styles.recapBlock}>
+              <Text style={styles.recapLabel}>Next step</Text>
+              <Text style={styles.recapText}>{snap.latestRecap.nextStep}</Text>
+            </View>
+          ) : null}
+          {!snap.latestRecap.summary && !snap.latestRecap.highlight && !snap.latestRecap.nextStep ? (
+            <Text style={styles.cardMeta}>
+              Recap waiting to be filled in. Open the call to add notes.
+            </Text>
+          ) : null}
+        </Card>
+      ) : null}
+
+      <Card>
+        <SectionHeader title="Inbox" />
+        {snap.inbox.notifications.length === 0 ? (
+          <EmptyState
+            title="All caught up"
+            description="Reminders and recap nudges will land here."
+          />
+        ) : (
+          <View style={{ gap: spacing.sm }}>
+            {snap.inbox.notifications.map((n) => (
+              <ListItem
+                key={n.id}
+                title={n.title}
+                subtitle={n.body}
+                meta={relativeTime(n.createdAt)}
+                trailing={n.readAt ? null : <Badge tone="warning" label="New" />}
+              />
+            ))}
+            {snap.inbox.unreadCount > snap.inbox.notifications.length ? (
+              <Text style={styles.cardMeta}>
+                {snap.inbox.unreadCount - snap.inbox.notifications.length} more unread
+              </Text>
+            ) : null}
+          </View>
+        )}
+      </Card>
+
+      <Card>
+        <SectionHeader title="Recent activity" />
+        {snap.recentActivity.length === 0 ? (
+          <EmptyState
+            title="Activity will land here"
+            description="Invites, scheduled calls, and saved recaps build a timeline for your circle."
+          />
+        ) : (
+          <View style={{ gap: spacing.sm }}>
+            {snap.recentActivity.slice(0, 5).map((item) => (
+              <ListItem
+                key={item.id}
+                title={item.summary}
+                meta={relativeTime(item.createdAt)}
+              />
+            ))}
+          </View>
+        )}
+      </Card>
+
+      <Card>
+        <SectionHeader title="Family members" />
+        {snap.memberships.length === 0 ? (
+          <EmptyState title="No family members added yet" />
+        ) : (
+          <View style={{ gap: spacing.sm }}>
+            {snap.memberships.slice(0, 6).map((m) => (
+              <ListItem
+                key={m.id}
+                title={m.display_name}
+                subtitle={m.invite_email ?? undefined}
+                trailing={
+                  <Badge
+                    tone={m.status === "active" ? "success" : "neutral"}
+                    label={m.status === "active" ? "Joined" : "Invited"}
+                  />
+                }
+              />
+            ))}
+            {snap.memberships.length > 6 ? (
+              <Text style={styles.cardMeta}>
+                +{snap.memberships.length - 6} more in Family tab
+              </Text>
+            ) : null}
           </View>
         )}
       </Card>
     </Screen>
+  );
+}
+
+function UpcomingCallRow({ call }: { call: DashboardUpcomingCall }) {
+  const start = new Date(call.scheduled_start);
+  const end = new Date(call.scheduled_end);
+  const isLive = call.status === "live" || !!call.actual_started_at;
+  const needsRecovery = call.show_recovery_prompt;
+  return (
+    <ListItem
+      title={call.title}
+      subtitle={`${formatDate(start.toISOString())} · ${formatTime(start.toISOString())} – ${formatTime(end.toISOString())}`}
+      meta={call.reminder_label}
+      trailing={
+        isLive ? (
+          <Badge tone="live" label="Live" />
+        ) : needsRecovery ? (
+          <Badge tone="warning" label="Follow up" />
+        ) : (
+          <Badge label="Scheduled" />
+        )
+      }
+    />
+  );
+}
+
+function SuggestionRow({ suggestion }: { suggestion: Suggestion }) {
+  const start = new Date(suggestion.start_at);
+  const end = new Date(suggestion.end_at);
+  return (
+    <View style={styles.suggestionBox}>
+      <View style={styles.suggestionHead}>
+        <Text style={styles.suggestionTitle}>{suggestion.label}</Text>
+        <Badge label={suggestion.overlap_strength_label} />
+      </View>
+      <Text style={styles.cardMeta}>
+        {formatDate(start.toISOString())} · {formatTime(start.toISOString())} – {formatTime(end.toISOString())}
+      </Text>
+      <Text style={styles.cardMeta}>{suggestion.rationale}</Text>
+      <Text style={styles.cardMeta}>
+        Family-ready: {suggestion.participant_names.slice(0, 4).join(", ")}
+        {suggestion.participant_count > 4
+          ? ` and ${suggestion.participant_count - 4} more`
+          : ""}
+      </Text>
+    </View>
   );
 }
 
@@ -169,11 +383,61 @@ const styles = StyleSheet.create({
     fontWeight: fontWeight.black,
     color: colors.text,
   },
-  muted: { color: colors.textSubtle, fontSize: fontSize.sm },
-  errorCard: {
-    backgroundColor: colors.dangerBg,
-    borderColor: colors.danger,
-    padding: spacing.md,
+  lede: {
+    fontSize: fontSize.sm,
+    color: colors.textMuted,
+    lineHeight: 20,
   },
-  errorText: { color: colors.danger, fontSize: fontSize.sm },
+  cardLabel: {
+    fontSize: fontSize.xs,
+    fontWeight: fontWeight.bold,
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
+    color: colors.textSubtle,
+  },
+  bigStat: {
+    fontSize: fontSize.xl,
+    fontWeight: fontWeight.black,
+    color: colors.text,
+  },
+  cardMeta: { fontSize: fontSize.sm, color: colors.textMuted, lineHeight: 19 },
+  pillRow: {
+    flexDirection: "row",
+    gap: spacing.sm,
+    flexWrap: "wrap",
+    marginTop: spacing.xs,
+  },
+  highlights: { gap: spacing.sm },
+  recapTitle: {
+    fontSize: fontSize.md,
+    fontWeight: fontWeight.bold,
+    color: colors.text,
+  },
+  recapBlock: { gap: 2 },
+  recapLabel: {
+    fontSize: fontSize.xs,
+    fontWeight: fontWeight.bold,
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
+    color: colors.accent,
+  },
+  recapText: { fontSize: fontSize.sm, color: colors.text, lineHeight: 19 },
+  suggestionBox: {
+    backgroundColor: colors.surfaceMuted,
+    borderRadius: 12,
+    padding: spacing.md,
+    gap: 4,
+  },
+  suggestionHead: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: spacing.sm,
+  },
+  suggestionTitle: {
+    fontSize: fontSize.md,
+    fontWeight: fontWeight.bold,
+    color: colors.text,
+    flex: 1,
+  },
 });

@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { buildAvailabilitySummary, getAvailabilitySlotKey } from "@/lib/availability";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -88,8 +89,10 @@ export async function requireViewer() {
   return user;
 }
 
-export async function getViewerFamilyCircle(userId: string) {
-  const supabase = await createSupabaseServerClient();
+export async function getViewerFamilyCircleWith(
+  supabase: SupabaseClient,
+  userId: string
+) {
   const membershipResponse = await supabase
     .from("family_memberships")
     .select("id, family_circle_id, display_name, role, status")
@@ -117,6 +120,11 @@ export async function getViewerFamilyCircle(userId: string) {
     membership,
     circle: circleResponse.data
   };
+}
+
+export async function getViewerFamilyCircle(userId: string) {
+  const supabase = await createSupabaseServerClient();
+  return getViewerFamilyCircleWith(supabase, userId);
 }
 
 async function getViewerTimezone(
@@ -240,7 +248,7 @@ export async function getHomepageStats(): Promise<{
   }
 }
 
-export async function getDashboardData(userId: string): Promise<{
+export interface DashboardSnapshot {
   circle: { id: string; name: string; description: string | null };
   memberships: {
     id: string;
@@ -295,12 +303,21 @@ export async function getDashboardData(userId: string): Promise<{
   };
   notificationPreferences: NotificationPreferenceSettings;
   viewerTimezone: string;
-}> {
-  const supabase = await createSupabaseServerClient();
-  const family = await getViewerFamilyCircle(userId);
+}
+
+/**
+ * Pure data builder used by both the web dashboard page (which redirects
+ * to onboarding when null) and the native /api/native/dashboard endpoint
+ * (which returns { needsOnboarding: true }).
+ */
+export async function getDashboardSnapshot(
+  supabase: SupabaseClient,
+  userId: string
+): Promise<DashboardSnapshot | null> {
+  const family = await getViewerFamilyCircleWith(supabase, userId);
 
   if (!family) {
-    redirect("/onboarding");
+    return null;
   }
 
   await ensureNotificationPreferences(supabase, userId);
@@ -506,6 +523,15 @@ export async function getDashboardData(userId: string): Promise<{
     notificationPreferences: inboxData.preferences,
     viewerTimezone: inboxData.preferences.timezone
   };
+}
+
+export async function getDashboardData(userId: string): Promise<DashboardSnapshot> {
+  const supabase = await createSupabaseServerClient();
+  const snapshot = await getDashboardSnapshot(supabase, userId);
+  if (!snapshot) {
+    redirect("/onboarding");
+  }
+  return snapshot;
 }
 
 export async function getNotificationsPageData(
