@@ -8,8 +8,14 @@ import {
   View,
 } from "react-native";
 import { router } from "expo-router";
-import * as Linking from "expo-linking";
 import { supabase } from "@/lib/supabase";
+
+// Hard-coded so it exactly matches the Supabase Auth → URL Configuration →
+// Redirect URLs allow-list entry. expo-linking's createURL returns
+// "kynfowk:///auth/callback" (triple slash, empty host) which Supabase
+// treats as a different value than "kynfowk://auth/callback". Mismatched
+// values cause Supabase to silently fall back to Site URL.
+const REDIRECT_URL = "kynfowk://auth/callback";
 
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
@@ -26,10 +32,9 @@ export default function LoginScreen() {
       return;
     }
     setStatus({ kind: "sending" });
-    const redirectTo = Linking.createURL("/auth/callback");
     const { error } = await supabase.auth.signInWithOtp({
       email: email.trim().toLowerCase(),
-      options: { emailRedirectTo: redirectTo },
+      options: { emailRedirectTo: REDIRECT_URL },
     });
     if (error) {
       setStatus({ kind: "error", message: error.message });
