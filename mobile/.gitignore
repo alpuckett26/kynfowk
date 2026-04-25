@@ -5,6 +5,7 @@ web-build/
 .DS_Store
 *.log
 *.tsbuildinfo
+package-lock.json
 
 # Native
 android/
