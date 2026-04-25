@@ -21,7 +21,18 @@
       "package": "com.kynfowk.app",
       "adaptiveIcon": {
         "backgroundColor": "#fdf6ec"
-      }
+      },
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": false,
+          "data": [
+            { "scheme": "kynfowk", "host": "auth", "pathPrefix": "/" },
+            { "scheme": "kynfowk" }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
     },
     "plugins": [
       "expo-router",
