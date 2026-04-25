@@ -237,3 +237,35 @@ export interface SaveAvailabilityResponse {
   slots: string[];
   summary: AvailabilitySummaryItem[];
 }
+
+export interface FamilyMember {
+  id: string;
+  display_name: string;
+  status: "active" | "invited";
+  role: "owner" | "member";
+  relationship_label: string | null;
+  invite_email: string | null;
+  phone_number: string | null;
+  avatar_url: string | null;
+  is_placeholder: boolean;
+  is_deceased: boolean;
+  blocked_at: string | null;
+}
+
+export interface FamilyMembersResponse {
+  circle: { id: string; name: string; description: string | null };
+  viewerMembershipId: string;
+  viewerRole: "owner" | "member";
+  members: FamilyMember[];
+}
+
+export interface ScheduleCallBody {
+  title: string;
+  scheduledStart: string;
+  scheduledEnd: string;
+  participantMembershipIds: string[];
+}
+
+export interface ScheduleCallResponse {
+  callId: string;
+}

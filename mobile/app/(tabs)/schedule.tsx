@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { router } from "expo-router";
 import { Screen } from "@/components/Screen";
 import { Card } from "@/components/Card";
 import { Button } from "@/components/Button";
@@ -209,10 +210,11 @@ export default function ScheduleTab() {
 
       <Card>
         <SectionHeader title="Plan a call" />
-        <EmptyState
-          title="Coming in M5"
-          description="Pick participants, find an overlap, and put a call on the calendar — straight from your phone."
-        />
+        <Text style={styles.lede}>
+          Pick a date, time, and who to invite. The call lands on everyone's
+          dashboard immediately.
+        </Text>
+        <Button label="Schedule a call" onPress={() => router.push("/schedule/new")} />
       </Card>
     </Screen>
   );

@@ -4,6 +4,8 @@ import type {
   CompleteCallBody,
   SaveLinkBody,
   SaveRecapBody,
+  ScheduleCallBody,
+  ScheduleCallResponse,
 } from "@/types/api";
 
 export function fetchCallDetail(callId: string): Promise<CallDetailResponse> {
@@ -42,4 +44,11 @@ export function saveCallLink(
 
 export function cancelCall(callId: string): Promise<{ success: true }> {
   return apiFetch(`/api/native/calls/${callId}/cancel`, { method: "POST" });
+}
+
+export function scheduleCall(body: ScheduleCallBody): Promise<ScheduleCallResponse> {
+  return apiFetch("/api/native/calls/schedule", {
+    method: "POST",
+    body,
+  });
 }
