@@ -160,3 +160,60 @@ export interface DashboardSnapshot {
 export type DashboardResponse =
   | { needsOnboarding: true }
   | { needsOnboarding: false; snapshot: DashboardSnapshot };
+
+export interface CallDetailParticipant {
+  membershipId: string;
+  displayName: string;
+  attended: boolean | null;
+  avatarUrl: string | null;
+}
+
+export interface CallDetailSnapshot {
+  circle: { id: string; name: string; description: string | null };
+  call: {
+    id: string;
+    title: string;
+    scheduled_start: string;
+    scheduled_end: string;
+    status: CallStatus;
+    actual_duration_minutes: number | null;
+    meeting_provider: string | null;
+    meeting_url: string | null;
+    actual_started_at: string | null;
+    actual_ended_at: string | null;
+    reminder_status: ReminderStatus;
+    reminder_sent_at: string | null;
+    reminder_label: string;
+    needs_join_link_prompt: boolean;
+    needs_completion_prompt: boolean;
+    recovery_dismissed_at: string | null;
+    show_recovery_prompt: boolean;
+    suggested_reschedule_start: string | null;
+    suggested_reschedule_end: string | null;
+    can_reschedule: boolean;
+  };
+  participants: CallDetailParticipant[];
+  recap: CallRecap | null;
+  viewerTimezone: string;
+  viewerTimezoneLabel: string;
+  viewerMembershipId: string;
+  canManageFamily: boolean;
+}
+
+export type CallDetailResponse = { snapshot: CallDetailSnapshot };
+
+export type CompleteCallBody = {
+  durationMinutes: number;
+  attendedMembershipIds: string[];
+};
+
+export type SaveRecapBody = {
+  summary?: string;
+  highlight?: string;
+  nextStep?: string;
+};
+
+export type SaveLinkBody = {
+  meetingProvider?: string | null;
+  meetingUrl?: string | null;
+};

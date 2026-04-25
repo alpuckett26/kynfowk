@@ -46,6 +46,7 @@ export default function RootLayout() {
           }}
         >
           <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="calls/[callId]" />
           <Stack.Screen name="login" options={{ presentation: "modal" }} />
           <Stack.Screen name="auth/callback" />
         </Stack>

@@ -1,0 +1,45 @@
+import { apiFetch } from "@/lib/api";
+import type {
+  CallDetailResponse,
+  CompleteCallBody,
+  SaveLinkBody,
+  SaveRecapBody,
+} from "@/types/api";
+
+export function fetchCallDetail(callId: string): Promise<CallDetailResponse> {
+  return apiFetch<CallDetailResponse>(`/api/native/calls/${callId}`);
+}
+
+export function completeCall(
+  callId: string,
+  body: CompleteCallBody
+): Promise<{ success: true }> {
+  return apiFetch(`/api/native/calls/${callId}/complete`, {
+    method: "POST",
+    body,
+  });
+}
+
+export function saveCallRecap(
+  callId: string,
+  body: SaveRecapBody
+): Promise<{ success: true }> {
+  return apiFetch(`/api/native/calls/${callId}/recap`, {
+    method: "POST",
+    body,
+  });
+}
+
+export function saveCallLink(
+  callId: string,
+  body: SaveLinkBody
+): Promise<{ success: true; meetingProvider: string | null; meetingUrl: string | null }> {
+  return apiFetch(`/api/native/calls/${callId}/link`, {
+    method: "POST",
+    body,
+  });
+}
+
+export function cancelCall(callId: string): Promise<{ success: true }> {
+  return apiFetch(`/api/native/calls/${callId}/cancel`, { method: "POST" });
+}

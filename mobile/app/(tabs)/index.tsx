@@ -163,7 +163,11 @@ export default function HomeScreen() {
         ) : (
           <View style={{ gap: spacing.sm }}>
             {snap.upcomingCalls.map((call) => (
-              <UpcomingCallRow key={call.id} call={call} />
+              <UpcomingCallRow
+                key={call.id}
+                call={call}
+                onPress={() => router.push(`/calls/${call.id}`)}
+              />
             ))}
           </View>
         )}
@@ -205,6 +209,7 @@ export default function HomeScreen() {
                     label={`${c.actual_duration_minutes ?? 0} min`}
                   />
                 }
+                onPress={() => router.push(`/calls/${c.id}`)}
               />
             ))}
           </View>
@@ -323,7 +328,13 @@ export default function HomeScreen() {
   );
 }
 
-function UpcomingCallRow({ call }: { call: DashboardUpcomingCall }) {
+function UpcomingCallRow({
+  call,
+  onPress,
+}: {
+  call: DashboardUpcomingCall;
+  onPress: () => void;
+}) {
   const start = new Date(call.scheduled_start);
   const end = new Date(call.scheduled_end);
   const isLive = call.status === "live" || !!call.actual_started_at;
@@ -342,6 +353,7 @@ function UpcomingCallRow({ call }: { call: DashboardUpcomingCall }) {
           <Badge label="Scheduled" />
         )
       }
+      onPress={onPress}
     />
   );
 }
