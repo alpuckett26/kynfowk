@@ -29,6 +29,10 @@ jobs:
         working-directory: mobile
         run: npm install --legacy-peer-deps
 
+      - name: Align deps with Expo SDK (expo install --fix)
+        working-directory: mobile
+        run: npx expo install --fix
+
       - name: Prebuild Android (generates android/ from app.json)
         working-directory: mobile
         env:
