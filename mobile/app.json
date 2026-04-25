@@ -2,6 +2,7 @@
   "expo": {
     "name": "Kynfowk",
     "slug": "kynfowk",
+    "owner": "ahype",
     "scheme": "kynfowk",
     "version": "0.0.1",
     "orientation": "portrait",
@@ -26,6 +27,11 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "8d4e3725-0286-4a06-81e1-411f265674d4"
+      }
     }
   }
 }
