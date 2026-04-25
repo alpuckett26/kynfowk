@@ -2,7 +2,9 @@ name: Mobile Android APK
 
 on:
   push:
-    branches: [native-plan]
+    branches:
+      - native-plan
+      - claude/native-feature-parity-uFLDu
     paths:
       - 'mobile/**'
       - '.github/workflows/mobile-android.yml'
@@ -32,6 +34,14 @@ jobs:
       - name: Align deps with Expo SDK (expo install --fix)
         working-directory: mobile
         run: npx expo install --fix
+
+      - name: Type check
+        working-directory: mobile
+        run: npx tsc --noEmit
+
+      - name: Lint
+        working-directory: mobile
+        run: npx expo lint
 
       - name: Prebuild Android (generates android/ from app.json)
         working-directory: mobile
