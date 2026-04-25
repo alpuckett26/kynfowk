@@ -2,20 +2,13 @@
   "name": "@kynfowk/utils",
   "version": "0.0.1",
   "private": true,
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./index.ts",
+  "types": "./index.ts",
   "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
-    }
+    ".": "./index.ts"
   },
-  "files": [
-    "dist",
-    "index.ts"
-  ],
-  "scripts": {
-    "build": "tsc",
-    "clean": "rm -rf dist"
+  "dependencies": {
+    "clsx": "^2.1.0",
+    "tailwind-merge": "^2.2.0"
   }
 }
