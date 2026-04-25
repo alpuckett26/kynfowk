@@ -13,6 +13,7 @@ import {
   fetchNotifications,
   saveNotificationPrefs,
 } from "@/lib/notifications";
+import { registerForPushAsync } from "@/lib/push";
 import { colors, fontSize, fontWeight, radius, spacing } from "@/lib/theme";
 import type { NotificationPreferenceSettings } from "@/types/api";
 
@@ -35,6 +36,8 @@ export default function NotificationSettingsScreen() {
   const [draft, setDraft] = useState<NotificationPreferenceSettings | null>(null);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [pushBusy, setPushBusy] = useState(false);
+  const [pushMessage, setPushMessage] = useState<string | null>(null);
 
   const load_ = useCallback(async () => {
     try {
@@ -118,6 +121,33 @@ export default function NotificationSettingsScreen() {
     setMessage(null);
   };
 
+  const togglePush = async () => {
+    if (!draft) return;
+    if (draft.pushEnabled) {
+      // Turning off — leave the token registered (server stops sending
+      // because pushEnabled=false) but flip the flag.
+      setField("pushEnabled", false);
+      setPushMessage(null);
+      return;
+    }
+    setPushBusy(true);
+    setPushMessage(null);
+    const result = await registerForPushAsync();
+    setPushBusy(false);
+    if (result.kind === "registered") {
+      setField("pushEnabled", true);
+      setPushMessage("Device registered. Save to apply.");
+    } else if (result.kind === "denied") {
+      setPushMessage(
+        "Permission denied. Enable notifications for Kynfowk in your phone's settings, then try again."
+      );
+    } else if (result.kind === "unsupported") {
+      setPushMessage(result.reason);
+    } else {
+      setPushMessage(result.message);
+    }
+  };
+
   return (
     <Screen>
       <View style={styles.headerRow}>
@@ -148,11 +178,16 @@ export default function NotificationSettingsScreen() {
         />
         <Toggle
           label="Push"
-          subtitle="Phone notifications (M8)"
+          subtitle={
+            pushBusy
+              ? "Asking permission…"
+              : "Phone notifications via Expo + FCM"
+          }
           checked={draft.pushEnabled}
-          onToggle={() => setField("pushEnabled", !draft.pushEnabled)}
-          disabled
+          onToggle={() => void togglePush()}
+          disabled={pushBusy}
         />
+        {pushMessage ? <Text style={styles.helper}>{pushMessage}</Text> : null}
       </Card>
 
       <Card>

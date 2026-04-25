@@ -52,6 +52,9 @@ export default function RootLayout() {
           <Stack.Screen name="family/placeholder" />
           <Stack.Screen name="family/[membershipId]" />
           <Stack.Screen name="settings/notifications" />
+          <Stack.Screen name="photos" />
+          <Stack.Screen name="polls" />
+          <Stack.Screen name="activity" />
           <Stack.Screen name="login" options={{ presentation: "modal" }} />
           <Stack.Screen name="auth/callback" />
         </Stack>

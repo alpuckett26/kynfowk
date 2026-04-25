@@ -7,6 +7,9 @@ web-build/
 *.tsbuildinfo
 package-lock.json
 
+# FCM config — written by CI from GOOGLE_SERVICES_JSON secret
+google-services.json
+
 # Native
 android/
 ios/
