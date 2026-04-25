@@ -250,6 +250,8 @@ export interface FamilyMember {
   is_placeholder: boolean;
   is_deceased: boolean;
   blocked_at: string | null;
+  address: string | null;
+  placeholder_notes: string | null;
 }
 
 export interface FamilyMembersResponse {
@@ -268,4 +270,39 @@ export interface ScheduleCallBody {
 
 export interface ScheduleCallResponse {
   callId: string;
+}
+
+export interface InviteMemberBody {
+  displayName: string;
+  inviteEmail: string;
+  relationshipLabel?: string;
+}
+
+export interface InviteMemberResponse {
+  success: true;
+  membershipId: string;
+  alreadyClaimed: boolean;
+}
+
+export interface UpdateMemberBody {
+  displayName?: string;
+  relationshipLabel?: string | null;
+  phoneNumber?: string | null;
+  address?: string | null;
+}
+
+export interface BlockMemberBody {
+  reason?: string;
+}
+
+export interface AddPlaceholderBody {
+  displayName: string;
+  relationshipLabel?: string;
+  isDeceased?: boolean;
+  notes?: string;
+}
+
+export interface AddPlaceholderResponse {
+  success: true;
+  membershipId: string;
 }
