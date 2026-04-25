@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { sendCallInvites } from "@/lib/email";
 
 export type ScheduleFormState = { ok: boolean; message: string };
 
@@ -65,16 +66,58 @@ export async function scheduleCall(
     cleanInvited = (validRows ?? []).map((r) => r.id as string);
   }
 
-  const { error } = await supabase.from("calls").insert({
-    family_id: me.family_id,
-    title,
-    scheduled_at: when.toISOString(),
-    status: "scheduled",
-    invited_member_ids: cleanInvited,
-    participant_count: cleanInvited.length || null,
-  });
+  const { data: insertedRows, error } = await supabase
+    .from("calls")
+    .insert({
+      family_id: me.family_id,
+      title,
+      scheduled_at: when.toISOString(),
+      status: "scheduled",
+      invited_member_ids: cleanInvited,
+      participant_count: cleanInvited.length || null,
+    })
+    .select("id")
+    .single();
 
   if (error) return { ok: false, message: error.message };
+
+  // Fire invite emails in the background — don't block the redirect on
+  // email delivery, and don't fail the schedule if Resend isn't
+  // configured (sendCallInvites returns 0 in that case).
+  if (insertedRows?.id && cleanInvited.length > 0) {
+    const [{ data: invitees }, { data: family }, { data: inviter }] =
+      await Promise.all([
+        supabase
+          .from("family_members")
+          .select("email")
+          .in("id", cleanInvited)
+          .not("email", "is", null),
+        supabase
+          .from("families")
+          .select("name")
+          .eq("id", me.family_id)
+          .maybeSingle(),
+        supabase
+          .from("family_members")
+          .select("display_name")
+          .eq("user_id", user.id)
+          .maybeSingle(),
+      ]);
+
+    const toEmails = (invitees ?? [])
+      .map((r) => r.email as string | null)
+      .filter((e): e is string => !!e);
+
+    // fire-and-forget; errors per-recipient are swallowed inside.
+    sendCallInvites({
+      toEmails,
+      callId: insertedRows.id,
+      callTitle: title,
+      scheduledAt: when.toISOString(),
+      familyName: family?.name ?? "Your",
+      inviterName: inviter?.display_name ?? "A family member",
+    }).catch(() => {});
+  }
 
   revalidatePath("/dashboard");
   redirect("/dashboard");
