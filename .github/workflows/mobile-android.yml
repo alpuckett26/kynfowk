@@ -25,54 +25,38 @@ jobs:
           java-version: '17'
           distribution: temurin
 
-      - uses: expo/expo-github-action@v8
-        with:
-          eas-version: latest
-          token: ${{ secrets.EXPO_TOKEN }}
-
       - name: Install deps
         working-directory: mobile
         run: npm install --legacy-peer-deps
 
-      - name: Decode keystore and write credentials.json
+      - name: Prebuild Android (generates android/ from app.json)
         working-directory: mobile
         env:
-          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-        run: |
-          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > /tmp/kynfowk-release.keystore
-          node -e "
-            const fs = require('fs');
-            fs.writeFileSync('credentials.json', JSON.stringify({
-              android: {
-                keystore: {
-                  keystorePath: '/tmp/kynfowk-release.keystore',
-                  keystorePassword: process.env.KEYSTORE_PASSWORD,
-                  keyAlias: process.env.KEY_ALIAS,
-                  keyPassword: process.env.KEY_PASSWORD
-                }
-              }
-            }, null, 2));
-            console.log('credentials.json written');
-          "
+          EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
+          EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
+        run: npx expo prebuild --platform android --clean --no-install
 
-      - name: Build APK (EAS local)
-        working-directory: mobile
+      - name: Decode release keystore
+        run: echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > /tmp/kynfowk-release.keystore
+
+      - name: Build APK with gradle
+        working-directory: mobile/android
         timeout-minutes: 25
         env:
           EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
           EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
         run: |
-          eas build \
-            --platform android \
-            --profile preview \
-            --local \
-            --output ./build.apk \
-            --non-interactive
+          chmod +x gradlew
+          ./gradlew assembleRelease \
+            -PMYAPP_UPLOAD_STORE_FILE=/tmp/kynfowk-release.keystore \
+            -PMYAPP_UPLOAD_STORE_PASSWORD=${{ secrets.ANDROID_STORE_PASSWORD }} \
+            -PMYAPP_UPLOAD_KEY_ALIAS=${{ secrets.ANDROID_KEY_ALIAS }} \
+            -PMYAPP_UPLOAD_KEY_PASSWORD=${{ secrets.ANDROID_KEY_PASSWORD }} \
+            -PreactNativeArchitectures=arm64-v8a,armeabi-v7a \
+            --no-daemon
 
       - uses: actions/upload-artifact@v4
         with:
           name: kynfowk-mobile-apk
-          path: mobile/build.apk
+          path: mobile/android/app/build/outputs/apk/release/app-release.apk
           retention-days: 14
