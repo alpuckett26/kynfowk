@@ -1,7 +1,13 @@
 import { supabase } from "@/lib/supabase";
 
+// Use || not ?? — CI passes EXPO_PUBLIC_WEB_API_BASE_URL="" when the
+// secret is unset, and ?? would let an empty string through, leaving
+// fetch with a relative URL like "/api/native/dashboard" → "Invalid URL".
+const ENV_BASE_URL = process.env.EXPO_PUBLIC_WEB_API_BASE_URL;
 const BASE_URL =
-  process.env.EXPO_PUBLIC_WEB_API_BASE_URL ?? "https://kynfowk.vercel.app";
+  ENV_BASE_URL && ENV_BASE_URL.length > 0
+    ? ENV_BASE_URL
+    : "https://kynfowk.vercel.app";
 
 type RequestOptions = {
   method?: "GET" | "POST" | "PATCH" | "DELETE";
