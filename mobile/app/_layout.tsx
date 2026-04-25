@@ -46,7 +46,8 @@ export default function RootLayout() {
           }}
         >
           <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="calls/[callId]" />
+          <Stack.Screen name="calls/[callId]/index" />
+          <Stack.Screen name="calls/[callId]/live" />
           <Stack.Screen name="schedule/new" />
           <Stack.Screen name="family/invite" />
           <Stack.Screen name="family/placeholder" />

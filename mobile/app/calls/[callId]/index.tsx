@@ -113,6 +113,20 @@ export default function CallDetailScreen() {
         <Text style={styles.meta}>{call.reminder_label}</Text>
       </View>
 
+      {!isCompleted && !isCanceled ? (
+        <Card>
+          <Text style={styles.joinTitle}>Join Kynfowk video</Text>
+          <Text style={styles.subtle}>
+            In-app call room — no extra link needed. Camera + mic permission
+            required the first time.
+          </Text>
+          <Button
+            label={isLive ? "Re-join live call" : "Start call"}
+            onPress={() => router.push(`/calls/${callId}/live`)}
+          />
+        </Card>
+      ) : null}
+
       {call.meeting_url ? (
         <Card>
           <SectionHeader title="Join link" />
@@ -453,6 +467,11 @@ const styles = StyleSheet.create({
   meta: { fontSize: fontSize.sm, color: colors.textMuted, lineHeight: 19 },
   badges: { flexDirection: "row", gap: spacing.sm, marginTop: spacing.xs },
   subtle: { fontSize: fontSize.sm, color: colors.textMuted },
+  joinTitle: {
+    fontSize: fontSize.md,
+    fontWeight: fontWeight.bold,
+    color: colors.text,
+  },
   linkText: {
     fontSize: fontSize.sm,
     color: colors.accent,

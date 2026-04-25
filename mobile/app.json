@@ -44,6 +44,23 @@
           "color": "#1f1916",
           "defaultChannel": "default"
         }
+      ],
+      [
+        "@config-plugins/react-native-webrtc",
+        {
+          "cameraPermission": "Kynfowk uses your camera so the family can see you on a call.",
+          "microphonePermission": "Kynfowk uses your microphone so the family can hear you on a call."
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "minSdkVersion": 24,
+            "compileSdkVersion": 35,
+            "targetSdkVersion": 34
+          }
+        }
       ]
     ],
     "experiments": {
