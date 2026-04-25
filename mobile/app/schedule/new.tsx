@@ -53,7 +53,7 @@ export default function ScheduleNewScreen() {
       const res = await fetchFamilyMembers();
       const eligible = res.members.filter(
         (m) =>
-          (m.status === "active" || m.status === "invited") &&
+          m.status === "active" &&
           !m.is_deceased &&
           !m.is_placeholder &&
           !m.blocked_at &&
@@ -236,36 +236,23 @@ export default function ScheduleNewScreen() {
         <SectionHeader title={`Invite (${picked.size})`} />
         {load.members.length === 0 ? (
           <EmptyState
-            title="No one to invite yet"
-            description="Add family from the Family tab so you can invite them to a call."
+            title="No other active members"
+            description="Add family from the Family tab to invite them to a call."
           />
         ) : (
           <View style={{ gap: spacing.sm }}>
-            {load.members.map((m) => {
-              const subtitleParts = [
-                m.relationship_label,
-                m.status === "invited" ? "Pending invite" : null,
-              ].filter(Boolean);
-              return (
-                <Toggle
-                  key={m.id}
-                  label={m.display_name}
-                  subtitle={
-                    subtitleParts.length > 0
-                      ? subtitleParts.join(" · ")
-                      : undefined
-                  }
-                  checked={picked.has(m.id)}
-                  onToggle={() => togglePick(m.id)}
-                />
-              );
-            })}
+            {load.members.map((m) => (
+              <Toggle
+                key={m.id}
+                label={m.display_name}
+                subtitle={m.relationship_label ?? undefined}
+                checked={picked.has(m.id)}
+                onToggle={() => togglePick(m.id)}
+              />
+            ))}
           </View>
         )}
-        <Text style={styles.helper}>
-          You're automatically included. Pending invitees see the call once
-          they accept their invite.
-        </Text>
+        <Text style={styles.helper}>You're automatically included.</Text>
       </Card>
 
       {error ? (
