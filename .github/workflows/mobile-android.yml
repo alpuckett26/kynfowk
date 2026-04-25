@@ -44,6 +44,7 @@ jobs:
         env:
           EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
           EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
+          EXPO_PUBLIC_WEB_API_BASE_URL: ${{ secrets.WEB_API_BASE_URL }}
         run: npx expo prebuild --platform android --clean --no-install
 
       - name: Decode release keystore
@@ -55,6 +56,7 @@ jobs:
         env:
           EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
           EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
+          EXPO_PUBLIC_WEB_API_BASE_URL: ${{ secrets.WEB_API_BASE_URL }}
         run: |
           chmod +x gradlew
           n=0
