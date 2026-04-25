@@ -335,3 +335,44 @@ export interface SaveNotificationPrefsBody {
   quietHoursEnd: number | null;
   timezone: string;
 }
+
+export interface CarouselPhoto {
+  id: string;
+  photoUrl: string;
+  caption: string | null;
+  membershipId: string;
+  displayName: string;
+  avatarUrl: string | null;
+  createdAt: string;
+}
+
+export interface PhotosResponse {
+  circle: { id: string; name: string; description: string | null };
+  viewerMembershipId: string;
+  photos: CarouselPhoto[];
+}
+
+export interface FamilyPoll {
+  id: string;
+  question: string;
+  option_a: string;
+  option_b: string;
+  emoji_a: string | null;
+  emoji_b: string | null;
+  category: string | null;
+}
+
+export interface FamilyPollResult extends FamilyPoll {
+  count_a: number;
+  count_b: number;
+  viewer_choice: "a" | "b" | null;
+  responses: { displayName: string; choice: "a" | "b" }[];
+}
+
+export interface ActivityFeedItem {
+  id: string;
+  summary: string;
+  createdAt: string;
+  type: string;
+  actorMembershipId: string | null;
+}

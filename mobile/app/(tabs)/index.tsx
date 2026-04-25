@@ -278,7 +278,16 @@ export default function HomeScreen() {
       </Card>
 
       <Card>
-        <SectionHeader title="Recent activity" />
+        <SectionHeader
+          title="Recent activity"
+          action={
+            <Button
+              label="See all"
+              variant="ghost"
+              onPress={() => router.push("/activity")}
+            />
+          }
+        />
         {snap.recentActivity.length === 0 ? (
           <EmptyState
             title="Activity will land here"
@@ -295,6 +304,20 @@ export default function HomeScreen() {
             ))}
           </View>
         )}
+      </Card>
+
+      <Card>
+        <SectionHeader title="Family extras" />
+        <Button
+          label="Photo reel"
+          variant="secondary"
+          onPress={() => router.push("/photos")}
+        />
+        <Button
+          label="This-or-that polls"
+          variant="secondary"
+          onPress={() => router.push("/polls")}
+        />
       </Card>
 
       <Card>
