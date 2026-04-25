@@ -34,8 +34,12 @@ export default function MeTab() {
       </Card>
 
       <Card>
-        <Text style={styles.label}>Profile, timezone, notification preferences</Text>
-        <Text style={styles.muted}>Coming in M12.</Text>
+        <Text style={styles.label}>Notifications</Text>
+        <Button
+          label="Notification preferences"
+          variant="secondary"
+          onPress={() => router.push("/settings/notifications")}
+        />
       </Card>
 
       <Button label="Sign out" variant="danger" onPress={onSignOut} />
