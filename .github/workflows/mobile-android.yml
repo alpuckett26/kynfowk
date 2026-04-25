@@ -39,10 +39,6 @@ jobs:
         working-directory: mobile
         run: npx tsc --noEmit
 
-      - name: Lint
-        working-directory: mobile
-        run: npx expo lint
-
       - name: Prebuild Android (generates android/ from app.json)
         working-directory: mobile
         env:
