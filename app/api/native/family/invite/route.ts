@@ -1,0 +1,106 @@
+import {
+  authenticateNativeRequest,
+  nativeErrorResponse,
+} from "@/lib/native-auth";
+import { getViewerFamilyCircleWith } from "@/lib/data";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { hasSupabaseServiceRoleEnv } from "@/lib/env";
+
+type Body = {
+  displayName?: string;
+  inviteEmail?: string;
+  relationshipLabel?: string;
+};
+
+export async function POST(request: Request) {
+  try {
+    const { user, supabase } = await authenticateNativeRequest(request);
+    const body = (await request.json().catch(() => ({}))) as Body;
+
+    const family = await getViewerFamilyCircleWith(supabase, user.id);
+    if (!family || family.membership.status !== "active") {
+      return Response.json(
+        { error: "Only active family members can invite." },
+        { status: 403 }
+      );
+    }
+
+    const displayName = (body.displayName ?? "").trim();
+    const inviteEmail = (body.inviteEmail ?? "").trim().toLowerCase();
+    const relationshipLabel = (body.relationshipLabel ?? "").trim();
+
+    if (!displayName || !inviteEmail) {
+      return Response.json(
+        { error: "Name and email are required." },
+        { status: 400 }
+      );
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(inviteEmail)) {
+      return Response.json(
+        { error: "That email doesn't look right." },
+        { status: 400 }
+      );
+    }
+
+    const memberInsert = await supabase
+      .from("family_memberships")
+      .insert({
+        family_circle_id: family.circle.id,
+        display_name: displayName,
+        invite_email: inviteEmail,
+        relationship_label: relationshipLabel || null,
+        status: "invited",
+        role: "member",
+      })
+      .select("id")
+      .single();
+    if (memberInsert.error || !memberInsert.data) {
+      return Response.json(
+        { error: memberInsert.error?.message ?? "Couldn't add member." },
+        { status: 400 }
+      );
+    }
+
+    let alreadyClaimed = false;
+    if (hasSupabaseServiceRoleEnv()) {
+      const admin = createSupabaseAdminClient();
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://kynfowk.vercel.app";
+      const acceptUrl = new URL(`${siteUrl}/auth/accept-invite`);
+      acceptUrl.searchParams.set("circle", family.circle.name);
+      acceptUrl.searchParams.set("from", family.membership.display_name);
+      acceptUrl.searchParams.set("email", inviteEmail);
+      if (relationshipLabel) acceptUrl.searchParams.set("relationship", relationshipLabel);
+
+      const inviteResponse = await admin.auth.admin.inviteUserByEmail(inviteEmail, {
+        data: {
+          full_name: displayName,
+          family_circle_name: family.circle.name,
+          inviter_name: family.membership.display_name,
+          relationship_label: relationshipLabel || undefined,
+        },
+        redirectTo: acceptUrl.toString(),
+      });
+      if (inviteResponse.error) {
+        const msg = inviteResponse.error.message.toLowerCase();
+        if (msg.includes("already") || msg.includes("exists")) {
+          alreadyClaimed = true;
+        }
+      }
+    }
+
+    await supabase.from("family_activity").insert({
+      family_circle_id: family.circle.id,
+      actor_membership_id: family.membership.id,
+      activity_type: "members_invited",
+      summary: `${displayName} was invited to join the Family Circle.`,
+    });
+
+    return Response.json({
+      success: true,
+      membershipId: memberInsert.data.id,
+      alreadyClaimed,
+    });
+  } catch (error) {
+    return nativeErrorResponse(error);
+  }
+}
