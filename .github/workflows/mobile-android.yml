@@ -1,0 +1,84 @@
+name: Mobile Android APK
+
+on:
+  push:
+    branches:
+      - native-plan
+      - claude/native-feature-parity-uFLDu
+    paths:
+      - 'mobile/**'
+      - '.github/workflows/mobile-android.yml'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: temurin
+
+      - name: Install deps
+        working-directory: mobile
+        run: npm install --legacy-peer-deps
+
+      - name: Align deps with Expo SDK (expo install --fix)
+        working-directory: mobile
+        run: npx expo install --fix
+
+      - name: Type check
+        working-directory: mobile
+        run: npx tsc --noEmit
+
+      - name: Prebuild Android (generates android/ from app.json)
+        working-directory: mobile
+        env:
+          EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
+          EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
+          EXPO_PUBLIC_WEB_API_BASE_URL: ${{ secrets.WEB_API_BASE_URL }}
+        run: npx expo prebuild --platform android --clean --no-install
+
+      - name: Decode release keystore
+        run: echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > /tmp/kynfowk-release.keystore
+
+      - name: Build APK with gradle (retries on transient repo 403s)
+        working-directory: mobile/android
+        timeout-minutes: 25
+        env:
+          EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
+          EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
+          EXPO_PUBLIC_WEB_API_BASE_URL: ${{ secrets.WEB_API_BASE_URL }}
+        run: |
+          chmod +x gradlew
+          n=0
+          until [ $n -ge 3 ]; do
+            ./gradlew assembleRelease \
+              -PMYAPP_UPLOAD_STORE_FILE=/tmp/kynfowk-release.keystore \
+              -PMYAPP_UPLOAD_STORE_PASSWORD=${{ secrets.ANDROID_STORE_PASSWORD }} \
+              -PMYAPP_UPLOAD_KEY_ALIAS=${{ secrets.ANDROID_KEY_ALIAS }} \
+              -PMYAPP_UPLOAD_KEY_PASSWORD=${{ secrets.ANDROID_KEY_PASSWORD }} \
+              -PreactNativeArchitectures=arm64-v8a,armeabi-v7a \
+              --no-daemon && break
+            n=$((n+1))
+            echo "Gradle attempt $n failed (likely Maven Central 403). Sleeping 30s before retry..."
+            sleep 30
+          done
+          if [ $n -ge 3 ]; then
+            echo "Gradle build failed after 3 attempts."
+            exit 1
+          fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kynfowk-mobile-apk
+          path: mobile/android/app/build/outputs/apk/release/app-release.apk
+          retention-days: 14

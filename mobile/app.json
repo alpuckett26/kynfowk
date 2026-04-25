@@ -1,0 +1,50 @@
+{
+  "expo": {
+    "name": "Kynfowk",
+    "slug": "kynfowk",
+    "owner": "ahype",
+    "scheme": "kynfowk",
+    "version": "0.0.1",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": false,
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#fdf6ec"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.kynfowk.app"
+    },
+    "android": {
+      "package": "com.kynfowk.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#fdf6ec"
+      },
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": false,
+          "data": [
+            { "scheme": "kynfowk", "host": "auth", "pathPrefix": "/" },
+            { "scheme": "kynfowk" }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "8d4e3725-0286-4a06-81e1-411f265674d4"
+      }
+    }
+  }
+}
