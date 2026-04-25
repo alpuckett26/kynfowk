@@ -266,6 +266,18 @@ async function sendPushThroughProvider(input: {
   body: string;
   href: string | null;
 }) {
+  // Expo Push tokens are stored in push_subscriptions.endpoint with an
+  // "expo:" prefix so the existing schema can carry both web push and
+  // native push without a migration. Route those to Expo's API.
+  if (input.subscription.endpoint.startsWith("expo:")) {
+    return sendExpoPush({
+      token: input.subscription.endpoint.slice("expo:".length),
+      title: input.title,
+      body: input.body,
+      href: input.href,
+    });
+  }
+
   const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
   const privateKey = process.env.VAPID_PRIVATE_KEY;
   const subject = process.env.VAPID_SUBJECT;
@@ -309,6 +321,81 @@ async function sendPushThroughProvider(input: {
           ? "Push subscription is no longer valid."
           : "Push delivery failed before the browser could receive it.",
       shouldDeleteSubscription: statusCode === 404 || statusCode === 410
+    };
+  }
+}
+
+/**
+ * Send a notification via Expo Push (https://exp.host/--/api/v2/push/send).
+ * Expo's hosted service routes the message through FCM (Android) and APNs
+ * (iOS). The mobile app gets its push token via expo-notifications and POSTs
+ * it to /api/native/push/register, which stores it in push_subscriptions
+ * with an "expo:" endpoint prefix.
+ */
+async function sendExpoPush(input: {
+  token: string;
+  title: string;
+  body: string;
+  href: string | null;
+}): Promise<{
+  status: NotificationDeliveryStatus;
+  providerMessageId?: string | null;
+  errorMessage?: string | null;
+  shouldDeleteSubscription?: boolean;
+}> {
+  try {
+    const accessToken = process.env.EXPO_ACCESS_TOKEN;
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      "Accept-Encoding": "gzip, deflate",
+    };
+    if (accessToken) headers.Authorization = `Bearer ${accessToken}`;
+
+    const response = await fetch("https://exp.host/--/api/v2/push/send", {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        to: input.token,
+        title: input.title,
+        body: input.body,
+        sound: "default",
+        priority: "high",
+        data: { href: input.href ?? "/dashboard" },
+      }),
+    });
+
+    if (!response.ok) {
+      return {
+        status: "failed" as NotificationDeliveryStatus,
+        errorMessage: `Expo push API responded ${response.status}`,
+      };
+    }
+
+    const payload = (await response.json().catch(() => null)) as
+      | { data?: { id?: string; status?: string; message?: string; details?: { error?: string } } }
+      | null;
+    const ticket = payload?.data;
+    if (ticket?.status === "error") {
+      const errorCode = ticket.details?.error;
+      // DeviceNotRegistered = uninstalled or token rotated; drop it.
+      const drop = errorCode === "DeviceNotRegistered";
+      return {
+        status: drop ? ("skipped" as NotificationDeliveryStatus) : ("failed" as NotificationDeliveryStatus),
+        errorMessage: ticket.message ?? errorCode ?? "Expo push ticket error",
+        shouldDeleteSubscription: drop,
+      };
+    }
+
+    return {
+      status: "sent" as NotificationDeliveryStatus,
+      providerMessageId: ticket?.id ?? null,
+    };
+  } catch (error) {
+    return {
+      status: "failed" as NotificationDeliveryStatus,
+      errorMessage:
+        error instanceof Error ? error.message : "Expo push delivery failed",
     };
   }
 }
