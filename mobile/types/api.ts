@@ -217,3 +217,23 @@ export type SaveLinkBody = {
   meetingProvider?: string | null;
   meetingUrl?: string | null;
 };
+
+export interface AvailabilityWindow {
+  weekday: number;
+  start_hour: number;
+  end_hour: number;
+}
+
+export interface AvailabilityResponse {
+  circle: { id: string; name: string; description: string | null };
+  membershipId: string;
+  slots: string[];
+  windows: AvailabilityWindow[];
+  summary: AvailabilitySummaryItem[];
+}
+
+export interface SaveAvailabilityResponse {
+  success: true;
+  slots: string[];
+  summary: AvailabilitySummaryItem[];
+}
