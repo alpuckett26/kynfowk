@@ -37,7 +37,6 @@ jobs:
       - name: Typecheck web (strict)
         run: npm run typecheck --workspace=@kynfowk/web
         timeout-minutes: 3
-        continue-on-error: true
 
       - name: Build web
         run: npm run build:web

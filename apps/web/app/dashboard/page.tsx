@@ -10,7 +10,51 @@ import {
   type UpcomingCall,
 } from "@/lib/connections";
 import { signOut } from "@/app/login/actions";
+import { createClient } from "@/lib/supabase/server";
 import { formatMinutes, formatNumber } from "@/lib/utils";
+
+async function getFamilyMemberCount(): Promise<number> {
+  const supabase = createClient();
+  const { count } = await supabase
+    .from("family_members")
+    .select("id", { count: "exact", head: true });
+  return count ?? 0;
+}
+
+function WelcomeBanner({ familyName }: { familyName: string }) {
+  return (
+    <section className="rounded-2xl border border-brand-200 bg-gradient-to-br from-brand-50 to-warm-50 p-6 shadow-sm">
+      <div className="flex items-start gap-4">
+        <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-white text-2xl shadow-sm">
+          💜
+        </div>
+        <div className="flex-1">
+          <h2 className="text-lg font-bold text-gray-900">
+            Welcome to the {familyName} family
+          </h2>
+          <p className="mt-1 text-sm text-gray-600">
+            Two quick steps and you&apos;re ready: invite a family member, then
+            schedule your first call together.
+          </p>
+          <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+            <Link
+              href="/family"
+              className="rounded-full bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-700"
+            >
+              👥 Invite family
+            </Link>
+            <Link
+              href="/schedule"
+              className="rounded-full border border-gray-300 bg-white px-5 py-2.5 text-sm font-semibold text-gray-700 transition-colors hover:border-gray-400 hover:bg-gray-50"
+            >
+              📅 Schedule a call
+            </Link>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
 
 export const metadata: Metadata = {
   title: "Dashboard",
@@ -171,6 +215,12 @@ export default async function DashboardPage() {
     getUpcomingCalls(),
   ]);
 
+  // Show welcome banner only for fresh signed-in users — solo family,
+  // no calls yet. Skipped in demo mode (the demo data is rich already).
+  const memberCount = family.signedIn ? await getFamilyMemberCount() : 0;
+  const showWelcome =
+    family.signedIn && memberCount <= 1 && upcoming.length === 0;
+
   return (
     <>
       <TopNav width="narrow">
@@ -207,6 +257,8 @@ export default async function DashboardPage() {
       </TopNav>
       <main className="min-h-screen bg-gray-50">
         <div className="mx-auto max-w-5xl px-4 sm:px-6 py-8 space-y-8">
+          {showWelcome && <WelcomeBanner familyName={family.name} />}
+
           {/* Page header */}
           <div className="flex items-center justify-between">
             <div>
