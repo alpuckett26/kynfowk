@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { buildAvailabilitySummary, getAvailabilitySlotKey } from "@/lib/availability";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -88,8 +89,10 @@ export async function requireViewer() {
   return user;
 }
 
-export async function getViewerFamilyCircle(userId: string) {
-  const supabase = await createSupabaseServerClient();
+export async function getViewerFamilyCircleWith(
+  supabase: SupabaseClient,
+  userId: string
+) {
   const membershipResponse = await supabase
     .from("family_memberships")
     .select("id, family_circle_id, display_name, role, status")
@@ -117,6 +120,11 @@ export async function getViewerFamilyCircle(userId: string) {
     membership,
     circle: circleResponse.data
   };
+}
+
+export async function getViewerFamilyCircle(userId: string) {
+  const supabase = await createSupabaseServerClient();
+  return getViewerFamilyCircleWith(supabase, userId);
 }
 
 async function getViewerTimezone(
@@ -240,7 +248,7 @@ export async function getHomepageStats(): Promise<{
   }
 }
 
-export async function getDashboardData(userId: string): Promise<{
+export interface DashboardSnapshot {
   circle: { id: string; name: string; description: string | null };
   memberships: {
     id: string;
@@ -295,12 +303,21 @@ export async function getDashboardData(userId: string): Promise<{
   };
   notificationPreferences: NotificationPreferenceSettings;
   viewerTimezone: string;
-}> {
-  const supabase = await createSupabaseServerClient();
-  const family = await getViewerFamilyCircle(userId);
+}
+
+/**
+ * Pure data builder used by both the web dashboard page (which redirects
+ * to onboarding when null) and the native /api/native/dashboard endpoint
+ * (which returns { needsOnboarding: true }).
+ */
+export async function getDashboardSnapshot(
+  supabase: SupabaseClient,
+  userId: string
+): Promise<DashboardSnapshot | null> {
+  const family = await getViewerFamilyCircleWith(supabase, userId);
 
   if (!family) {
-    redirect("/onboarding");
+    return null;
   }
 
   await ensureNotificationPreferences(supabase, userId);
@@ -508,6 +525,15 @@ export async function getDashboardData(userId: string): Promise<{
   };
 }
 
+export async function getDashboardData(userId: string): Promise<DashboardSnapshot> {
+  const supabase = await createSupabaseServerClient();
+  const snapshot = await getDashboardSnapshot(supabase, userId);
+  if (!snapshot) {
+    redirect("/onboarding");
+  }
+  return snapshot;
+}
+
 export async function getNotificationsPageData(
   userId: string,
   filters?: {
@@ -659,6 +685,147 @@ export async function getScheduledCallLinkData(
     meeting_provider: callResponse.data.meeting_provider,
     meeting_url: callResponse.data.meeting_url,
     actual_started_at: callResponse.data.actual_started_at
+  };
+}
+
+export interface CallDetailSnapshot {
+  circle: { id: string; name: string; description: string | null };
+  call: {
+    id: string;
+    title: string;
+    scheduled_start: string;
+    scheduled_end: string;
+    status: CallStatus;
+    actual_duration_minutes: number | null;
+    meeting_provider: string | null;
+    meeting_url: string | null;
+    actual_started_at: string | null;
+    actual_ended_at: string | null;
+    reminder_status: ReminderStatus;
+    reminder_sent_at: string | null;
+    reminder_label: string;
+    needs_join_link_prompt: boolean;
+    needs_completion_prompt: boolean;
+    recovery_dismissed_at: string | null;
+    show_recovery_prompt: boolean;
+    suggested_reschedule_start: string | null;
+    suggested_reschedule_end: string | null;
+    can_reschedule: boolean;
+  };
+  participants: CallDetailParticipant[];
+  recap: CallRecap | null;
+  viewerTimezone: string;
+  viewerTimezoneLabel: string;
+  viewerMembershipId: string;
+  canManageFamily: boolean;
+}
+
+export async function getCallDetailSnapshot(
+  supabase: SupabaseClient,
+  userId: string,
+  callId: string
+): Promise<CallDetailSnapshot | null> {
+  const family = await getViewerFamilyCircleWith(supabase, userId);
+  if (!family || family.membership.status !== "active") {
+    return null;
+  }
+
+  const callResponse = await supabase
+    .from("call_sessions")
+    .select(
+      "id, title, scheduled_start, scheduled_end, status, actual_duration_minutes, meeting_provider, meeting_url, actual_started_at, actual_ended_at, recovery_dismissed_at, reminder_status, reminder_sent_at, family_circle_id"
+    )
+    .eq("id", callId)
+    .maybeSingle();
+
+  if (!callResponse.data || callResponse.data.family_circle_id !== family.circle.id) {
+    return null;
+  }
+
+  const [participantsResponse, recapResponse] = await Promise.all([
+    supabase
+      .from("call_participants")
+      .select(
+        "membership_id, attended, family_memberships!inner(display_name, avatar_url)"
+      )
+      .eq("call_session_id", callId),
+    supabase
+      .from("call_recaps")
+      .select("summary, highlight, next_step")
+      .eq("call_session_id", callId)
+      .maybeSingle()
+  ]);
+
+  const participants = (participantsResponse.data ?? []).map((participant) => {
+    const familyMembershipRecord = participant.family_memberships as
+      | { display_name: string; avatar_url: string | null }[]
+      | { display_name: string; avatar_url: string | null }
+      | null;
+    const record = Array.isArray(familyMembershipRecord)
+      ? familyMembershipRecord[0]
+      : familyMembershipRecord;
+    return {
+      membershipId: participant.membership_id,
+      displayName: record?.display_name ?? "Family member",
+      attended: participant.attended,
+      avatarUrl: record?.avatar_url ?? null
+    };
+  });
+
+  const reminderStatus = normalizeReminderStatus(
+    callResponse.data.status,
+    callResponse.data.reminder_status
+  );
+  const recovery = buildCallRecoveryState(callResponse.data);
+  const viewerTimezone = await getViewerTimezone(supabase, userId);
+
+  return {
+    circle: family.circle,
+    call: {
+      id: callResponse.data.id,
+      title: callResponse.data.title,
+      scheduled_start: callResponse.data.scheduled_start,
+      scheduled_end: callResponse.data.scheduled_end,
+      status: callResponse.data.status,
+      actual_duration_minutes: callResponse.data.actual_duration_minutes,
+      meeting_provider: callResponse.data.meeting_provider,
+      meeting_url: callResponse.data.meeting_url,
+      actual_started_at: callResponse.data.actual_started_at,
+      actual_ended_at: callResponse.data.actual_ended_at,
+      reminder_status: reminderStatus,
+      reminder_sent_at: callResponse.data.reminder_sent_at,
+      reminder_label: formatReminderState(
+        callResponse.data.status,
+        reminderStatus,
+        callResponse.data.reminder_sent_at
+      ),
+      needs_join_link_prompt: false,
+      needs_completion_prompt: isCallPastDue(
+        callResponse.data.status,
+        callResponse.data.scheduled_end
+      ),
+      ...recovery,
+      can_reschedule:
+        callResponse.data.status === "scheduled" &&
+        isFutureCall(callResponse.data.scheduled_start)
+    },
+    participants,
+    recap:
+      callResponse.data.status === "completed"
+        ? {
+            callId: callResponse.data.id,
+            title: callResponse.data.title,
+            scheduledStart: callResponse.data.scheduled_start,
+            actualDurationMinutes: callResponse.data.actual_duration_minutes ?? 0,
+            summary: recapResponse.data?.summary ?? null,
+            highlight: recapResponse.data?.highlight ?? null,
+            nextStep: recapResponse.data?.next_step ?? null
+          }
+        : null,
+    viewerTimezone,
+    viewerTimezoneLabel: formatTimezoneLabel(viewerTimezone),
+    viewerMembershipId: family.membership.id,
+    canManageFamily: family.membership.role === "owner"
   };
 }
 

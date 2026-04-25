@@ -1,0 +1,19 @@
+node_modules/
+.expo/
+dist/
+web-build/
+.DS_Store
+*.log
+*.tsbuildinfo
+package-lock.json
+
+# Native
+android/
+ios/
+
+# Local secrets
+.env
+.env.local
+
+# EAS local credentials — never commit
+credentials.json
