@@ -144,17 +144,14 @@ export default function ScheduleTab() {
       <Screen onRefresh={onRefresh} refreshing={refreshing}>
         <View style={styles.header}>
           <Text style={styles.eyebrow}>Schedule</Text>
-          <Text style={styles.title}>No circle yet</Text>
+          <Text style={styles.title}>Start your circle</Text>
           <Text style={styles.lede}>
             Once you're in a family circle you can mark your weekly windows
-            here so Kynfowk can find shared time.
+            here.
           </Text>
         </View>
         <Card>
-          <EmptyState
-            title="Finish onboarding at kynfowk.vercel.app"
-            description="In-app onboarding lands in M12. Pull to refresh once you're in."
-          />
+          <Button label="Create circle" onPress={() => router.push("/onboarding")} />
         </Card>
       </Screen>
     );

@@ -2,6 +2,8 @@ import { apiFetch } from "@/lib/api";
 import type {
   CallDetailResponse,
   CompleteCallBody,
+  RescheduleBody,
+  RescheduleResponse,
   SaveLinkBody,
   SaveRecapBody,
   ScheduleCallBody,
@@ -48,6 +50,22 @@ export function cancelCall(callId: string): Promise<{ success: true }> {
 
 export function scheduleCall(body: ScheduleCallBody): Promise<ScheduleCallResponse> {
   return apiFetch("/api/native/calls/schedule", {
+    method: "POST",
+    body,
+  });
+}
+
+export function dismissRecovery(callId: string): Promise<{ success: true }> {
+  return apiFetch(`/api/native/calls/${callId}/recovery/dismiss`, {
+    method: "POST",
+  });
+}
+
+export function rescheduleCall(
+  callId: string,
+  body: RescheduleBody = {}
+): Promise<RescheduleResponse> {
+  return apiFetch(`/api/native/calls/${callId}/recovery/reschedule`, {
     method: "POST",
     body,
   });

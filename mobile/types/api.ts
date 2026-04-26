@@ -388,3 +388,48 @@ export interface ActivityFeedItem {
   type: string;
   actorMembershipId: string | null;
 }
+
+export interface OnboardingBody {
+  fullName: string;
+  circleName: string;
+  description?: string;
+  timezone?: string;
+}
+
+export interface OnboardingResponse {
+  success: true;
+  circle: { id: string; name: string; description: string | null };
+  membershipId: string;
+}
+
+export interface ProfileResponse {
+  profile: {
+    id: string;
+    email: string | null;
+    fullName: string | null;
+    timezone: string;
+  };
+}
+
+export interface SaveProfileBody {
+  fullName: string;
+  timezone: string;
+}
+
+export type FeedbackCategory = "bug" | "confusing" | "suggestion" | "positive";
+
+export interface SaveFeedbackBody {
+  category: FeedbackCategory;
+  message: string;
+  pagePath?: string;
+}
+
+export interface RescheduleBody {
+  scheduledStart?: string;
+  scheduledEnd?: string;
+}
+
+export interface RescheduleResponse {
+  success: true;
+  callId: string;
+}

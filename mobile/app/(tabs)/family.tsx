@@ -102,13 +102,13 @@ export default function FamilyTab() {
       <Screen onRefresh={onRefresh} refreshing={refreshing}>
         <View style={styles.header}>
           <Text style={styles.eyebrow}>Family</Text>
-          <Text style={styles.title}>No circle yet</Text>
+          <Text style={styles.title}>Start your circle</Text>
+          <Text style={styles.lede}>
+            A family circle is a private space for the people you call.
+          </Text>
         </View>
         <Card>
-          <EmptyState
-            title="You're not part of a family circle"
-            description="Onboarding from the app lands in M12. For now, finish setup at kynfowk.vercel.app and pull to refresh."
-          />
+          <Button label="Create circle" onPress={() => router.push("/onboarding")} />
         </Card>
       </Screen>
     );

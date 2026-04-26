@@ -13,7 +13,9 @@ import { ApiError } from "@/lib/api";
 import {
   cancelCall,
   completeCall,
+  dismissRecovery,
   fetchCallDetail,
+  rescheduleCall,
   saveCallLink,
   saveCallRecap,
 } from "@/lib/calls";
@@ -125,6 +127,14 @@ export default function CallDetailScreen() {
             onPress={() => router.push(`/calls/${callId}/live`)}
           />
         </Card>
+      ) : null}
+
+      {call.show_recovery_prompt && !isCompleted && !isCanceled ? (
+        <RecoveryActions
+          callId={callId}
+          onRescheduled={(newId) => router.replace(`/calls/${newId}`)}
+          onDismissed={() => void load()}
+        />
       ) : null}
 
       {call.meeting_url ? (
@@ -403,6 +413,65 @@ function RecapForm({
         loading={saving}
       />
       {message ? <Text style={styles.subtle}>{message}</Text> : null}
+    </Card>
+  );
+}
+
+function RecoveryActions({
+  callId,
+  onRescheduled,
+  onDismissed,
+}: {
+  callId: string;
+  onRescheduled: (newCallId: string) => void;
+  onDismissed: () => void;
+}) {
+  const [busy, setBusy] = useState<"none" | "reschedule" | "dismiss">("none");
+
+  const onReschedule = async () => {
+    setBusy("reschedule");
+    try {
+      const res = await rescheduleCall(callId, {});
+      onRescheduled(res.callId);
+    } catch (e) {
+      Alert.alert("Couldn't reschedule", e instanceof Error ? e.message : "Try again.");
+    } finally {
+      setBusy("none");
+    }
+  };
+
+  const onDismiss = async () => {
+    setBusy("dismiss");
+    try {
+      await dismissRecovery(callId);
+      onDismissed();
+    } catch (e) {
+      Alert.alert("Couldn't dismiss", e instanceof Error ? e.message : "Try again.");
+    } finally {
+      setBusy("none");
+    }
+  };
+
+  return (
+    <Card>
+      <SectionHeader title="Missed-call follow-up" />
+      <Text style={styles.subtle}>
+        Either roll this call forward a week with the same participants, or
+        clear it from the missed list if it isn't happening.
+      </Text>
+      <Button
+        label={busy === "reschedule" ? "Rescheduling…" : "Reschedule for next week"}
+        onPress={onReschedule}
+        loading={busy === "reschedule"}
+        disabled={busy !== "none"}
+      />
+      <Button
+        label={busy === "dismiss" ? "Clearing…" : "Clear from missed list"}
+        variant="secondary"
+        onPress={onDismiss}
+        loading={busy === "dismiss"}
+        disabled={busy !== "none"}
+      />
     </Card>
   );
 }
