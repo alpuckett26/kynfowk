@@ -538,3 +538,36 @@ export interface UpdateFamilyUnitBody {
   kind?: string;
   memberIds?: string[];
 }
+
+export type RecurrenceFrequency = "weekly" | "biweekly" | "monthly";
+
+export interface RecurrenceRule {
+  id: string;
+  title: string;
+  description: string | null;
+  frequency: RecurrenceFrequency;
+  day_of_week: number | null;
+  day_of_month: number | null;
+  start_local_time: string;
+  duration_minutes: number;
+  timezone: string;
+  active: boolean;
+  created_at: string;
+}
+
+export interface RecurrenceListResponse {
+  needsOnboarding: boolean;
+  rules?: RecurrenceRule[];
+  viewerRole?: "owner" | "member";
+}
+
+export interface CreateRecurrenceBody {
+  title: string;
+  description?: string;
+  frequency: RecurrenceFrequency;
+  dayOfWeek?: number | null;
+  dayOfMonth?: number | null;
+  startLocalTime: string; // HH:MM
+  durationMinutes: number;
+  timezone: string;
+}

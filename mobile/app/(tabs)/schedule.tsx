@@ -237,6 +237,11 @@ export default function ScheduleTab() {
           dashboard immediately.
         </Text>
         <Button label="Schedule a call" onPress={() => router.push("/schedule/new")} />
+        <Button
+          label="Recurring calls"
+          variant="secondary"
+          onPress={() => router.push("/recurring")}
+        />
       </Card>
     </Screen>
   );

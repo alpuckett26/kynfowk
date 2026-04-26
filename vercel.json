@@ -3,6 +3,10 @@
     {
       "path": "/api/notifications/sweep",
       "schedule": "0 12 * * *"
+    },
+    {
+      "path": "/api/cron/recurrence-materialize",
+      "schedule": "0 6 * * *"
     }
   ]
 }
