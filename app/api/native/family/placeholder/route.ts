@@ -8,6 +8,8 @@ type Body = {
   displayName?: string;
   relationshipLabel?: string;
   isDeceased?: boolean;
+  isMinor?: boolean;
+  managedByMembershipId?: string;
   notes?: string;
 };
 
@@ -32,9 +34,26 @@ export async function POST(request: Request) {
     const relationshipLabel = (body.relationshipLabel ?? "").trim();
     const notes = (body.notes ?? "").trim();
     const isDeceased = !!body.isDeceased;
+    const isMinor = !!body.isMinor;
+    const managedBy = (body.managedByMembershipId ?? "").trim() || null;
 
     if (!displayName) {
       return Response.json({ error: "Name is required." }, { status: 400 });
+    }
+
+    if (managedBy) {
+      const checkResponse = await supabase
+        .from("family_memberships")
+        .select("id")
+        .eq("id", managedBy)
+        .eq("family_circle_id", family.circle.id)
+        .maybeSingle();
+      if (!checkResponse.data) {
+        return Response.json(
+          { error: "Manager must be a member of your family circle." },
+          { status: 400 }
+        );
+      }
     }
 
     const insert = await supabase
@@ -47,6 +66,8 @@ export async function POST(request: Request) {
         role: "member",
         is_placeholder: true,
         is_deceased: isDeceased,
+        is_minor: isMinor,
+        managed_by_membership_id: managedBy,
         placeholder_notes: notes || null,
       })
       .select("id")

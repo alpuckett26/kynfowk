@@ -292,6 +292,8 @@ export default function MemberDetailScreen() {
             <Badge tone="neutral" label="In memoriam" />
           ) : member.blocked_at ? (
             <Badge tone="danger" label="Blocked" />
+          ) : member.is_minor ? (
+            <Badge tone="warning" label="Minor" />
           ) : member.is_placeholder ? (
             <Badge tone="warning" label="Placeholder" />
           ) : member.role === "owner" ? (

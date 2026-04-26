@@ -265,6 +265,8 @@ export interface FamilyMember {
   prayer_intentions: string | null;
   pronouns: string | null;
   hometown: string | null;
+  is_minor: boolean;
+  managed_by_membership_id: string | null;
 }
 
 export interface FamilyMembersResponse {
@@ -327,6 +329,8 @@ export interface AddPlaceholderBody {
   displayName: string;
   relationshipLabel?: string;
   isDeceased?: boolean;
+  isMinor?: boolean;
+  managedByMembershipId?: string;
   notes?: string;
 }
 
