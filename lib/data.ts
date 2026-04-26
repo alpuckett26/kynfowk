@@ -93,15 +93,48 @@ export async function getViewerFamilyCircleWith(
   supabase: SupabaseClient,
   userId: string
 ) {
-  const membershipResponse = await supabase
-    .from("family_memberships")
-    .select("id, family_circle_id, display_name, role, status")
-    .eq("user_id", userId)
-    .order("created_at", { ascending: true })
-    .limit(1)
+  // Honor profiles.active_family_circle_id when set; otherwise fall back
+  // to the oldest membership (existing behavior).
+  const profileResponse = await supabase
+    .from("profiles")
+    .select("active_family_circle_id")
+    .eq("id", userId)
     .maybeSingle();
+  const activeId = (profileResponse.data as
+    | { active_family_circle_id: string | null }
+    | null)?.active_family_circle_id ?? null;
 
-  const membership = membershipResponse.data;
+  type MembershipRow = {
+    id: string;
+    family_circle_id: string;
+    display_name: string;
+    role: "owner" | "member";
+    status: "active" | "invited";
+  };
+
+  let membership: MembershipRow | null = null;
+
+  if (activeId) {
+    const activeResponse = await supabase
+      .from("family_memberships")
+      .select("id, family_circle_id, display_name, role, status")
+      .eq("user_id", userId)
+      .eq("family_circle_id", activeId)
+      .maybeSingle();
+    membership = (activeResponse.data as MembershipRow | null) ?? null;
+  }
+
+  if (!membership) {
+    const fallback = await supabase
+      .from("family_memberships")
+      .select("id, family_circle_id, display_name, role, status")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+    membership = (fallback.data as MembershipRow | null) ?? null;
+  }
+
   if (!membership) {
     return null;
   }

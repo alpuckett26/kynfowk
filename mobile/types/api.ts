@@ -571,3 +571,18 @@ export interface CreateRecurrenceBody {
   durationMinutes: number;
   timezone: string;
 }
+
+export interface CircleSummary {
+  membershipId: string;
+  circleId: string;
+  name: string;
+  description: string | null;
+  role: "owner" | "member";
+  status: "active" | "invited";
+  active: boolean;
+}
+
+export interface CirclesResponse {
+  circles: CircleSummary[];
+  activeCircleId: string | null;
+}

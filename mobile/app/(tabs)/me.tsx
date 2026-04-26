@@ -50,6 +50,11 @@ export default function MeTab() {
           variant="secondary"
           onPress={() => router.push("/settings/circle")}
         />
+        <Button
+          label="Switch circle"
+          variant="secondary"
+          onPress={() => router.push("/circles")}
+        />
       </Card>
 
       <Card>
