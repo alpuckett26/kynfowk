@@ -14,10 +14,7 @@ export async function GET(request: Request) {
     const { user, supabase } = await authenticateNativeRequest(request);
     const family = await getViewerFamilyCircleWith(supabase, user.id);
     if (!family || family.membership.status !== "active") {
-      return Response.json(
-        { error: "Not a member of any family circle" },
-        { status: 403 }
-      );
+      return Response.json({ needsOnboarding: true }, { status: 200 });
     }
 
     const windowsResponse = await supabase
@@ -33,6 +30,7 @@ export async function GET(request: Request) {
     const summary = buildAvailabilitySummary(windows);
 
     return Response.json({
+      needsOnboarding: false,
       circle: family.circle,
       membershipId: family.membership.id,
       slots,

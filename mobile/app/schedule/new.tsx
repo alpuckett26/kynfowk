@@ -51,6 +51,13 @@ export default function ScheduleNewScreen() {
   const loadMembers = useCallback(async () => {
     try {
       const res = await fetchFamilyMembers();
+      if (res.needsOnboarding) {
+        setLoad({
+          kind: "error",
+          message: "You aren't part of a family circle yet.",
+        });
+        return;
+      }
       const eligible = res.members.filter(
         (m) =>
           m.status === "active" &&

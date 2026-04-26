@@ -62,6 +62,8 @@ export async function POST(request: Request) {
     }
 
     let alreadyClaimed = false;
+    let inviteEmailWarning: string | null = null;
+    let inviteEmailSent = false;
     if (hasSupabaseServiceRoleEnv()) {
       const admin = createSupabaseAdminClient();
       const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://kynfowk.vercel.app";
@@ -71,7 +73,7 @@ export async function POST(request: Request) {
       acceptUrl.searchParams.set("email", inviteEmail);
       if (relationshipLabel) acceptUrl.searchParams.set("relationship", relationshipLabel);
 
-      const inviteResponse = await admin.auth.admin.inviteUserByEmail(inviteEmail, {
+      const inviteCall = admin.auth.admin.inviteUserByEmail(inviteEmail, {
         data: {
           full_name: displayName,
           family_circle_name: family.circle.name,
@@ -80,12 +82,37 @@ export async function POST(request: Request) {
         },
         redirectTo: acceptUrl.toString(),
       });
+      const timeoutMs = 8000;
+      const inviteResponse = await Promise.race([
+        inviteCall,
+        new Promise<{ error: { message: string }; data: null }>((resolve) =>
+          setTimeout(
+            () =>
+              resolve({
+                error: {
+                  message: `Supabase Auth invite did not respond in ${timeoutMs}ms (likely SMTP/redirect-allow-list config).`,
+                },
+                data: null,
+              }),
+            timeoutMs
+          )
+        ),
+      ]);
       if (inviteResponse.error) {
-        const msg = inviteResponse.error.message.toLowerCase();
-        if (msg.includes("already") || msg.includes("exists")) {
+        const msg = inviteResponse.error.message;
+        const lower = msg.toLowerCase();
+        if (lower.includes("already") || lower.includes("exists")) {
           alreadyClaimed = true;
+        } else {
+          inviteEmailWarning = msg;
+          console.error("[invite] Supabase Auth invite error:", msg);
         }
+      } else {
+        inviteEmailSent = true;
       }
+    } else {
+      inviteEmailWarning =
+        "Server isn't configured to send invite emails (SUPABASE_SERVICE_ROLE_KEY missing).";
     }
 
     await supabase.from("family_activity").insert({
@@ -99,6 +126,8 @@ export async function POST(request: Request) {
       success: true,
       membershipId: memberInsert.data.id,
       alreadyClaimed,
+      inviteEmailSent,
+      inviteEmailWarning,
     });
   } catch (error) {
     return nativeErrorResponse(error);

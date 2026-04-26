@@ -20,6 +20,7 @@ import type { AvailabilitySummaryItem } from "@/types/api";
 type State =
   | { kind: "loading" }
   | { kind: "error"; message: string }
+  | { kind: "needs-onboarding" }
   | {
       kind: "ok";
       circleName: string;
@@ -37,6 +38,10 @@ export default function ScheduleTab() {
   const load = useCallback(async () => {
     try {
       const res = await fetchAvailability();
+      if (res.needsOnboarding) {
+        setState({ kind: "needs-onboarding" });
+        return;
+      }
       setState({
         kind: "ok",
         circleName: res.circle.name,
@@ -134,6 +139,23 @@ export default function ScheduleTab() {
       </Screen>
     );
   }
+  if (state.kind === "needs-onboarding") {
+    return (
+      <Screen onRefresh={onRefresh} refreshing={refreshing}>
+        <View style={styles.header}>
+          <Text style={styles.eyebrow}>Schedule</Text>
+          <Text style={styles.title}>Start your circle</Text>
+          <Text style={styles.lede}>
+            Once you're in a family circle you can mark your weekly windows
+            here.
+          </Text>
+        </View>
+        <Card>
+          <Button label="Create circle" onPress={() => router.push("/onboarding")} />
+        </Card>
+      </Screen>
+    );
+  }
 
   return (
     <Screen onRefresh={onRefresh} refreshing={refreshing}>
@@ -215,6 +237,11 @@ export default function ScheduleTab() {
           dashboard immediately.
         </Text>
         <Button label="Schedule a call" onPress={() => router.push("/schedule/new")} />
+        <Button
+          label="Recurring calls"
+          variant="secondary"
+          onPress={() => router.push("/recurring")}
+        />
       </Card>
     </Screen>
   );

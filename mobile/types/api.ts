@@ -225,12 +225,17 @@ export interface AvailabilityWindow {
 }
 
 export interface AvailabilityResponse {
+  needsOnboarding: false;
   circle: { id: string; name: string; description: string | null };
   membershipId: string;
   slots: string[];
   windows: AvailabilityWindow[];
   summary: AvailabilitySummaryItem[];
 }
+
+export type AvailabilityResult =
+  | { needsOnboarding: true }
+  | AvailabilityResponse;
 
 export interface SaveAvailabilityResponse {
   success: true;
@@ -252,14 +257,29 @@ export interface FamilyMember {
   blocked_at: string | null;
   address: string | null;
   placeholder_notes: string | null;
+  birthday: string | null;
+  nickname: string | null;
+  bio: string | null;
+  favorite_food: string | null;
+  faith_notes: string | null;
+  prayer_intentions: string | null;
+  pronouns: string | null;
+  hometown: string | null;
+  is_minor: boolean;
+  managed_by_membership_id: string | null;
 }
 
 export interface FamilyMembersResponse {
+  needsOnboarding: false;
   circle: { id: string; name: string; description: string | null };
   viewerMembershipId: string;
   viewerRole: "owner" | "member";
   members: FamilyMember[];
 }
+
+export type FamilyMembersResult =
+  | { needsOnboarding: true }
+  | FamilyMembersResponse;
 
 export interface ScheduleCallBody {
   title: string;
@@ -282,6 +302,8 @@ export interface InviteMemberResponse {
   success: true;
   membershipId: string;
   alreadyClaimed: boolean;
+  inviteEmailSent: boolean;
+  inviteEmailWarning: string | null;
 }
 
 export interface UpdateMemberBody {
@@ -289,6 +311,14 @@ export interface UpdateMemberBody {
   relationshipLabel?: string | null;
   phoneNumber?: string | null;
   address?: string | null;
+  birthday?: string | null;
+  nickname?: string | null;
+  bio?: string | null;
+  favoriteFood?: string | null;
+  faithNotes?: string | null;
+  prayerIntentions?: string | null;
+  pronouns?: string | null;
+  hometown?: string | null;
 }
 
 export interface BlockMemberBody {
@@ -299,6 +329,8 @@ export interface AddPlaceholderBody {
   displayName: string;
   relationshipLabel?: string;
   isDeceased?: boolean;
+  isMinor?: boolean;
+  managedByMembershipId?: string;
   notes?: string;
 }
 
@@ -375,4 +407,250 @@ export interface ActivityFeedItem {
   createdAt: string;
   type: string;
   actorMembershipId: string | null;
+}
+
+export interface OnboardingBody {
+  fullName: string;
+  circleName: string;
+  description?: string;
+  timezone?: string;
+}
+
+export interface OnboardingResponse {
+  success: true;
+  circle: { id: string; name: string; description: string | null };
+  membershipId: string;
+}
+
+export interface ProfileResponse {
+  profile: {
+    id: string;
+    email: string | null;
+    fullName: string | null;
+    timezone: string;
+  };
+}
+
+export interface SaveProfileBody {
+  fullName: string;
+  timezone: string;
+}
+
+export type FeedbackCategory = "bug" | "confusing" | "suggestion" | "positive";
+
+export interface SaveFeedbackBody {
+  category: FeedbackCategory;
+  message: string;
+  pagePath?: string;
+}
+
+export interface RescheduleBody {
+  scheduledStart?: string;
+  scheduledEnd?: string;
+}
+
+export interface RescheduleResponse {
+  success: true;
+  callId: string;
+}
+
+export interface EditCallDetailsBody {
+  title: string;
+  scheduledStart?: string;
+  scheduledEnd?: string;
+  description?: string;
+}
+
+export interface SetMemberAvatarBody {
+  membershipId: string;
+  photoUrl: string;
+}
+
+export interface AiSuggestion {
+  focus: string;
+  reason: string;
+  participantIds: string[];
+  participantNames: string[];
+  isAI: boolean;
+}
+
+export interface AiSuggestionResponse {
+  suggestion: AiSuggestion | null;
+}
+
+export type RelationshipKind =
+  | "parent"
+  | "child"
+  | "spouse"
+  | "sibling"
+  | "grandparent"
+  | "grandchild"
+  | "in_law"
+  | "step_parent"
+  | "step_child"
+  | "guardian"
+  | "ward"
+  | "partner"
+  | "other";
+
+export interface RelationshipEdge {
+  id: string;
+  source_membership_id: string;
+  target_membership_id: string;
+  kind: RelationshipKind;
+  notes: string | null;
+  created_at: string;
+}
+
+export interface FamilyUnit {
+  id: string;
+  name: string;
+  kind: string;
+  created_at: string;
+  memberIds: { membershipId: string; role: string | null }[];
+}
+
+export interface RelationshipsSnapshot {
+  needsOnboarding: false;
+  circle: { id: string; name: string; description: string | null };
+  viewerMembershipId: string;
+  viewerRole: "owner" | "member";
+  members: { id: string; display_name: string; status: string }[];
+  edges: RelationshipEdge[];
+  units: FamilyUnit[];
+}
+
+export type RelationshipsResponse =
+  | { needsOnboarding: true }
+  | RelationshipsSnapshot;
+
+export interface CreateRelationshipBody {
+  sourceMembershipId: string;
+  targetMembershipId: string;
+  kind: RelationshipKind;
+  notes?: string;
+}
+
+export interface CreateFamilyUnitBody {
+  name: string;
+  kind?: string;
+  memberIds?: string[];
+}
+
+export interface UpdateFamilyUnitBody {
+  name?: string;
+  kind?: string;
+  memberIds?: string[];
+}
+
+export type RecurrenceFrequency = "weekly" | "biweekly" | "monthly";
+
+export interface RecurrenceRule {
+  id: string;
+  title: string;
+  description: string | null;
+  frequency: RecurrenceFrequency;
+  day_of_week: number | null;
+  day_of_month: number | null;
+  start_local_time: string;
+  duration_minutes: number;
+  timezone: string;
+  active: boolean;
+  created_at: string;
+}
+
+export interface RecurrenceListResponse {
+  needsOnboarding: boolean;
+  rules?: RecurrenceRule[];
+  viewerRole?: "owner" | "member";
+}
+
+export interface CreateRecurrenceBody {
+  title: string;
+  description?: string;
+  frequency: RecurrenceFrequency;
+  dayOfWeek?: number | null;
+  dayOfMonth?: number | null;
+  startLocalTime: string; // HH:MM
+  durationMinutes: number;
+  timezone: string;
+}
+
+export interface CircleSummary {
+  membershipId: string;
+  circleId: string;
+  name: string;
+  description: string | null;
+  role: "owner" | "member";
+  status: "active" | "invited";
+  active: boolean;
+}
+
+export interface CirclesResponse {
+  circles: CircleSummary[];
+  activeCircleId: string | null;
+}
+
+export type FamilyPromptKind = "memory" | "open_text" | "photo_request";
+
+export interface FamilyPromptResponse {
+  id: string;
+  membershipId: string;
+  displayName: string;
+  textResponse: string | null;
+  photoUrl: string | null;
+  createdAt: string;
+}
+
+export interface FamilyPrompt {
+  id: string;
+  kind: FamilyPromptKind;
+  promptText: string;
+  createdAt: string;
+  closedAt: string | null;
+  createdByMembershipId: string | null;
+  responses: FamilyPromptResponse[];
+}
+
+export interface PromptsResponse {
+  needsOnboarding: boolean;
+  viewerMembershipId?: string;
+  viewerRole?: "owner" | "member";
+  prompts?: FamilyPrompt[];
+}
+
+export interface CreatePromptBody {
+  kind: FamilyPromptKind;
+  promptText: string;
+}
+
+export interface RespondPromptBody {
+  textResponse?: string;
+  photoUrl?: string;
+}
+
+export type PrayerStatus = "open" | "answered" | "archived";
+
+export interface PrayerResponse {
+  id: string;
+  membershipId: string;
+  displayName: string;
+  message: string | null;
+  createdAt: string;
+}
+
+export interface PrayerIntention {
+  id: string;
+  body: string;
+  status: PrayerStatus;
+  createdAt: string;
+  authorMembershipId: string;
+  authorDisplayName: string;
+  responses: PrayerResponse[];
+}
+
+export interface PrayerListResponse {
+  needsOnboarding: boolean;
+  viewerMembershipId?: string;
+  intentions?: PrayerIntention[];
 }

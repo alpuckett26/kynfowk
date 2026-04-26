@@ -13,7 +13,10 @@ import { ApiError } from "@/lib/api";
 import {
   cancelCall,
   completeCall,
+  dismissRecovery,
   fetchCallDetail,
+  markReminderSent,
+  rescheduleCall,
   saveCallLink,
   saveCallRecap,
 } from "@/lib/calls";
@@ -113,6 +116,36 @@ export default function CallDetailScreen() {
         <Text style={styles.meta}>{call.reminder_label}</Text>
       </View>
 
+      {!isCompleted && !isCanceled ? (
+        <Card>
+          <Text style={styles.joinTitle}>Join Kynfowk video</Text>
+          <Text style={styles.subtle}>
+            In-app call room — no extra link needed. Camera + mic permission
+            required the first time.
+          </Text>
+          <Button
+            label={isLive ? "Re-join live call" : "Start call"}
+            onPress={() => router.push(`/calls/${callId}/live`)}
+          />
+        </Card>
+      ) : null}
+
+      {!isCompleted && !isCanceled && canManageFamily ? (
+        <ManageCallCard
+          callId={callId}
+          reminderStatus={call.reminder_status}
+          onReminderMarked={() => void load()}
+        />
+      ) : null}
+
+      {call.show_recovery_prompt && !isCompleted && !isCanceled ? (
+        <RecoveryActions
+          callId={callId}
+          onRescheduled={(newId) => router.replace(`/calls/${newId}`)}
+          onDismissed={() => void load()}
+        />
+      ) : null}
+
       {call.meeting_url ? (
         <Card>
           <SectionHeader title="Join link" />
@@ -190,6 +223,50 @@ export default function CallDetailScreen() {
         <CancelCallButton callId={callId} onCanceled={() => router.back()} />
       ) : null}
     </Screen>
+  );
+}
+
+function ManageCallCard({
+  callId,
+  reminderStatus,
+  onReminderMarked,
+}: {
+  callId: string;
+  reminderStatus: "pending" | "sent" | "not_needed";
+  onReminderMarked: () => void;
+}) {
+  const [busy, setBusy] = useState<"none" | "reminder">("none");
+
+  const onMarkReminderSent = async () => {
+    setBusy("reminder");
+    try {
+      await markReminderSent(callId);
+      onReminderMarked();
+    } catch (error) {
+      const m = error instanceof Error ? error.message : "Couldn't mark reminder";
+      Alert.alert("Error", m);
+    } finally {
+      setBusy("none");
+    }
+  };
+
+  return (
+    <Card>
+      <SectionHeader title="Manage" />
+      <Button
+        label="Edit details"
+        variant="secondary"
+        onPress={() => router.push(`/calls/${callId}/edit`)}
+      />
+      {reminderStatus === "pending" ? (
+        <Button
+          label={busy === "reminder" ? "Marking…" : "Mark reminder sent"}
+          variant="ghost"
+          onPress={onMarkReminderSent}
+          loading={busy === "reminder"}
+        />
+      ) : null}
+    </Card>
   );
 }
 
@@ -393,6 +470,65 @@ function RecapForm({
   );
 }
 
+function RecoveryActions({
+  callId,
+  onRescheduled,
+  onDismissed,
+}: {
+  callId: string;
+  onRescheduled: (newCallId: string) => void;
+  onDismissed: () => void;
+}) {
+  const [busy, setBusy] = useState<"none" | "reschedule" | "dismiss">("none");
+
+  const onReschedule = async () => {
+    setBusy("reschedule");
+    try {
+      const res = await rescheduleCall(callId, {});
+      onRescheduled(res.callId);
+    } catch (e) {
+      Alert.alert("Couldn't reschedule", e instanceof Error ? e.message : "Try again.");
+    } finally {
+      setBusy("none");
+    }
+  };
+
+  const onDismiss = async () => {
+    setBusy("dismiss");
+    try {
+      await dismissRecovery(callId);
+      onDismissed();
+    } catch (e) {
+      Alert.alert("Couldn't dismiss", e instanceof Error ? e.message : "Try again.");
+    } finally {
+      setBusy("none");
+    }
+  };
+
+  return (
+    <Card>
+      <SectionHeader title="Missed-call follow-up" />
+      <Text style={styles.subtle}>
+        Either roll this call forward a week with the same participants, or
+        clear it from the missed list if it isn't happening.
+      </Text>
+      <Button
+        label={busy === "reschedule" ? "Rescheduling…" : "Reschedule for next week"}
+        onPress={onReschedule}
+        loading={busy === "reschedule"}
+        disabled={busy !== "none"}
+      />
+      <Button
+        label={busy === "dismiss" ? "Clearing…" : "Clear from missed list"}
+        variant="secondary"
+        onPress={onDismiss}
+        loading={busy === "dismiss"}
+        disabled={busy !== "none"}
+      />
+    </Card>
+  );
+}
+
 function CancelCallButton({
   callId,
   onCanceled,
@@ -453,6 +589,11 @@ const styles = StyleSheet.create({
   meta: { fontSize: fontSize.sm, color: colors.textMuted, lineHeight: 19 },
   badges: { flexDirection: "row", gap: spacing.sm, marginTop: spacing.xs },
   subtle: { fontSize: fontSize.sm, color: colors.textMuted },
+  joinTitle: {
+    fontSize: fontSize.md,
+    fontWeight: fontWeight.bold,
+    color: colors.text,
+  },
   linkText: {
     fontSize: fontSize.sm,
     color: colors.accent,

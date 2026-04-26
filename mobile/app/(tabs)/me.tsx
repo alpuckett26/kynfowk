@@ -34,11 +34,35 @@ export default function MeTab() {
       </Card>
 
       <Card>
-        <Text style={styles.label}>Notifications</Text>
+        <Text style={styles.label}>Settings</Text>
+        <Button
+          label="Profile"
+          variant="secondary"
+          onPress={() => router.push("/settings/profile")}
+        />
         <Button
           label="Notification preferences"
           variant="secondary"
           onPress={() => router.push("/settings/notifications")}
+        />
+        <Button
+          label="Family Circle"
+          variant="secondary"
+          onPress={() => router.push("/settings/circle")}
+        />
+        <Button
+          label="Switch circle"
+          variant="secondary"
+          onPress={() => router.push("/circles")}
+        />
+      </Card>
+
+      <Card>
+        <Text style={styles.label}>Help</Text>
+        <Button
+          label="Send feedback"
+          variant="secondary"
+          onPress={() => router.push("/feedback")}
         />
       </Card>
 

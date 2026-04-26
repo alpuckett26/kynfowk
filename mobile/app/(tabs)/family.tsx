@@ -15,6 +15,7 @@ import type { FamilyMember } from "@/types/api";
 type State =
   | { kind: "loading" }
   | { kind: "error"; message: string }
+  | { kind: "needs-onboarding" }
   | {
       kind: "ok";
       circleName: string;
@@ -39,6 +40,10 @@ export default function FamilyTab() {
   const load = useCallback(async () => {
     try {
       const res = await fetchFamilyMembers();
+      if (res.needsOnboarding) {
+        setState({ kind: "needs-onboarding" });
+        return;
+      }
       setState({
         kind: "ok",
         circleName: res.circle.name,
@@ -92,6 +97,22 @@ export default function FamilyTab() {
       </Screen>
     );
   }
+  if (state.kind === "needs-onboarding") {
+    return (
+      <Screen onRefresh={onRefresh} refreshing={refreshing}>
+        <View style={styles.header}>
+          <Text style={styles.eyebrow}>Family</Text>
+          <Text style={styles.title}>Start your circle</Text>
+          <Text style={styles.lede}>
+            A family circle is a private space for the people you call.
+          </Text>
+        </View>
+        <Card>
+          <Button label="Create circle" onPress={() => router.push("/onboarding")} />
+        </Card>
+      </Screen>
+    );
+  }
 
   const isOwner = state.viewerRole === "owner";
   const sortedMembers = [...state.members].sort((a, b) => {
@@ -125,6 +146,20 @@ export default function FamilyTab() {
           />
         </Card>
       ) : null}
+
+      <Card>
+        <SectionHeader title="Quick links" />
+        <Button
+          label="Phonebook"
+          variant="secondary"
+          onPress={() => router.push("/phonebook")}
+        />
+        <Button
+          label="Relationships & units"
+          variant="secondary"
+          onPress={() => router.push("/relationships")}
+        />
+      </Card>
 
       <Card>
         <SectionHeader title="Members" />

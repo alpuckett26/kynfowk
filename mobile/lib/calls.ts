@@ -2,6 +2,9 @@ import { apiFetch } from "@/lib/api";
 import type {
   CallDetailResponse,
   CompleteCallBody,
+  EditCallDetailsBody,
+  RescheduleBody,
+  RescheduleResponse,
   SaveLinkBody,
   SaveRecapBody,
   ScheduleCallBody,
@@ -50,5 +53,37 @@ export function scheduleCall(body: ScheduleCallBody): Promise<ScheduleCallRespon
   return apiFetch("/api/native/calls/schedule", {
     method: "POST",
     body,
+  });
+}
+
+export function dismissRecovery(callId: string): Promise<{ success: true }> {
+  return apiFetch(`/api/native/calls/${callId}/recovery/dismiss`, {
+    method: "POST",
+  });
+}
+
+export function rescheduleCall(
+  callId: string,
+  body: RescheduleBody = {}
+): Promise<RescheduleResponse> {
+  return apiFetch(`/api/native/calls/${callId}/recovery/reschedule`, {
+    method: "POST",
+    body,
+  });
+}
+
+export function editCallDetails(
+  callId: string,
+  body: EditCallDetailsBody
+): Promise<{ success: true }> {
+  return apiFetch(`/api/native/calls/${callId}/details`, {
+    method: "POST",
+    body,
+  });
+}
+
+export function markReminderSent(callId: string): Promise<{ success: true }> {
+  return apiFetch(`/api/native/calls/${callId}/reminder-sent`, {
+    method: "POST",
   });
 }

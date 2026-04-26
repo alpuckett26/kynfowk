@@ -46,15 +46,19 @@ export default function RootLayout() {
           }}
         >
           <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="calls/[callId]" />
+          <Stack.Screen name="calls/[callId]/index" />
+          <Stack.Screen name="calls/[callId]/live" />
           <Stack.Screen name="schedule/new" />
           <Stack.Screen name="family/invite" />
           <Stack.Screen name="family/placeholder" />
           <Stack.Screen name="family/[membershipId]" />
           <Stack.Screen name="settings/notifications" />
+          <Stack.Screen name="settings/profile" />
           <Stack.Screen name="photos" />
           <Stack.Screen name="polls" />
           <Stack.Screen name="activity" />
+          <Stack.Screen name="onboarding" />
+          <Stack.Screen name="feedback" />
           <Stack.Screen name="login" options={{ presentation: "modal" }} />
           <Stack.Screen name="auth/callback" />
         </Stack>

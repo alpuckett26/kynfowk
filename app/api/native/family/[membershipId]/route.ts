@@ -9,6 +9,14 @@ type Body = {
   relationshipLabel?: string | null;
   phoneNumber?: string | null;
   address?: string | null;
+  birthday?: string | null;
+  nickname?: string | null;
+  bio?: string | null;
+  favoriteFood?: string | null;
+  faithNotes?: string | null;
+  prayerIntentions?: string | null;
+  pronouns?: string | null;
+  hometown?: string | null;
 };
 
 export async function POST(
@@ -57,6 +65,44 @@ export async function POST(
     if (body.address !== undefined) {
       const ad = (body.address ?? "").trim();
       updates.address = ad || null;
+    }
+    if (body.birthday !== undefined) {
+      const b = (body.birthday ?? "").trim();
+      if (b && !/^\d{4}-\d{2}-\d{2}$/.test(b)) {
+        return Response.json(
+          { error: "Birthday must be YYYY-MM-DD." },
+          { status: 400 }
+        );
+      }
+      updates.birthday = b || null;
+    }
+    if (body.nickname !== undefined) {
+      const v = (body.nickname ?? "").trim();
+      updates.nickname = v || null;
+    }
+    if (body.bio !== undefined) {
+      const v = (body.bio ?? "").trim();
+      updates.bio = v || null;
+    }
+    if (body.favoriteFood !== undefined) {
+      const v = (body.favoriteFood ?? "").trim();
+      updates.favorite_food = v || null;
+    }
+    if (body.faithNotes !== undefined) {
+      const v = (body.faithNotes ?? "").trim();
+      updates.faith_notes = v || null;
+    }
+    if (body.prayerIntentions !== undefined) {
+      const v = (body.prayerIntentions ?? "").trim();
+      updates.prayer_intentions = v || null;
+    }
+    if (body.pronouns !== undefined) {
+      const v = (body.pronouns ?? "").trim();
+      updates.pronouns = v || null;
+    }
+    if (body.hometown !== undefined) {
+      const v = (body.hometown ?? "").trim();
+      updates.hometown = v || null;
     }
 
     if (Object.keys(updates).length === 0) {

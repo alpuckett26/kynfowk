@@ -3,14 +3,14 @@ import type {
   AddPlaceholderBody,
   AddPlaceholderResponse,
   BlockMemberBody,
-  FamilyMembersResponse,
+  FamilyMembersResult,
   InviteMemberBody,
   InviteMemberResponse,
   UpdateMemberBody,
 } from "@/types/api";
 
-export function fetchFamilyMembers(): Promise<FamilyMembersResponse> {
-  return apiFetch<FamilyMembersResponse>("/api/native/family/members");
+export function fetchFamilyMembers(): Promise<FamilyMembersResult> {
+  return apiFetch<FamilyMembersResult>("/api/native/family/members");
 }
 
 export function inviteMember(
@@ -55,4 +55,22 @@ export function addPlaceholder(
   body: AddPlaceholderBody
 ): Promise<AddPlaceholderResponse> {
   return apiFetch("/api/native/family/placeholder", { method: "POST", body });
+}
+
+export function resendInvite(
+  membershipId: string
+): Promise<{ success: true }> {
+  return apiFetch(`/api/native/family/${membershipId}/resend-invite`, {
+    method: "POST",
+  });
+}
+
+export function setMemberAvatar(
+  membershipId: string,
+  photoUrl: string
+): Promise<{ success: true }> {
+  return apiFetch("/api/native/family/avatar", {
+    method: "POST",
+    body: { membershipId, photoUrl },
+  });
 }
