@@ -34,7 +34,7 @@ export async function GET(request: Request) {
   const rulesResponse = await supabase
     .from("call_recurrence_rules")
     .select(
-      "id, family_circle_id, title, description, frequency, day_of_week, day_of_month, start_local_time, duration_minutes, timezone, active, last_materialized_through"
+      "id, family_circle_id, title, description, frequency, day_of_week, day_of_month, start_local_time, duration_minutes, timezone, active, last_materialized_through, created_by_membership_id"
     )
     .eq("active", true);
   if (rulesResponse.error) {

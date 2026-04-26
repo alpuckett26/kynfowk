@@ -105,7 +105,7 @@ export async function POST(request: Request) {
         created_by_membership_id: family.membership.id,
       })
       .select(
-        "id, family_circle_id, title, description, frequency, day_of_week, day_of_month, start_local_time, duration_minutes, timezone, active, last_materialized_through"
+        "id, family_circle_id, title, description, frequency, day_of_week, day_of_month, start_local_time, duration_minutes, timezone, active, last_materialized_through, created_by_membership_id"
       )
       .single();
     if (insertResponse.error || !insertResponse.data) {
@@ -118,7 +118,8 @@ export async function POST(request: Request) {
     // Materialize a 4-week horizon immediately so the calls show up.
     const result = await materializeRecurrence(
       supabase,
-      insertResponse.data as RecurrenceRuleRow
+      insertResponse.data as RecurrenceRuleRow,
+      user.id
     );
 
     return Response.json({

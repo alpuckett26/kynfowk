@@ -15,6 +15,7 @@ export interface RecurrenceRuleRow {
   timezone: string;
   active: boolean;
   last_materialized_through: string | null;
+  created_by_membership_id: string | null;
 }
 
 const HORIZON_DAYS = 28;
@@ -137,7 +138,8 @@ function zonedToUtc(zoned: Date, tz: string): Date {
 
 export async function materializeRecurrence(
   supabase: SupabaseClient,
-  rule: RecurrenceRuleRow
+  rule: RecurrenceRuleRow,
+  createdByUserId?: string
 ): Promise<{ inserted: number }> {
   const now = new Date();
   const horizonEnd = new Date(now.getTime() + HORIZON_DAYS * 24 * 60 * 60 * 1000);
@@ -148,6 +150,30 @@ export async function materializeRecurrence(
 
   const occurrences = nextOccurrences(rule, startFrom, horizonEnd);
   if (occurrences.length === 0) {
+    return { inserted: 0 };
+  }
+
+  // call_sessions.created_by is NOT NULL — we need a user id. Prefer the
+  // user driving the request; otherwise resolve via the rule's creating
+  // membership; otherwise fall back to the circle's owner.
+  let createdBy = createdByUserId ?? null;
+  if (!createdBy && rule.created_by_membership_id) {
+    const membershipResponse = await supabase
+      .from("family_memberships")
+      .select("user_id")
+      .eq("id", rule.created_by_membership_id)
+      .maybeSingle();
+    createdBy = (membershipResponse.data as { user_id: string | null } | null)?.user_id ?? null;
+  }
+  if (!createdBy) {
+    const circleResponse = await supabase
+      .from("family_circles")
+      .select("created_by")
+      .eq("id", rule.family_circle_id)
+      .maybeSingle();
+    createdBy = (circleResponse.data as { created_by: string | null } | null)?.created_by ?? null;
+  }
+  if (!createdBy) {
     return { inserted: 0 };
   }
 
@@ -172,6 +198,7 @@ export async function materializeRecurrence(
         meeting_provider: "Kynfowk",
         reminder_status: "pending",
         recurrence_rule_id: rule.id,
+        created_by: createdBy,
       })
       .select("id")
       .single();
