@@ -586,3 +586,41 @@ export interface CirclesResponse {
   circles: CircleSummary[];
   activeCircleId: string | null;
 }
+
+export type FamilyPromptKind = "memory" | "open_text" | "photo_request";
+
+export interface FamilyPromptResponse {
+  id: string;
+  membershipId: string;
+  displayName: string;
+  textResponse: string | null;
+  photoUrl: string | null;
+  createdAt: string;
+}
+
+export interface FamilyPrompt {
+  id: string;
+  kind: FamilyPromptKind;
+  promptText: string;
+  createdAt: string;
+  closedAt: string | null;
+  createdByMembershipId: string | null;
+  responses: FamilyPromptResponse[];
+}
+
+export interface PromptsResponse {
+  needsOnboarding: boolean;
+  viewerMembershipId?: string;
+  viewerRole?: "owner" | "member";
+  prompts?: FamilyPrompt[];
+}
+
+export interface CreatePromptBody {
+  kind: FamilyPromptKind;
+  promptText: string;
+}
+
+export interface RespondPromptBody {
+  textResponse?: string;
+  photoUrl?: string;
+}

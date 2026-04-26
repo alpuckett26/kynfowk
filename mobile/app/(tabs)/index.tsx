@@ -323,6 +323,11 @@ export default function HomeScreen() {
           variant="secondary"
           onPress={() => router.push("/polls")}
         />
+        <Button
+          label="Family prompts"
+          variant="secondary"
+          onPress={() => router.push("/prompts")}
+        />
       </Card>
 
       <Card>
