@@ -43,7 +43,11 @@ export default function MemberDetailScreen() {
   const load = useCallback(async () => {
     try {
       const res = await fetchFamilyMembers();
-      const member = res.members.find((m) => m.id === membershipId);
+      if (res.needsOnboarding) {
+        setState({ kind: "error", message: "Not part of a family circle" });
+        return;
+      }
+      const member = res.members.find((m: FamilyMember) => m.id === membershipId);
       if (!member) {
         setState({ kind: "error", message: "Member not found" });
         return;

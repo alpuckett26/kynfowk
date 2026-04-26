@@ -9,10 +9,7 @@ export async function GET(request: Request) {
     const { user, supabase } = await authenticateNativeRequest(request);
     const family = await getViewerFamilyCircleWith(supabase, user.id);
     if (!family) {
-      return Response.json(
-        { error: "Not part of a family circle" },
-        { status: 403 }
-      );
+      return Response.json({ needsOnboarding: true }, { status: 200 });
     }
 
     const membersResponse = await supabase
@@ -24,6 +21,7 @@ export async function GET(request: Request) {
       .order("created_at", { ascending: true });
 
     return Response.json({
+      needsOnboarding: false,
       circle: family.circle,
       viewerMembershipId: family.membership.id,
       viewerRole: family.membership.role,

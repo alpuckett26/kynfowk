@@ -15,6 +15,7 @@ import type { FamilyMember } from "@/types/api";
 type State =
   | { kind: "loading" }
   | { kind: "error"; message: string }
+  | { kind: "needs-onboarding" }
   | {
       kind: "ok";
       circleName: string;
@@ -39,6 +40,10 @@ export default function FamilyTab() {
   const load = useCallback(async () => {
     try {
       const res = await fetchFamilyMembers();
+      if (res.needsOnboarding) {
+        setState({ kind: "needs-onboarding" });
+        return;
+      }
       setState({
         kind: "ok",
         circleName: res.circle.name,
@@ -89,6 +94,22 @@ export default function FamilyTab() {
           description={state.message}
           action={<Button label="Try again" variant="secondary" onPress={() => void load()} />}
         />
+      </Screen>
+    );
+  }
+  if (state.kind === "needs-onboarding") {
+    return (
+      <Screen onRefresh={onRefresh} refreshing={refreshing}>
+        <View style={styles.header}>
+          <Text style={styles.eyebrow}>Family</Text>
+          <Text style={styles.title}>No circle yet</Text>
+        </View>
+        <Card>
+          <EmptyState
+            title="You're not part of a family circle"
+            description="Onboarding from the app lands in M12. For now, finish setup at kynfowk.vercel.app and pull to refresh."
+          />
+        </Card>
       </Screen>
     );
   }

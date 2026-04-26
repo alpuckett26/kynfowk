@@ -1,6 +1,6 @@
 import { apiFetch } from "@/lib/api";
 import type {
-  AvailabilityResponse,
+  AvailabilityResult,
   SaveAvailabilityResponse,
 } from "@/types/api";
 
@@ -25,8 +25,8 @@ export function slotKey(weekday: number, startHour: number, endHour: number) {
   return `${weekday}|${startHour}|${endHour}`;
 }
 
-export function fetchAvailability(): Promise<AvailabilityResponse> {
-  return apiFetch<AvailabilityResponse>("/api/native/availability");
+export function fetchAvailability(): Promise<AvailabilityResult> {
+  return apiFetch<AvailabilityResult>("/api/native/availability");
 }
 
 export function saveAvailability(slots: string[]): Promise<SaveAvailabilityResponse> {

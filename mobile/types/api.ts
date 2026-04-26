@@ -225,12 +225,17 @@ export interface AvailabilityWindow {
 }
 
 export interface AvailabilityResponse {
+  needsOnboarding: false;
   circle: { id: string; name: string; description: string | null };
   membershipId: string;
   slots: string[];
   windows: AvailabilityWindow[];
   summary: AvailabilitySummaryItem[];
 }
+
+export type AvailabilityResult =
+  | { needsOnboarding: true }
+  | AvailabilityResponse;
 
 export interface SaveAvailabilityResponse {
   success: true;
@@ -255,11 +260,16 @@ export interface FamilyMember {
 }
 
 export interface FamilyMembersResponse {
+  needsOnboarding: false;
   circle: { id: string; name: string; description: string | null };
   viewerMembershipId: string;
   viewerRole: "owner" | "member";
   members: FamilyMember[];
 }
+
+export type FamilyMembersResult =
+  | { needsOnboarding: true }
+  | FamilyMembersResponse;
 
 export interface ScheduleCallBody {
   title: string;

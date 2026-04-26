@@ -3,14 +3,14 @@ import type {
   AddPlaceholderBody,
   AddPlaceholderResponse,
   BlockMemberBody,
-  FamilyMembersResponse,
+  FamilyMembersResult,
   InviteMemberBody,
   InviteMemberResponse,
   UpdateMemberBody,
 } from "@/types/api";
 
-export function fetchFamilyMembers(): Promise<FamilyMembersResponse> {
-  return apiFetch<FamilyMembersResponse>("/api/native/family/members");
+export function fetchFamilyMembers(): Promise<FamilyMembersResult> {
+  return apiFetch<FamilyMembersResult>("/api/native/family/members");
 }
 
 export function inviteMember(
