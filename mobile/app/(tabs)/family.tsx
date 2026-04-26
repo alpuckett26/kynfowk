@@ -7,6 +7,7 @@ import { Button } from "@/components/Button";
 import { Badge } from "@/components/Badge";
 import { ListItem, SectionHeader } from "@/components/ListItem";
 import { EmptyState } from "@/components/EmptyState";
+import { FamilyReel } from "@/components/FamilyReel";
 import { ApiError } from "@/lib/api";
 import { fetchFamilyMembers } from "@/lib/family";
 import { colors, fontSize, fontWeight, spacing } from "@/lib/theme";
@@ -132,6 +133,8 @@ export default function FamilyTab() {
         </Text>
       </View>
 
+      <FamilyReel />
+
       {isOwner ? (
         <Card>
           <SectionHeader title="Add to the circle" />
@@ -158,6 +161,11 @@ export default function FamilyTab() {
           label="Relationships & units"
           variant="secondary"
           onPress={() => router.push("/relationships")}
+        />
+        <Button
+          label="Cross-circle links"
+          variant="secondary"
+          onPress={() => router.push("/cross-circle")}
         />
       </Card>
 

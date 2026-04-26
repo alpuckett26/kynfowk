@@ -7,6 +7,10 @@
     {
       "path": "/api/cron/recurrence-materialize",
       "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/cron/auto-schedule",
+      "schedule": "0 2 * * *"
     }
   ]
 }

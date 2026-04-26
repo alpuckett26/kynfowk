@@ -267,6 +267,7 @@ export interface FamilyMember {
   hometown: string | null;
   is_minor: boolean;
   managed_by_membership_id: string | null;
+  parental_auto_schedule_consent: boolean;
 }
 
 export interface FamilyMembersResponse {
@@ -679,4 +680,54 @@ export interface StartGameSessionBody {
 export interface StartGameSessionResponse {
   success: true;
   sessionId: string;
+}
+
+export interface ConnectionTier {
+  id: string;
+  name: string;
+  min_days_between: number;
+  ordinal: number;
+}
+
+export interface AutoScheduleSettings {
+  enabled: boolean;
+  pausedUntil: string | null;
+  maxPerWeek: number;
+  tiers: ConnectionTier[];
+}
+
+export interface SaveAutoScheduleBody {
+  enabled?: boolean;
+  pausedUntil?: string | null;
+  maxPerWeek?: number;
+}
+
+export interface CrossCircleLinkRow {
+  id: string;
+  source_membership_id: string;
+  target_membership_id: string;
+  kind: string;
+  status: "pending" | "active" | "declined";
+  created_at: string;
+  approved_at: string | null;
+}
+
+export interface CrossCircleMember {
+  id: string;
+  displayName: string;
+  familyCircleId: string;
+  familyCircleName: string;
+  isMinor: boolean;
+  managedByMembershipId: string | null;
+}
+
+export interface CrossCircleListResponse {
+  links: CrossCircleLinkRow[];
+  members: CrossCircleMember[];
+}
+
+export interface CreateCrossCircleLinkBody {
+  sourceMembershipId: string;
+  targetMembershipId: string;
+  kind: string;
 }

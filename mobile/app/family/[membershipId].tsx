@@ -17,6 +17,7 @@ import {
   unblockMember,
   updateMember,
 } from "@/lib/family";
+import { setMinorParentalConsent } from "@/lib/auto-schedule";
 import { pickAndUploadAvatar } from "@/lib/photos";
 import { colors, fontSize, fontWeight, spacing } from "@/lib/theme";
 import type { FamilyMember } from "@/types/api";
@@ -246,6 +247,21 @@ export default function MemberDetailScreen() {
       await load();
     } catch (e) {
       Alert.alert("Error", e instanceof Error ? e.message : "Couldn't upload photo");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const onToggleMinorConsent = async () => {
+    setBusy(true);
+    try {
+      await setMinorParentalConsent(
+        member.id,
+        !member.parental_auto_schedule_consent
+      );
+      await load();
+    } catch (e) {
+      Alert.alert("Error", e instanceof Error ? e.message : "Couldn't save");
     } finally {
       setBusy(false);
     }
@@ -485,6 +501,29 @@ export default function MemberDetailScreen() {
             label={busy ? "Working…" : member.avatar_url ? "Change photo" : "Set photo"}
             variant="secondary"
             onPress={onSetPhoto}
+            loading={busy}
+          />
+        </Card>
+      ) : null}
+
+      {member.is_minor && member.managed_by_membership_id ? (
+        <Card>
+          <SectionHeader title="Auto-scheduling for this minor" />
+          <Text style={styles.message}>
+            {member.parental_auto_schedule_consent
+              ? "On — Kynfowk can auto-schedule calls that include this minor. The managing parent must always be a participant."
+              : "Off — auto-scheduling is paused for this minor."}
+          </Text>
+          <Button
+            label={
+              busy
+                ? "Working…"
+                : member.parental_auto_schedule_consent
+                  ? "Pause auto-scheduling"
+                  : "Resume auto-scheduling"
+            }
+            variant="secondary"
+            onPress={onToggleMinorConsent}
             loading={busy}
           />
         </Card>
