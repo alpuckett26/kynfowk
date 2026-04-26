@@ -15,6 +15,7 @@ import {
   completeCall,
   dismissRecovery,
   fetchCallDetail,
+  markReminderSent,
   rescheduleCall,
   saveCallLink,
   saveCallRecap,
@@ -129,6 +130,14 @@ export default function CallDetailScreen() {
         </Card>
       ) : null}
 
+      {!isCompleted && !isCanceled && canManageFamily ? (
+        <ManageCallCard
+          callId={callId}
+          reminderStatus={call.reminder_status}
+          onReminderMarked={() => void load()}
+        />
+      ) : null}
+
       {call.show_recovery_prompt && !isCompleted && !isCanceled ? (
         <RecoveryActions
           callId={callId}
@@ -214,6 +223,50 @@ export default function CallDetailScreen() {
         <CancelCallButton callId={callId} onCanceled={() => router.back()} />
       ) : null}
     </Screen>
+  );
+}
+
+function ManageCallCard({
+  callId,
+  reminderStatus,
+  onReminderMarked,
+}: {
+  callId: string;
+  reminderStatus: "pending" | "sent" | "not_needed";
+  onReminderMarked: () => void;
+}) {
+  const [busy, setBusy] = useState<"none" | "reminder">("none");
+
+  const onMarkReminderSent = async () => {
+    setBusy("reminder");
+    try {
+      await markReminderSent(callId);
+      onReminderMarked();
+    } catch (error) {
+      const m = error instanceof Error ? error.message : "Couldn't mark reminder";
+      Alert.alert("Error", m);
+    } finally {
+      setBusy("none");
+    }
+  };
+
+  return (
+    <Card>
+      <SectionHeader title="Manage" />
+      <Button
+        label="Edit details"
+        variant="secondary"
+        onPress={() => router.push(`/calls/${callId}/edit`)}
+      />
+      {reminderStatus === "pending" ? (
+        <Button
+          label={busy === "reminder" ? "Marking…" : "Mark reminder sent"}
+          variant="ghost"
+          onPress={onMarkReminderSent}
+          loading={busy === "reminder"}
+        />
+      ) : null}
+    </Card>
   );
 }
 

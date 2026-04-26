@@ -2,6 +2,7 @@ import { apiFetch } from "@/lib/api";
 import type {
   CallDetailResponse,
   CompleteCallBody,
+  EditCallDetailsBody,
   RescheduleBody,
   RescheduleResponse,
   SaveLinkBody,
@@ -68,5 +69,21 @@ export function rescheduleCall(
   return apiFetch(`/api/native/calls/${callId}/recovery/reschedule`, {
     method: "POST",
     body,
+  });
+}
+
+export function editCallDetails(
+  callId: string,
+  body: EditCallDetailsBody
+): Promise<{ success: true }> {
+  return apiFetch(`/api/native/calls/${callId}/details`, {
+    method: "POST",
+    body,
+  });
+}
+
+export function markReminderSent(callId: string): Promise<{ success: true }> {
+  return apiFetch(`/api/native/calls/${callId}/reminder-sent`, {
+    method: "POST",
   });
 }

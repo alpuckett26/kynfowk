@@ -433,3 +433,15 @@ export interface RescheduleResponse {
   success: true;
   callId: string;
 }
+
+export interface EditCallDetailsBody {
+  title: string;
+  scheduledStart?: string;
+  scheduledEnd?: string;
+  description?: string;
+}
+
+export interface SetMemberAvatarBody {
+  membershipId: string;
+  photoUrl: string;
+}

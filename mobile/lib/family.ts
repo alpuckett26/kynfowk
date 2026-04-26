@@ -56,3 +56,21 @@ export function addPlaceholder(
 ): Promise<AddPlaceholderResponse> {
   return apiFetch("/api/native/family/placeholder", { method: "POST", body });
 }
+
+export function resendInvite(
+  membershipId: string
+): Promise<{ success: true }> {
+  return apiFetch(`/api/native/family/${membershipId}/resend-invite`, {
+    method: "POST",
+  });
+}
+
+export function setMemberAvatar(
+  membershipId: string,
+  photoUrl: string
+): Promise<{ success: true }> {
+  return apiFetch("/api/native/family/avatar", {
+    method: "POST",
+    body: { membershipId, photoUrl },
+  });
+}

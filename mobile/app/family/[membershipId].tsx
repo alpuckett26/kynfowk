@@ -13,9 +13,11 @@ import {
   blockMember,
   fetchFamilyMembers,
   removeMember,
+  resendInvite,
   unblockMember,
   updateMember,
 } from "@/lib/family";
+import { pickAndUploadAvatar } from "@/lib/photos";
 import { colors, fontSize, fontWeight, spacing } from "@/lib/theme";
 import type { FamilyMember } from "@/types/api";
 
@@ -172,6 +174,36 @@ export default function MemberDetailScreen() {
     }
   };
 
+  const onResendInvite = async () => {
+    setBusy(true);
+    try {
+      await resendInvite(member.id);
+      Alert.alert("Invite sent", `${member.display_name} should get an email shortly.`);
+    } catch (e) {
+      Alert.alert("Error", e instanceof Error ? e.message : "Couldn't resend invite");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const onSetPhoto = async () => {
+    setBusy(true);
+    try {
+      const res = await pickAndUploadAvatar(member.id);
+      if (!res.success) {
+        if (res.reason !== "Cancelled") {
+          Alert.alert("Couldn't upload", res.reason);
+        }
+        return;
+      }
+      await load();
+    } catch (e) {
+      Alert.alert("Error", e instanceof Error ? e.message : "Couldn't upload photo");
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const onRemove = () => {
     Alert.alert(
       "Remove member?",
@@ -289,6 +321,33 @@ export default function MemberDetailScreen() {
         <Card>
           <SectionHeader title="Notes" />
           <Text style={styles.notes}>{member.placeholder_notes}</Text>
+        </Card>
+      ) : null}
+
+      {canEdit && !member.is_placeholder && !member.is_deceased ? (
+        <Card>
+          <SectionHeader title="Photo" />
+          <Button
+            label={busy ? "Working…" : member.avatar_url ? "Change photo" : "Set photo"}
+            variant="secondary"
+            onPress={onSetPhoto}
+            loading={busy}
+          />
+        </Card>
+      ) : null}
+
+      {isOwner && member.status === "invited" && member.invite_email ? (
+        <Card>
+          <SectionHeader title="Pending invite" />
+          <Text style={styles.message}>
+            Email goes to {member.invite_email}.
+          </Text>
+          <Button
+            label={busy ? "Working…" : "Resend invite email"}
+            variant="secondary"
+            onPress={onResendInvite}
+            loading={busy}
+          />
         </Card>
       ) : null}
 

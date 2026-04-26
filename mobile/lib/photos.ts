@@ -64,3 +64,59 @@ export async function pickAndUploadPhoto(
 export function removePhoto(id: string): Promise<{ success: true }> {
   return apiFetch(`/api/native/photos/${id}/remove`, { method: "POST" });
 }
+
+export async function pickAndUploadAvatar(
+  membershipId: string
+): Promise<
+  | { success: true; photoUrl: string }
+  | { success: false; reason: string }
+> {
+  const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+  if (!perm.granted) {
+    return { success: false, reason: "Camera roll permission denied." };
+  }
+
+  const result = await ImagePicker.launchImageLibraryAsync({
+    mediaTypes: ImagePicker.MediaTypeOptions.Images,
+    quality: 0.85,
+    base64: true,
+    allowsEditing: true,
+    aspect: [1, 1],
+  });
+
+  if (result.canceled || !result.assets?.length) {
+    return { success: false, reason: "Cancelled" };
+  }
+
+  const asset = result.assets[0];
+  if (!asset.base64) {
+    return { success: false, reason: "Couldn't read photo data." };
+  }
+
+  const ext = asset.uri.split(".").pop()?.toLowerCase() || "jpg";
+  const contentType =
+    asset.mimeType ?? (ext === "png" ? "image/png" : "image/jpeg");
+  const path = `avatars/${membershipId}-${Date.now()}.${ext}`;
+  const buffer = decodeBase64(asset.base64);
+
+  const upload = await supabase.storage
+    .from(STORAGE_BUCKET)
+    .upload(path, buffer, { upsert: false, contentType });
+  if (upload.error) {
+    return { success: false, reason: upload.error.message };
+  }
+
+  const { data: publicUrlData } = supabase.storage
+    .from(STORAGE_BUCKET)
+    .getPublicUrl(path);
+
+  await apiFetch("/api/native/family/avatar", {
+    method: "POST",
+    body: {
+      membershipId,
+      photoUrl: publicUrlData.publicUrl,
+    },
+  });
+
+  return { success: true, photoUrl: publicUrlData.publicUrl };
+}
