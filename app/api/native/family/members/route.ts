@@ -15,7 +15,7 @@ export async function GET(request: Request) {
     const membersResponse = await supabase
       .from("family_memberships")
       .select(
-        "id, display_name, status, role, relationship_label, invite_email, phone_number, avatar_url, is_placeholder, is_deceased, blocked_at, address, placeholder_notes"
+        "id, display_name, status, role, relationship_label, invite_email, phone_number, avatar_url, is_placeholder, is_deceased, blocked_at, address, placeholder_notes, birthday, nickname, bio, favorite_food, faith_notes, prayer_intentions, pronouns, hometown"
       )
       .eq("family_circle_id", family.circle.id)
       .order("created_at", { ascending: true });

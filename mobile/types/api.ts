@@ -257,6 +257,14 @@ export interface FamilyMember {
   blocked_at: string | null;
   address: string | null;
   placeholder_notes: string | null;
+  birthday: string | null;
+  nickname: string | null;
+  bio: string | null;
+  favorite_food: string | null;
+  faith_notes: string | null;
+  prayer_intentions: string | null;
+  pronouns: string | null;
+  hometown: string | null;
 }
 
 export interface FamilyMembersResponse {
@@ -301,6 +309,14 @@ export interface UpdateMemberBody {
   relationshipLabel?: string | null;
   phoneNumber?: string | null;
   address?: string | null;
+  birthday?: string | null;
+  nickname?: string | null;
+  bio?: string | null;
+  favoriteFood?: string | null;
+  faithNotes?: string | null;
+  prayerIntentions?: string | null;
+  pronouns?: string | null;
+  hometown?: string | null;
 }
 
 export interface BlockMemberBody {

@@ -38,6 +38,14 @@ export default function MemberDetailScreen() {
   const [relationship, setRelationship] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
+  const [birthday, setBirthday] = useState("");
+  const [nickname, setNickname] = useState("");
+  const [bio, setBio] = useState("");
+  const [favoriteFood, setFavoriteFood] = useState("");
+  const [pronouns, setPronouns] = useState("");
+  const [hometown, setHometown] = useState("");
+  const [faithNotes, setFaithNotes] = useState("");
+  const [prayerIntentions, setPrayerIntentions] = useState("");
   const [savingEdit, setSavingEdit] = useState(false);
   const [editMessage, setEditMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -64,6 +72,14 @@ export default function MemberDetailScreen() {
       setRelationship(member.relationship_label ?? "");
       setPhone(member.phone_number ?? "");
       setAddress(member.address ?? "");
+      setBirthday(member.birthday ?? "");
+      setNickname(member.nickname ?? "");
+      setBio(member.bio ?? "");
+      setFavoriteFood(member.favorite_food ?? "");
+      setPronouns(member.pronouns ?? "");
+      setHometown(member.hometown ?? "");
+      setFaithNotes(member.faith_notes ?? "");
+      setPrayerIntentions(member.prayer_intentions ?? "");
     } catch (e) {
       const m =
         e instanceof ApiError
@@ -81,13 +97,36 @@ export default function MemberDetailScreen() {
 
   const dirty = useMemo(() => {
     if (state.kind !== "ok") return false;
+    const m = state.member;
     return (
-      displayName !== state.member.display_name ||
-      relationship !== (state.member.relationship_label ?? "") ||
-      phone !== (state.member.phone_number ?? "") ||
-      address !== (state.member.address ?? "")
+      displayName !== m.display_name ||
+      relationship !== (m.relationship_label ?? "") ||
+      phone !== (m.phone_number ?? "") ||
+      address !== (m.address ?? "") ||
+      birthday !== (m.birthday ?? "") ||
+      nickname !== (m.nickname ?? "") ||
+      bio !== (m.bio ?? "") ||
+      favoriteFood !== (m.favorite_food ?? "") ||
+      pronouns !== (m.pronouns ?? "") ||
+      hometown !== (m.hometown ?? "") ||
+      faithNotes !== (m.faith_notes ?? "") ||
+      prayerIntentions !== (m.prayer_intentions ?? "")
     );
-  }, [state, displayName, relationship, phone, address]);
+  }, [
+    state,
+    displayName,
+    relationship,
+    phone,
+    address,
+    birthday,
+    nickname,
+    bio,
+    favoriteFood,
+    pronouns,
+    hometown,
+    faithNotes,
+    prayerIntentions,
+  ]);
 
   if (state.kind === "loading") {
     return (
@@ -127,6 +166,14 @@ export default function MemberDetailScreen() {
         relationshipLabel: relationship,
         phoneNumber: phone,
         address,
+        birthday: birthday.trim() || null,
+        nickname,
+        bio,
+        favoriteFood,
+        pronouns,
+        hometown,
+        faithNotes,
+        prayerIntentions,
       });
       await load();
       setEditMessage("Saved.");
@@ -261,34 +308,91 @@ export default function MemberDetailScreen() {
       </View>
 
       {canEdit ? (
-        <Card>
-          <SectionHeader title="Details" />
-          <Input
-            label="Display name"
-            value={displayName}
-            onChangeText={setDisplayName}
-          />
-          <Input
-            label="Relationship"
-            value={relationship}
-            onChangeText={setRelationship}
-            placeholder="Sister, grandparent…"
-          />
-          <Input
-            label="Phone"
-            value={phone}
-            onChangeText={setPhone}
-            placeholder="(optional)"
-            keyboardType="default"
-            autoCapitalize="none"
-          />
-          <Input
-            label="Address"
-            value={address}
-            onChangeText={setAddress}
-            placeholder="(optional)"
-            multiline
-          />
+        <>
+          <Card>
+            <SectionHeader title="Details" />
+            <Input
+              label="Display name"
+              value={displayName}
+              onChangeText={setDisplayName}
+            />
+            <Input
+              label="Nickname"
+              value={nickname}
+              onChangeText={setNickname}
+              placeholder="(optional)"
+            />
+            <Input
+              label="Pronouns"
+              value={pronouns}
+              onChangeText={setPronouns}
+              placeholder="she/her, he/him, they/them…"
+              autoCapitalize="none"
+            />
+            <Input
+              label="Relationship"
+              value={relationship}
+              onChangeText={setRelationship}
+              placeholder="Sister, grandparent…"
+            />
+            <Input
+              label="Birthday (YYYY-MM-DD)"
+              value={birthday}
+              onChangeText={setBirthday}
+              placeholder="1985-04-26"
+              autoCapitalize="none"
+            />
+            <Input
+              label="Hometown"
+              value={hometown}
+              onChangeText={setHometown}
+              placeholder="(optional)"
+            />
+            <Input
+              label="Phone"
+              value={phone}
+              onChangeText={setPhone}
+              placeholder="(optional)"
+              autoCapitalize="none"
+            />
+            <Input
+              label="Address"
+              value={address}
+              onChangeText={setAddress}
+              placeholder="(optional)"
+              multiline
+            />
+            <Input
+              label="Bio"
+              value={bio}
+              onChangeText={setBio}
+              placeholder="A short note about this person"
+              multiline
+            />
+            <Input
+              label="Favorite food"
+              value={favoriteFood}
+              onChangeText={setFavoriteFood}
+              placeholder="(optional)"
+            />
+          </Card>
+          <Card>
+            <SectionHeader title="Faith & prayer (optional)" />
+            <Input
+              label="Faith notes"
+              value={faithNotes}
+              onChangeText={setFaithNotes}
+              placeholder="Tradition, parish, ministry…"
+              multiline
+            />
+            <Input
+              label="Prayer intentions"
+              value={prayerIntentions}
+              onChangeText={setPrayerIntentions}
+              placeholder="What's on their heart"
+              multiline
+            />
+          </Card>
           <Button
             label={savingEdit ? "Saving…" : dirty ? "Save changes" : "All saved"}
             onPress={onSaveEdit}
@@ -296,12 +400,36 @@ export default function MemberDetailScreen() {
             disabled={!dirty}
           />
           {editMessage ? <Text style={styles.message}>{editMessage}</Text> : null}
-        </Card>
+        </>
       ) : (
         <Card>
           <SectionHeader title="Details" />
+          {member.nickname ? (
+            <>
+              <Text style={styles.metaLabel}>Nickname</Text>
+              <Text style={styles.metaValue}>{member.nickname}</Text>
+            </>
+          ) : null}
+          {member.pronouns ? (
+            <>
+              <Text style={styles.metaLabel}>Pronouns</Text>
+              <Text style={styles.metaValue}>{member.pronouns}</Text>
+            </>
+          ) : null}
           <Text style={styles.metaLabel}>Relationship</Text>
           <Text style={styles.metaValue}>{member.relationship_label ?? "—"}</Text>
+          {member.birthday ? (
+            <>
+              <Text style={styles.metaLabel}>Birthday</Text>
+              <Text style={styles.metaValue}>{member.birthday}</Text>
+            </>
+          ) : null}
+          {member.hometown ? (
+            <>
+              <Text style={styles.metaLabel}>Hometown</Text>
+              <Text style={styles.metaValue}>{member.hometown}</Text>
+            </>
+          ) : null}
           {member.phone_number ? (
             <>
               <Text style={styles.metaLabel}>Phone</Text>
@@ -312,6 +440,30 @@ export default function MemberDetailScreen() {
             <>
               <Text style={styles.metaLabel}>Address</Text>
               <Text style={styles.metaValue}>{member.address}</Text>
+            </>
+          ) : null}
+          {member.bio ? (
+            <>
+              <Text style={styles.metaLabel}>Bio</Text>
+              <Text style={styles.metaValue}>{member.bio}</Text>
+            </>
+          ) : null}
+          {member.favorite_food ? (
+            <>
+              <Text style={styles.metaLabel}>Favorite food</Text>
+              <Text style={styles.metaValue}>{member.favorite_food}</Text>
+            </>
+          ) : null}
+          {member.faith_notes ? (
+            <>
+              <Text style={styles.metaLabel}>Faith notes</Text>
+              <Text style={styles.metaValue}>{member.faith_notes}</Text>
+            </>
+          ) : null}
+          {member.prayer_intentions ? (
+            <>
+              <Text style={styles.metaLabel}>Prayer intentions</Text>
+              <Text style={styles.metaValue}>{member.prayer_intentions}</Text>
             </>
           ) : null}
         </Card>
