@@ -5,6 +5,7 @@ import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { colors } from "@/lib/theme";
 import { useSession } from "@/hooks/useSession";
+import { SplashOverlay } from "@/components/SplashOverlay";
 
 function AuthGate({ children }: { children: React.ReactNode }) {
   const session = useSession();
@@ -63,6 +64,7 @@ export default function RootLayout() {
           <Stack.Screen name="auth/callback" />
         </Stack>
       </AuthGate>
+      <SplashOverlay />
     </SafeAreaProvider>
   );
 }
