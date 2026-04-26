@@ -24,7 +24,7 @@ export function Screen({
   refreshing,
   onRefresh,
   contentStyle,
-  edges = ["top", "left", "right"],
+  edges = ["top", "bottom", "left", "right"],
 }: Props) {
   if (!scroll) {
     return (
@@ -59,7 +59,7 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: spacing.xl,
     paddingTop: spacing.xl,
-    paddingBottom: spacing.xxl,
+    paddingBottom: spacing.xxl * 2,
     gap: spacing.lg,
   },
 });
