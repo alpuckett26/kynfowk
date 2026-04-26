@@ -118,7 +118,7 @@ export default async function AdminPage() {
                 <h2>Super-admin testing toolkit</h2>
                 <p className="meta">
                   Calls the same /api/admin/* endpoints the native app uses. Requires
-                  the viewer's profile to have <code>is_super_admin = true</code>; flip the
+                  the viewer&apos;s profile to have <code>is_super_admin = true</code>; flip the
                   flag in the Supabase SQL editor to bootstrap.
                 </p>
                 <AdminTestingToolkit />
