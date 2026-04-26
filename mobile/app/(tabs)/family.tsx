@@ -148,6 +148,15 @@ export default function FamilyTab() {
       ) : null}
 
       <Card>
+        <SectionHeader title="Quick links" />
+        <Button
+          label="Phonebook"
+          variant="secondary"
+          onPress={() => router.push("/phonebook")}
+        />
+      </Card>
+
+      <Card>
         <SectionHeader title="Members" />
         <View style={{ gap: spacing.sm }}>
           {sortedMembers.map((m) => (

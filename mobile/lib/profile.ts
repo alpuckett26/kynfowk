@@ -24,3 +24,10 @@ export function completeOnboarding(
 export function sendFeedback(body: SaveFeedbackBody): Promise<{ success: true }> {
   return apiFetch("/api/native/feedback", { method: "POST", body });
 }
+
+export function updateCircleSettings(body: {
+  name?: string;
+  description?: string | null;
+}): Promise<{ success: true }> {
+  return apiFetch("/api/native/circle", { method: "POST", body });
+}

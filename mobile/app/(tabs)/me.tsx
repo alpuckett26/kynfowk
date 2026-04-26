@@ -45,6 +45,11 @@ export default function MeTab() {
           variant="secondary"
           onPress={() => router.push("/settings/notifications")}
         />
+        <Button
+          label="Family Circle"
+          variant="secondary"
+          onPress={() => router.push("/settings/circle")}
+        />
       </Card>
 
       <Card>
