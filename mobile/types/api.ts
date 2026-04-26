@@ -445,3 +445,15 @@ export interface SetMemberAvatarBody {
   membershipId: string;
   photoUrl: string;
 }
+
+export interface AiSuggestion {
+  focus: string;
+  reason: string;
+  participantIds: string[];
+  participantNames: string[];
+  isAI: boolean;
+}
+
+export interface AiSuggestionResponse {
+  suggestion: AiSuggestion | null;
+}

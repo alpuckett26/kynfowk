@@ -12,8 +12,10 @@ import { HighlightCard } from "@/components/HighlightCard";
 import { colors, fontSize, fontWeight, spacing } from "@/lib/theme";
 import { formatDate, formatTime, relativeTime } from "@/lib/format";
 import { fetchDashboard } from "@/lib/dashboard";
+import { fetchAiSuggestion } from "@/lib/ai";
 import { ApiError } from "@/lib/api";
 import type {
+  AiSuggestion,
   DashboardSnapshot,
   DashboardUpcomingCall,
   Suggestion,
@@ -188,6 +190,9 @@ export default function HomeScreen() {
           </View>
         )}
       </Card>
+
+      <AiSuggestionCard />
+
 
       <Card>
         <SectionHeader title="Recently completed" />
@@ -381,6 +386,72 @@ function UpcomingCallRow({
   );
 }
 
+function AiSuggestionCard() {
+  const [state, setState] = useState<
+    | { kind: "idle" }
+    | { kind: "loading" }
+    | { kind: "ok"; suggestion: AiSuggestion | null }
+    | { kind: "error"; message: string }
+  >({ kind: "idle" });
+
+  const fetch = useCallback(async () => {
+    setState({ kind: "loading" });
+    try {
+      const res = await fetchAiSuggestion();
+      setState({ kind: "ok", suggestion: res.suggestion });
+    } catch (e) {
+      const message =
+        e instanceof ApiError
+          ? e.message
+          : e instanceof Error
+            ? e.message
+            : "Couldn't reach Kyn";
+      setState({ kind: "error", message });
+    }
+  }, []);
+
+  useEffect(() => {
+    void fetch();
+  }, [fetch]);
+
+  return (
+    <Card>
+      <View style={styles.aiHead}>
+        <SectionHeader title="Kyn says" />
+        {state.kind === "ok" && state.suggestion?.isAI ? (
+          <Badge label="AI" />
+        ) : null}
+      </View>
+      {state.kind === "loading" || state.kind === "idle" ? (
+        <Text style={styles.cardMeta}>Kyn is thinking…</Text>
+      ) : state.kind === "error" ? (
+        <Text style={styles.cardMeta}>{state.message}</Text>
+      ) : !state.suggestion ? (
+        <Text style={styles.cardMeta}>
+          Add a few family members and complete a call so Kyn can recommend
+          who to connect with next.
+        </Text>
+      ) : (
+        <View style={{ gap: spacing.xs }}>
+          <Text style={styles.aiFocus}>{state.suggestion.focus}</Text>
+          <Text style={styles.cardMeta}>{state.suggestion.reason}</Text>
+          {state.suggestion.participantNames.length > 0 ? (
+            <Text style={styles.cardMeta}>
+              Suggested: {state.suggestion.participantNames.join(", ")}
+            </Text>
+          ) : null}
+        </View>
+      )}
+      <Button
+        label={state.kind === "loading" ? "Refreshing…" : "Get a new suggestion"}
+        variant="ghost"
+        onPress={fetch}
+        loading={state.kind === "loading"}
+      />
+    </Card>
+  );
+}
+
 function SuggestionRow({ suggestion }: { suggestion: Suggestion }) {
   const start = new Date(suggestion.start_at);
   const end = new Date(suggestion.end_at);
@@ -474,5 +545,15 @@ const styles = StyleSheet.create({
     fontWeight: fontWeight.bold,
     color: colors.text,
     flex: 1,
+  },
+  aiHead: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  aiFocus: {
+    fontSize: fontSize.md,
+    fontWeight: fontWeight.bold,
+    color: colors.text,
   },
 });
