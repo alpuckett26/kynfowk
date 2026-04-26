@@ -154,6 +154,11 @@ export default function FamilyTab() {
           variant="secondary"
           onPress={() => router.push("/phonebook")}
         />
+        <Button
+          label="Relationships & units"
+          variant="secondary"
+          onPress={() => router.push("/relationships")}
+        />
       </Card>
 
       <Card>

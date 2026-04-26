@@ -473,3 +473,68 @@ export interface AiSuggestion {
 export interface AiSuggestionResponse {
   suggestion: AiSuggestion | null;
 }
+
+export type RelationshipKind =
+  | "parent"
+  | "child"
+  | "spouse"
+  | "sibling"
+  | "grandparent"
+  | "grandchild"
+  | "in_law"
+  | "step_parent"
+  | "step_child"
+  | "guardian"
+  | "ward"
+  | "partner"
+  | "other";
+
+export interface RelationshipEdge {
+  id: string;
+  source_membership_id: string;
+  target_membership_id: string;
+  kind: RelationshipKind;
+  notes: string | null;
+  created_at: string;
+}
+
+export interface FamilyUnit {
+  id: string;
+  name: string;
+  kind: string;
+  created_at: string;
+  memberIds: { membershipId: string; role: string | null }[];
+}
+
+export interface RelationshipsSnapshot {
+  needsOnboarding: false;
+  circle: { id: string; name: string; description: string | null };
+  viewerMembershipId: string;
+  viewerRole: "owner" | "member";
+  members: { id: string; display_name: string; status: string }[];
+  edges: RelationshipEdge[];
+  units: FamilyUnit[];
+}
+
+export type RelationshipsResponse =
+  | { needsOnboarding: true }
+  | RelationshipsSnapshot;
+
+export interface CreateRelationshipBody {
+  sourceMembershipId: string;
+  targetMembershipId: string;
+  kind: RelationshipKind;
+  notes?: string;
+}
+
+export interface CreateFamilyUnitBody {
+  name: string;
+  kind?: string;
+  memberIds?: string[];
+}
+
+export interface UpdateFamilyUnitBody {
+  name?: string;
+  kind?: string;
+  memberIds?: string[];
+}
