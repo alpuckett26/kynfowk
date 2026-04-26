@@ -13,9 +13,20 @@ import { Screen } from "@/components/Screen";
 import { Card } from "@/components/Card";
 import { Button } from "@/components/Button";
 import { EmptyState } from "@/components/EmptyState";
+import { GameTrivia, type TriviaAction } from "@/components/GameTrivia";
+import {
+  GameWordChain,
+  type WordChainAction,
+} from "@/components/GameWordChain";
 import { ApiError } from "@/lib/api";
 import { fetchCallDetail } from "@/lib/calls";
+import {
+  endGameSession,
+  fetchGameCatalog,
+  startGameSession,
+} from "@/lib/games";
 import { supabase } from "@/lib/supabase";
+import type { GameCatalogEntry } from "@/types/api";
 import {
   ROOM_CAP,
   RTCPeerConnection,
@@ -61,6 +72,22 @@ export default function LiveCallScreen() {
   const [cameraOn, setCameraOn] = useState(true);
   const [roomFull, setRoomFull] = useState(false);
   const [phase, setPhase] = useState<"connecting" | "ready" | "error">("connecting");
+
+  // Games (M11)
+  type GamePeer = { membershipId: string; displayName: string };
+  type GameMode =
+    | { kind: "idle" }
+    | { kind: "picking"; catalog: GameCatalogEntry[]; loading: boolean }
+    | {
+        kind: "playing";
+        gameId: string;
+        isHost: boolean;
+        peers: GamePeer[];
+        sessionId: string | null;
+        startedAt: number;
+      };
+  const [gameMode, setGameMode] = useState<GameMode>({ kind: "idle" });
+  const gameHandlerRef = useRef<((payload: unknown) => void) | null>(null);
 
   // Bootstrap: fetch viewer + call info, then start media + signaling.
   useEffect(() => {
@@ -278,6 +305,29 @@ export default function LiveCallScreen() {
         void handleSignal(payload as SignalMessage);
       });
 
+      channel.on("broadcast", { event: "game_event" }, ({ payload }) => {
+        if (!active) return;
+        gameHandlerRef.current?.(payload);
+      });
+
+      channel.on("broadcast", { event: "game_invite" }, ({ payload }) => {
+        if (!active) return;
+        const p = payload as {
+          gameId: string;
+          hostId: string;
+          peers: GamePeer[];
+        };
+        if (p.hostId === myId) return;
+        setGameMode({
+          kind: "playing",
+          gameId: p.gameId,
+          isHost: false,
+          peers: p.peers,
+          sessionId: null,
+          startedAt: Date.now(),
+        });
+      });
+
       await channel.subscribe(async (status) => {
         if (status === "SUBSCRIBED" && active) {
           await channel.track({ membership_id: myId, display_name: myName });
@@ -330,6 +380,91 @@ export default function LiveCallScreen() {
         onPress: () => router.back(),
       },
     ]);
+  };
+
+  // ── Games ────────────────────────────────────────────────────────────────
+
+  const sendGameEvent = useCallback((payload: unknown) => {
+    channelRef.current?.send({
+      type: "broadcast",
+      event: "game_event",
+      payload,
+    });
+  }, []);
+
+  const onGameMessage = useCallback((handler: (payload: unknown) => void) => {
+    gameHandlerRef.current = handler;
+    return () => {
+      gameHandlerRef.current = null;
+    };
+  }, []);
+
+  const openGamePicker = async () => {
+    setGameMode({ kind: "picking", catalog: [], loading: true });
+    try {
+      const res = await fetchGameCatalog();
+      setGameMode({ kind: "picking", catalog: res.games, loading: false });
+    } catch {
+      setGameMode({ kind: "idle" });
+      Alert.alert("Couldn't load games", "Try again in a moment.");
+    }
+  };
+
+  const startGame = async (game: GameCatalogEntry) => {
+    if (state.kind !== "ready") return;
+    const peers: GamePeer[] = [
+      { membershipId: state.membershipId, displayName: state.displayName },
+      ...Array.from(peersRef.current.values()).map((p) => ({
+        membershipId: p.membershipId,
+        displayName: p.displayName,
+      })),
+    ];
+    const startedAt = Date.now();
+    setGameMode({
+      kind: "playing",
+      gameId: game.id,
+      isHost: true,
+      peers,
+      sessionId: null,
+      startedAt,
+    });
+    channelRef.current?.send({
+      type: "broadcast",
+      event: "game_invite",
+      payload: { gameId: game.id, hostId: state.membershipId, peers },
+    });
+    try {
+      const res = await startGameSession({
+        callId: callId as string,
+        gameId: game.id,
+        participantMembershipIds: peers.map((p) => p.membershipId),
+      });
+      setGameMode((prev) =>
+        prev.kind === "playing"
+          ? { ...prev, sessionId: res.sessionId }
+          : prev
+      );
+    } catch {
+      // Session logging is best-effort; the game still runs.
+    }
+  };
+
+  const endGame = async () => {
+    if (gameMode.kind !== "playing") {
+      setGameMode({ kind: "idle" });
+      return;
+    }
+    const sessionId = gameMode.sessionId;
+    const duration = Math.floor((Date.now() - gameMode.startedAt) / 1000);
+    setGameMode({ kind: "idle" });
+    gameHandlerRef.current = null;
+    if (sessionId) {
+      try {
+        await endGameSession(sessionId, duration);
+      } catch {
+        // best-effort
+      }
+    }
   };
 
   if (state.kind === "loading") {
@@ -442,10 +577,99 @@ export default function LiveCallScreen() {
         >
           <Text style={styles.iconText}>{cameraOn ? "📹" : "🚫"}</Text>
         </Pressable>
+        <Pressable
+          style={[styles.iconBtn, gameMode.kind !== "idle" && styles.iconBtnActive]}
+          onPress={openGamePicker}
+          disabled={gameMode.kind !== "idle"}
+        >
+          <Text style={styles.iconText}>🎮</Text>
+        </Pressable>
         <Pressable style={styles.leaveBtn} onPress={onLeave}>
           <Text style={styles.leaveBtnText}>Leave</Text>
         </Pressable>
       </View>
+
+      {gameMode.kind === "picking" ? (
+        <View style={styles.gameOverlay}>
+          <Card>
+            <View style={styles.gamePickerHeader}>
+              <Text style={styles.gamePickerTitle}>Pick a game</Text>
+              <Pressable
+                onPress={() => setGameMode({ kind: "idle" })}
+                style={styles.gamePickerClose}
+              >
+                <Text style={styles.gamePickerCloseText}>✕</Text>
+              </Pressable>
+            </View>
+            {gameMode.loading ? (
+              <Text style={styles.gameLoading}>Loading…</Text>
+            ) : (
+              <View style={{ gap: spacing.sm }}>
+                {gameMode.catalog.map((g) => (
+                  <Pressable
+                    key={g.id}
+                    style={styles.gameCard}
+                    onPress={() => startGame(g)}
+                  >
+                    <Text style={styles.gameCardIcon}>
+                      {g.category === "trivia"
+                        ? "🎯"
+                        : g.category === "word"
+                          ? "📝"
+                          : "🎮"}
+                    </Text>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.gameCardName}>{g.name}</Text>
+                      {g.description ? (
+                        <Text style={styles.gameCardDesc} numberOfLines={2}>
+                          {g.description}
+                        </Text>
+                      ) : null}
+                      <Text style={styles.gameCardMeta}>
+                        {g.duration_label} · {g.min_players}–{g.max_players}{" "}
+                        players
+                      </Text>
+                    </View>
+                  </Pressable>
+                ))}
+              </View>
+            )}
+          </Card>
+        </View>
+      ) : null}
+
+      {gameMode.kind === "playing" ? (
+        <View style={styles.gameOverlay}>
+          {gameMode.gameId === "trivia" ? (
+            <GameTrivia
+              membershipId={state.membershipId}
+              isHost={gameMode.isHost}
+              players={gameMode.peers}
+              onSend={(action) => sendGameEvent(action)}
+              onMessage={(handler) =>
+                onGameMessage((p) => handler(p as TriviaAction))
+              }
+              onEnd={endGame}
+            />
+          ) : gameMode.gameId === "word_chain" ? (
+            <GameWordChain
+              membershipId={state.membershipId}
+              isHost={gameMode.isHost}
+              players={gameMode.peers}
+              onSend={(action) => sendGameEvent(action)}
+              onMessage={(handler) =>
+                onGameMessage((p) => handler(p as WordChainAction))
+              }
+              onEnd={endGame}
+            />
+          ) : (
+            <Card>
+              <Text>Unsupported game</Text>
+              <Button label="End" variant="ghost" onPress={endGame} />
+            </Card>
+          )}
+        </View>
+      ) : null}
     </Screen>
   );
 }
@@ -518,6 +742,7 @@ const styles = StyleSheet.create({
     borderColor: colors.borderStrong,
   },
   iconBtnOff: { backgroundColor: colors.dangerBg, borderColor: colors.danger },
+  iconBtnActive: { backgroundColor: colors.accent + "22", borderColor: colors.accent },
   iconText: { fontSize: 24 },
   leaveBtn: {
     backgroundColor: colors.liveDot,
@@ -529,6 +754,58 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: fontSize.md,
     fontWeight: fontWeight.bold,
+  },
+  gameOverlay: {
+    position: "absolute",
+    left: spacing.md,
+    right: spacing.md,
+    bottom: spacing.md + 80,
+    top: spacing.md + 80,
+    justifyContent: "center",
+  },
+  gamePickerHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  gamePickerTitle: {
+    fontSize: fontSize.lg,
+    fontWeight: fontWeight.black,
+    color: colors.text,
+  },
+  gamePickerClose: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.surfaceMuted,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  gamePickerCloseText: { fontSize: fontSize.md, color: colors.text },
+  gameLoading: { fontSize: fontSize.sm, color: colors.textMuted },
+  gameCard: {
+    flexDirection: "row",
+    gap: spacing.md,
+    padding: spacing.md,
+    backgroundColor: colors.surfaceMuted,
+    borderRadius: radius.md,
+    alignItems: "center",
+  },
+  gameCardIcon: { fontSize: 28 },
+  gameCardName: {
+    fontSize: fontSize.md,
+    fontWeight: fontWeight.bold,
+    color: colors.text,
+  },
+  gameCardDesc: {
+    fontSize: fontSize.sm,
+    color: colors.textMuted,
+    lineHeight: 19,
+  },
+  gameCardMeta: {
+    fontSize: fontSize.xs,
+    color: colors.textSubtle,
+    marginTop: 4,
   },
 });
 

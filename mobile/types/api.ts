@@ -654,3 +654,29 @@ export interface PrayerListResponse {
   viewerMembershipId?: string;
   intentions?: PrayerIntention[];
 }
+
+export interface GameCatalogEntry {
+  id: string;
+  name: string;
+  description: string | null;
+  category: string;
+  min_players: number;
+  max_players: number;
+  duration_label: string;
+  pace: string;
+}
+
+export interface GameCatalogResponse {
+  games: GameCatalogEntry[];
+}
+
+export interface StartGameSessionBody {
+  callId: string;
+  gameId: string;
+  participantMembershipIds: string[];
+}
+
+export interface StartGameSessionResponse {
+  success: true;
+  sessionId: string;
+}
