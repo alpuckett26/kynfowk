@@ -55,7 +55,8 @@ export async function GET(request: Request) {
 
   for (const row of (usersResponse.data ?? []) as { id: string }[]) {
     try {
-      const result = await runAutoScheduleForUser(supabase, row.id);
+      const { proposals: _proposals, ...result } =
+        await runAutoScheduleForUser(supabase, row.id);
       perUser.push({ userId: row.id, result });
       aggregate.attempted += result.attempted;
       aggregate.scheduled += result.scheduled;

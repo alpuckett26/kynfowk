@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 
 import { AdminInviteRescue } from "@/components/admin-invite-rescue";
 import { AdminSweepForm } from "@/components/admin-sweep-form";
+import { AdminTestingToolkit } from "@/components/admin-testing-toolkit";
 import { Card } from "@/components/card";
 import { getAdminAnalyticsData, getAdminInviteRescueData, requireViewer } from "@/lib/data";
 import { getAdminEmails, hasSupabaseServiceRoleEnv, isAdminEmail } from "@/lib/env";
@@ -109,6 +110,18 @@ export default async function AdminPage() {
                   product.
                 </p>
                 <AdminSweepForm />
+              </div>
+            </Card>
+
+            <Card>
+              <div className="stack-md">
+                <h2>Super-admin testing toolkit</h2>
+                <p className="meta">
+                  Calls the same /api/admin/* endpoints the native app uses. Requires
+                  the viewer's profile to have <code>is_super_admin = true</code>; flip the
+                  flag in the Supabase SQL editor to bootstrap.
+                </p>
+                <AdminTestingToolkit />
               </div>
             </Card>
 

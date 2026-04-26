@@ -62,6 +62,11 @@ export default function RootLayout() {
           <Stack.Screen name="feedback" />
           <Stack.Screen name="login" options={{ presentation: "modal" }} />
           <Stack.Screen name="auth/callback" />
+          <Stack.Screen name="admin/circles" />
+          <Stack.Screen name="admin/circles/[id]" />
+          <Stack.Screen name="admin/users" />
+          <Stack.Screen name="admin/users/[id]" />
+          <Stack.Screen name="admin/audit" />
         </Stack>
       </AuthGate>
       <SplashOverlay />

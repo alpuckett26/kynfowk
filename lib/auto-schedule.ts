@@ -43,10 +43,33 @@ export interface AutoScheduleResult {
   skippedByConsent: number;
 }
 
+export interface AutoScheduleProposal {
+  selfMembershipId: string;
+  selfDisplayName: string;
+  kinMembershipId: string;
+  kinDisplayName: string;
+  tier: TierId;
+  scheduledStart: string;
+  scheduledEnd: string;
+  participantMembershipIds: string[];
+}
+
+export interface AutoScheduleRunOptions {
+  /**
+   * When true, the engine evaluates every kin pair and returns the
+   * would-be calls in `proposals` without inserting anything. Used by
+   * the super-admin /api/admin/auto-schedule/run endpoint.
+   */
+  dryRun?: boolean;
+}
+
 export async function runAutoScheduleForUser(
   supabase: SupabaseClient,
-  userId: string
-): Promise<AutoScheduleResult> {
+  userId: string,
+  options: AutoScheduleRunOptions = {}
+): Promise<AutoScheduleResult & { proposals: AutoScheduleProposal[] }> {
+  const dryRun = Boolean(options.dryRun);
+  const proposals: AutoScheduleProposal[] = [];
   const result: AutoScheduleResult = {
     attempted: 0,
     scheduled: 0,
@@ -75,14 +98,14 @@ export async function runAutoScheduleForUser(
     | null;
   if (!profile || !profile.auto_schedule_enabled) {
     result.skippedByConsent = 1;
-    return result;
+    return { ...result, proposals };
   }
   if (
     profile.auto_schedule_paused_until &&
     new Date(profile.auto_schedule_paused_until).getTime() > Date.now()
   ) {
     result.skippedByConsent = 1;
-    return result;
+    return { ...result, proposals };
   }
 
   // Count auto-scheduled calls already on the calendar in the next 7 days
@@ -96,7 +119,7 @@ export async function runAutoScheduleForUser(
     .eq("user_id", userId);
   const myMemberships = (myMembershipsResponse.data ?? []) as MembershipRow[];
   if (myMemberships.length === 0) {
-    return result;
+    return { ...result, proposals };
   }
 
   const upcomingResponse = await supabase
@@ -191,6 +214,22 @@ export async function runAutoScheduleForUser(
         continue;
       }
 
+      if (dryRun) {
+        proposals.push({
+          selfMembershipId: pair.selfMembership.id,
+          selfDisplayName: pair.selfMembership.display_name,
+          kinMembershipId: pair.kinMembership.id,
+          kinDisplayName: pair.kinMembership.display_name,
+          tier: pair.tier,
+          scheduledStart: slot.startUtc.toISOString(),
+          scheduledEnd: slot.endUtc.toISOString(),
+          participantMembershipIds: requiredMembers.map((m) => m.id),
+        });
+        result.scheduled += 1;
+        scheduledThisWeek += 1;
+        continue;
+      }
+
       const inserted = await materializeAutoCall({
         supabase,
         circleId: pair.selfMembership.family_circle_id,
@@ -211,7 +250,7 @@ export async function runAutoScheduleForUser(
     }
   }
 
-  return result;
+  return { ...result, proposals };
 }
 
 // ── Kin resolution ──────────────────────────────────────────────────────────
