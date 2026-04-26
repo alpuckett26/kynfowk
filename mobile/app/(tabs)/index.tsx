@@ -328,6 +328,11 @@ export default function HomeScreen() {
           variant="secondary"
           onPress={() => router.push("/prompts")}
         />
+        <Button
+          label="Prayer chain"
+          variant="secondary"
+          onPress={() => router.push("/prayer")}
+        />
       </Card>
 
       <Card>

@@ -624,3 +624,29 @@ export interface RespondPromptBody {
   textResponse?: string;
   photoUrl?: string;
 }
+
+export type PrayerStatus = "open" | "answered" | "archived";
+
+export interface PrayerResponse {
+  id: string;
+  membershipId: string;
+  displayName: string;
+  message: string | null;
+  createdAt: string;
+}
+
+export interface PrayerIntention {
+  id: string;
+  body: string;
+  status: PrayerStatus;
+  createdAt: string;
+  authorMembershipId: string;
+  authorDisplayName: string;
+  responses: PrayerResponse[];
+}
+
+export interface PrayerListResponse {
+  needsOnboarding: boolean;
+  viewerMembershipId?: string;
+  intentions?: PrayerIntention[];
+}
