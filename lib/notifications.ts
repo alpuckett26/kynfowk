@@ -225,7 +225,7 @@ async function sendEmailThroughProvider(input: {
       to: [input.to],
       subject: input.subject,
       text: input.ctaHref
-        ? `${input.body}\n\nJoin here: ${input.ctaHref.startsWith("http") ? input.ctaHref : `https://kynfowk.vercel.app${input.ctaHref}`}`
+        ? `${input.body}\n\nJoin here: ${input.ctaHref.startsWith("http") ? input.ctaHref : `${process.env.NEXT_PUBLIC_SITE_URL ?? "https://kynfowk.vercel.app"}${input.ctaHref}`}`
         : input.body
     })
   });

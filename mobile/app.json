@@ -15,7 +15,8 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.kynfowk.app"
+      "bundleIdentifier": "com.kynfowk.app",
+      "associatedDomains": ["applinks:kynfowk.vercel.app"]
     },
     "android": {
       "package": "com.kynfowk.app",
@@ -30,6 +31,14 @@
           "data": [
             { "scheme": "kynfowk", "host": "auth", "pathPrefix": "/" },
             { "scheme": "kynfowk" }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        },
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            { "scheme": "https", "host": "kynfowk.vercel.app" }
           ],
           "category": ["BROWSABLE", "DEFAULT"]
         }
