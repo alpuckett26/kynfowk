@@ -136,6 +136,36 @@ function zonedToUtc(zoned: Date, tz: string): Date {
   return new Date(zoned.getTime() + offsetMs);
 }
 
+/**
+ * Run materializeRecurrence for every active rule. Used by both the
+ * scheduled cron and the super-admin "trigger now" button.
+ */
+export async function materializeAllRecurrences(
+  supabase: SupabaseClient
+): Promise<{ totalInserted: number; perRule: { id: string; inserted: number }[] }> {
+  const rulesResponse = await supabase
+    .from("call_recurrence_rules")
+    .select(
+      "id, family_circle_id, title, description, frequency, day_of_week, day_of_month, start_local_time, duration_minutes, timezone, active, last_materialized_through, created_by_membership_id"
+    )
+    .eq("active", true);
+  if (rulesResponse.error) {
+    throw new Error(rulesResponse.error.message);
+  }
+  let totalInserted = 0;
+  const perRule: { id: string; inserted: number }[] = [];
+  for (const rule of (rulesResponse.data ?? []) as RecurrenceRuleRow[]) {
+    try {
+      const r = await materializeRecurrence(supabase, rule);
+      perRule.push({ id: rule.id, inserted: r.inserted });
+      totalInserted += r.inserted;
+    } catch (e) {
+      console.error("[recurrence] rule failed", rule.id, e);
+    }
+  }
+  return { totalInserted, perRule };
+}
+
 export async function materializeRecurrence(
   supabase: SupabaseClient,
   rule: RecurrenceRuleRow,

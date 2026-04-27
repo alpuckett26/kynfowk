@@ -9,7 +9,7 @@ export async function GET(request: Request) {
 
     const { data: profile } = await supabase
       .from("profiles")
-      .select("id, email, full_name, timezone")
+      .select("id, email, full_name, timezone, is_super_admin")
       .eq("id", user.id)
       .maybeSingle();
 
@@ -30,6 +30,9 @@ export async function GET(request: Request) {
         email: user.email ?? profile?.email ?? null,
         fullName: profile?.full_name ?? null,
         timezone: profile?.timezone ?? null,
+        isSuperAdmin:
+          (profile as { is_super_admin?: boolean } | null)?.is_super_admin ===
+          true,
       },
       family: membership
         ? {

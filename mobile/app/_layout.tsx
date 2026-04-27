@@ -5,6 +5,7 @@ import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { colors } from "@/lib/theme";
 import { useSession } from "@/hooks/useSession";
+import { SplashOverlay } from "@/components/SplashOverlay";
 
 function AuthGate({ children }: { children: React.ReactNode }) {
   const session = useSession();
@@ -61,8 +62,14 @@ export default function RootLayout() {
           <Stack.Screen name="feedback" />
           <Stack.Screen name="login" options={{ presentation: "modal" }} />
           <Stack.Screen name="auth/callback" />
+          <Stack.Screen name="admin/circles" />
+          <Stack.Screen name="admin/circles/[id]" />
+          <Stack.Screen name="admin/users" />
+          <Stack.Screen name="admin/users/[id]" />
+          <Stack.Screen name="admin/audit" />
         </Stack>
       </AuthGate>
+      <SplashOverlay />
     </SafeAreaProvider>
   );
 }

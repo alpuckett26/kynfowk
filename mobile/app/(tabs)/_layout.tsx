@@ -1,6 +1,7 @@
 import { Tabs } from "expo-router";
 import { Text } from "react-native";
 import { colors, fontSize, fontWeight } from "@/lib/theme";
+import { useViewer } from "@/hooks/useViewer";
 
 function TabIcon({ glyph, focused }: { glyph: string; focused: boolean }) {
   return (
@@ -16,6 +17,9 @@ function TabIcon({ glyph, focused }: { glyph: string; focused: boolean }) {
 }
 
 export default function TabsLayout() {
+  const viewer = useViewer();
+  const showAdmin = viewer.status === "loaded" && viewer.isSuperAdmin;
+
   return (
     <Tabs
       screenOptions={{
@@ -66,6 +70,14 @@ export default function TabsLayout() {
         options={{
           title: "Me",
           tabBarIcon: ({ focused }) => <TabIcon glyph="○" focused={focused} />,
+        }}
+      />
+      <Tabs.Screen
+        name="admin"
+        options={{
+          title: "Admin",
+          href: showAdmin ? undefined : null,
+          tabBarIcon: ({ focused }) => <TabIcon glyph="◆" focused={focused} />,
         }}
       />
     </Tabs>

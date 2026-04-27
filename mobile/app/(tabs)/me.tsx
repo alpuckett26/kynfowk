@@ -51,6 +51,11 @@ export default function MeTab() {
           onPress={() => router.push("/settings/circle")}
         />
         <Button
+          label="Auto-scheduling"
+          variant="secondary"
+          onPress={() => router.push("/settings/auto-schedule")}
+        />
+        <Button
           label="Switch circle"
           variant="secondary"
           onPress={() => router.push("/circles")}
