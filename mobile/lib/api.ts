@@ -7,7 +7,7 @@ const ENV_BASE_URL = process.env.EXPO_PUBLIC_WEB_API_BASE_URL;
 const BASE_URL =
   ENV_BASE_URL && ENV_BASE_URL.length > 0
     ? ENV_BASE_URL
-    : "https://kynfowk.vercel.app";
+    : "https://kynfowk.com";
 
 type RequestOptions = {
   method?: "GET" | "POST" | "PATCH" | "DELETE";

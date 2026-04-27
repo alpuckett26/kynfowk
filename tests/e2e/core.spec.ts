@@ -78,7 +78,7 @@ test.describe("Auth redirects", () => {
     // Use a fresh context with no saved auth cookies
     const context = await browser.newContext({ storageState: { cookies: [], origins: [] } });
     const page = await context.newPage();
-    await page.goto("https://kynfowk.vercel.app/dashboard");
+    await page.goto("https://kynfowk.com/dashboard");
     // Allow time for the server-side redirect to complete
     await page.waitForURL(/sign-in|sign-up|dashboard/, { timeout: 10000 });
     await expect(page).toHaveURL(/sign-in|sign-up/);

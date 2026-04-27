@@ -22,7 +22,7 @@ const initialState: AuthState = {
 const SITE_URL =
   typeof window !== "undefined"
     ? window.location.origin
-    : process.env.NEXT_PUBLIC_SITE_URL ?? "https://kynfowk.vercel.app";
+    : process.env.NEXT_PUBLIC_SITE_URL ?? "https://kynfowk.com";
 
 async function signInWithProvider(provider: "google" | "apple" | "facebook") {
   const supabase = createSupabaseBrowserClient();

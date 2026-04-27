@@ -16,7 +16,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.kynfowk.app",
-      "associatedDomains": ["applinks:kynfowk.vercel.app"]
+      "associatedDomains": ["applinks:kynfowk.com"]
     },
     "android": {
       "package": "com.kynfowk.app",
@@ -38,7 +38,7 @@
           "action": "VIEW",
           "autoVerify": true,
           "data": [
-            { "scheme": "https", "host": "kynfowk.vercel.app" }
+            { "scheme": "https", "host": "kynfowk.com" }
           ],
           "category": ["BROWSABLE", "DEFAULT"]
         }

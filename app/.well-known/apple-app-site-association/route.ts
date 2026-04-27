@@ -1,6 +1,6 @@
 /**
  * Apple App Site Association — published at
- * https://kynfowk.vercel.app/.well-known/apple-app-site-association
+ * https://kynfowk.com/.well-known/apple-app-site-association
  *
  * iOS uses this to verify that this domain is authorized to deep-link
  * into the Kynfowk app. Bundle ID is `com.kynfowk.app`; Team ID is

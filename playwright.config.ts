@@ -8,7 +8,7 @@ export default defineConfig({
   workers: 1,
   reporter: "list",
   use: {
-    baseURL: process.env.BASE_URL ?? "https://kynfowk.vercel.app",
+    baseURL: process.env.BASE_URL ?? "https://kynfowk.com",
     trace: "on-first-retry",
     screenshot: "only-on-failure"
   },

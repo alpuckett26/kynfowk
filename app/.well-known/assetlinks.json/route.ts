@@ -1,11 +1,11 @@
 /**
  * Android Digital Asset Links — published at
- * https://kynfowk.vercel.app/.well-known/assetlinks.json
+ * https://kynfowk.com/.well-known/assetlinks.json
  *
  * Android (API 23+) uses this to verify that the domain authorizes
- * `com.kynfowk.app` to handle https://kynfowk.vercel.app/* URLs without
+ * `com.kynfowk.app` to handle https://kynfowk.com/* URLs without
  * the disambiguation chooser. Combined with `android:autoVerify="true"`
- * on the matching intent-filter, tapping a kynfowk.vercel.app link from
+ * on the matching intent-filter, tapping a kynfowk.com link from
  * email opens the app directly.
  *
  * The cert fingerprint is the SHA256 of the keystore that signs the
