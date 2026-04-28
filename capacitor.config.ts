@@ -9,7 +9,7 @@ const config: CapacitorConfig = {
   // API routes, and Supabase SSR all work without a static export.
   // Remove server block when/if we move to a fully static build.
   server: {
-    url: "https://kynfowk.vercel.app",
+    url: "https://kynfowk.com",
     cleartext: false,
   },
 

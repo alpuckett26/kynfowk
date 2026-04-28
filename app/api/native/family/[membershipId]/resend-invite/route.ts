@@ -55,7 +55,7 @@ export async function POST(
     const pending = membershipResponse.data;
 
     const admin = createSupabaseAdminClient();
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://kynfowk.vercel.app";
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://kynfowk.com";
     const acceptUrl = new URL(`${siteUrl}/auth/accept-invite`);
     acceptUrl.searchParams.set("circle", family.circle.name);
     acceptUrl.searchParams.set("from", family.membership.display_name);

@@ -1,0 +1,55 @@
+name: Show Android signing SHA-256
+
+# Manual-only: phone-friendly way to read the SHA-256 fingerprint of
+# the release keystore without needing a desktop with keytool.
+#
+# Trigger via GitHub UI:
+#   alpuckett26/kynfowk → Actions → "Show Android signing SHA-256" → Run workflow
+#
+# Then open the run, expand the "Print SHA-256 fingerprint" step, and
+# copy the line that begins with `SHA256:` into Vercel as
+# ANDROID_CERT_SHA256.
+
+on:
+  workflow_dispatch:
+
+jobs:
+  show:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: temurin
+
+      - name: Decode release keystore
+        run: |
+          if [ -z "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" ]; then
+            echo "::error::ANDROID_KEYSTORE_BASE64 secret is not set."
+            exit 1
+          fi
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > /tmp/release.keystore
+          echo "Keystore size: $(wc -c < /tmp/release.keystore) bytes"
+
+      - name: Print SHA-256 fingerprint
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        run: |
+          if [ -z "$KEYSTORE_PASSWORD" ] || [ -z "$KEY_ALIAS" ]; then
+            echo "::error::ANDROID_STORE_PASSWORD or ANDROID_KEY_ALIAS secret is not set."
+            exit 1
+          fi
+          # `-list -v` prints all the fingerprints. We grep for SHA1
+          # and SHA256 lines so the relevant value is easy to spot
+          # when scrolling on a phone.
+          keytool -list -v \
+            -keystore /tmp/release.keystore \
+            -storepass "$KEYSTORE_PASSWORD" \
+            -alias "$KEY_ALIAS" \
+            > /tmp/keytool.out
+          echo "──────────────────────────────────────────────────────"
+          echo "Fingerprints (copy the SHA256 line into Vercel):"
+          echo "──────────────────────────────────────────────────────"
+          grep -E "SHA1:|SHA256:" /tmp/keytool.out || cat /tmp/keytool.out
+          echo "──────────────────────────────────────────────────────"

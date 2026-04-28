@@ -89,7 +89,7 @@ export default function HomeScreen() {
         </View>
         <EmptyState
           title="You aren't part of a family circle yet"
-          description="Finish onboarding at kynfowk.vercel.app — in-app onboarding lands in M12."
+          description="Finish onboarding at kynfowk.com — in-app onboarding lands in M12."
         />
       </Screen>
     );

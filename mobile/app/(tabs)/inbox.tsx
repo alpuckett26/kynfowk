@@ -2,10 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { router, useFocusEffect } from "expo-router";
 import { Screen } from "@/components/Screen";
-import { Card } from "@/components/Card";
 import { Button } from "@/components/Button";
-import { Badge } from "@/components/Badge";
-import { ListItem, SectionHeader } from "@/components/ListItem";
 import { EmptyState } from "@/components/EmptyState";
 import { ApiError } from "@/lib/api";
 import {
@@ -19,7 +16,20 @@ import { relativeTime } from "@/lib/format";
 import type {
   NotificationItem,
   NotificationReadFilter,
+  NotificationType,
 } from "@/types/api";
+
+const TYPE_GLYPHS: Record<NotificationType, string> = {
+  call_scheduled: "📅",
+  reminder_24h_before: "🔔",
+  reminder_15m_before: "⏰",
+  starting_now: "🔴",
+  missing_join_link_warning: "⚠️",
+  call_passed_without_completion: "↻",
+  invite_claimed: "👋",
+  recap_posted: "📝",
+  weekly_connection_digest: "📊",
+};
 
 type State =
   | { kind: "loading" }
@@ -80,11 +90,23 @@ export default function InboxTab() {
   }, [load]);
 
   const onTapItem = async (item: NotificationItem) => {
+    // Optimistically mark read in local state for instant feedback.
     if (!item.readAt) {
+      setState((prev) => {
+        if (prev.kind !== "ok") return prev;
+        const now = new Date().toISOString();
+        return {
+          ...prev,
+          notifications: prev.notifications.map((n) =>
+            n.id === item.id ? { ...n, readAt: now } : n
+          ),
+          unreadCount: Math.max(0, prev.unreadCount - 1),
+        };
+      });
       try {
         await markNotificationRead(item.id);
       } catch {
-        // non-fatal
+        // non-fatal; server will reconcile on next load
       }
     }
     if (item.ctaHref) {
@@ -94,7 +116,6 @@ export default function InboxTab() {
         return;
       }
     }
-    void load();
   };
 
   const onMarkAll = async () => {
@@ -127,13 +148,20 @@ export default function InboxTab() {
   }
 
   return (
-    <Screen onRefresh={onRefresh} refreshing={refreshing}>
+    <Screen onRefresh={onRefresh} refreshing={refreshing} contentStyle={styles.tightContent}>
       <View style={styles.header}>
-        <Text style={styles.eyebrow}>Inbox</Text>
-        <Text style={styles.title}>Notifications</Text>
-        <Text style={styles.lede}>
-          {state.unreadCount} unread · {state.totalCount} total
-        </Text>
+        <View>
+          <Text style={styles.title}>Inbox</Text>
+          <Text style={styles.subtitle}>
+            {state.unreadCount ? `${state.unreadCount} unread · ` : "All caught up · "}
+            {state.totalCount} total
+          </Text>
+        </View>
+        {state.unreadCount > 0 ? (
+          <Pressable onPress={onMarkAll} disabled={busy}>
+            <Text style={styles.markAll}>{busy ? "…" : "Mark all read"}</Text>
+          </Pressable>
+        ) : null}
       </View>
 
       <View style={styles.filterRow}>
@@ -153,50 +181,66 @@ export default function InboxTab() {
         })}
       </View>
 
-      <Card>
-        <SectionHeader
-          title="Messages"
-          action={
-            state.unreadCount > 0 ? (
-              <Button
-                label={busy ? "Marking…" : "Mark all read"}
-                variant="ghost"
-                onPress={onMarkAll}
-                loading={busy}
-              />
-            ) : null
+      {state.notifications.length === 0 ? (
+        <EmptyState
+          title={
+            filter === "unread"
+              ? "All caught up"
+              : filter === "read"
+                ? "No read notifications"
+                : "Nothing yet"
           }
+          description="Reminders, recap nudges, and family activity will land here."
         />
-        {state.notifications.length === 0 ? (
-          <EmptyState
-            title={
-              filter === "unread"
-                ? "All caught up"
-                : filter === "read"
-                  ? "No read notifications"
-                  : "Nothing yet"
-            }
-            description="Reminders, recap nudges, and family activity will land here."
-          />
-        ) : (
-          <View style={{ gap: spacing.sm }}>
-            {state.notifications.map((n) => (
-              <ListItem
+      ) : (
+        <View style={styles.list}>
+          {state.notifications.map((n, idx) => {
+            const unread = !n.readAt;
+            const isLast = idx === state.notifications.length - 1;
+            return (
+              <Pressable
                 key={n.id}
-                title={n.title}
-                subtitle={n.body}
-                meta={`${NOTIFICATION_TYPE_LABELS[n.type] ?? n.type} · ${relativeTime(n.createdAt)}`}
-                trailing={n.readAt ? null : <Badge tone="warning" label="New" />}
+                style={({ pressed }) => [
+                  styles.row,
+                  unread ? styles.rowUnread : styles.rowRead,
+                  !isLast && styles.rowDivider,
+                  pressed && styles.rowPressed,
+                ]}
                 onPress={() => void onTapItem(n)}
-              />
-            ))}
-          </View>
-        )}
-      </Card>
+              >
+                <View style={styles.avatar}>
+                  <Text style={styles.avatarGlyph}>
+                    {TYPE_GLYPHS[n.type] ?? "✉️"}
+                  </Text>
+                </View>
+                <View style={styles.body}>
+                  <View style={styles.topLine}>
+                    <Text style={styles.sender} numberOfLines={1}>
+                      {NOTIFICATION_TYPE_LABELS[n.type] ?? "Family update"}
+                    </Text>
+                    <Text style={styles.time}>{relativeTime(n.createdAt)}</Text>
+                  </View>
+                  <Text
+                    style={[styles.subject, unread ? styles.subjectUnread : styles.subjectRead]}
+                    numberOfLines={2}
+                  >
+                    {unread ? <Text style={styles.unreadDot}>●  </Text> : null}
+                    <Text style={unread ? styles.titleUnread : styles.titleRead}>
+                      {n.title}
+                    </Text>
+                    <Text style={styles.snippet}> — {n.body}</Text>
+                  </Text>
+                </View>
+              </Pressable>
+            );
+          })}
+        </View>
+      )}
 
+      <View style={{ height: spacing.md }} />
       <Button
         label="Notification preferences"
-        variant="secondary"
+        variant="ghost"
         onPress={() => router.push("/settings/notifications")}
       />
     </Screen>
@@ -204,34 +248,106 @@ export default function InboxTab() {
 }
 
 const styles = StyleSheet.create({
-  header: { gap: 4 },
-  eyebrow: {
-    textTransform: "uppercase",
-    letterSpacing: 1.5,
-    fontSize: fontSize.xs,
-    fontWeight: fontWeight.bold,
-    color: colors.accent,
+  tightContent: { paddingHorizontal: spacing.lg },
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-end",
+    paddingBottom: spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
   },
   title: {
     fontSize: fontSize.xxl,
     fontWeight: fontWeight.black,
     color: colors.text,
   },
-  lede: { fontSize: fontSize.sm, color: colors.textMuted, lineHeight: 20 },
+  subtitle: {
+    fontSize: fontSize.xs,
+    color: colors.textMuted,
+    marginTop: 2,
+  },
+  markAll: {
+    fontSize: fontSize.sm,
+    color: colors.accent,
+    fontWeight: fontWeight.medium,
+  },
   filterRow: {
     flexDirection: "row",
-    gap: spacing.sm,
+    gap: spacing.xs,
     flexWrap: "wrap",
+    marginTop: spacing.sm,
   },
   chip: {
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 5,
     borderRadius: radius.pill,
     borderWidth: 1,
     borderColor: colors.borderStrong,
     backgroundColor: colors.surface,
   },
-  chipOn: { backgroundColor: colors.primary, borderColor: colors.primary },
-  chipText: { fontSize: fontSize.sm, color: colors.text, fontWeight: fontWeight.medium },
-  chipTextOn: { color: colors.primaryText },
+  chipOn: { backgroundColor: colors.successBg, borderColor: colors.success },
+  chipText: { fontSize: fontSize.xs, color: colors.text, fontWeight: fontWeight.medium },
+  chipTextOn: { color: colors.success, fontWeight: fontWeight.bold },
+
+  list: {
+    marginTop: spacing.md,
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    overflow: "hidden",
+  },
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: spacing.md - 2,
+    paddingHorizontal: spacing.md,
+    gap: spacing.md - 2,
+  },
+  rowUnread: { backgroundColor: colors.surface },
+  rowRead: { backgroundColor: colors.bg },
+  rowPressed: { opacity: 0.7 },
+  rowDivider: {
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  avatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.surfaceMuted,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  avatarGlyph: { fontSize: 16 },
+  body: { flex: 1, gap: 2 },
+  topLine: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "baseline",
+    gap: spacing.sm,
+  },
+  sender: {
+    fontSize: 11,
+    color: colors.accent,
+    fontWeight: fontWeight.bold,
+    letterSpacing: 0.5,
+    textTransform: "uppercase",
+    flex: 1,
+  },
+  time: {
+    fontSize: 11,
+    color: colors.textSubtle,
+  },
+  subject: {
+    fontSize: fontSize.sm,
+    lineHeight: 18,
+  },
+  subjectUnread: { color: colors.text },
+  subjectRead: { color: colors.textMuted },
+  titleUnread: { fontWeight: fontWeight.bold, color: colors.text },
+  titleRead: { fontWeight: fontWeight.medium, color: colors.textMuted },
+  snippet: { color: colors.textMuted, fontWeight: fontWeight.regular },
+  unreadDot: { color: colors.success, fontSize: 8 },
 });
