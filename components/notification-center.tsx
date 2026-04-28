@@ -12,24 +12,35 @@ import type {
   NotificationType,
   NotificationTypeCount
 } from "@/lib/types";
-import { formatDateTime } from "@/lib/utils";
 
 const READ_FILTERS: { value: NotificationReadFilter; label: string }[] = [
-  { value: "all", label: "All updates" },
+  { value: "all", label: "All" },
   { value: "unread", label: "Unread" },
   { value: "read", label: "Read" }
 ];
 
 const TYPE_LABELS: Record<NotificationType, string> = {
   call_scheduled: "Call scheduled",
-  reminder_24h_before: "24h reminders",
-  reminder_15m_before: "15m reminders",
+  reminder_24h_before: "24h reminder",
+  reminder_15m_before: "15m reminder",
   starting_now: "Starting now",
   missing_join_link_warning: "Missing join link",
-  call_passed_without_completion: "Missed-call follow-up",
+  call_passed_without_completion: "Missed call",
   invite_claimed: "Invite claimed",
-  recap_posted: "Recaps",
+  recap_posted: "Recap posted",
   weekly_connection_digest: "Weekly digest"
+};
+
+const TYPE_GLYPHS: Record<NotificationType, string> = {
+  call_scheduled: "📅",
+  reminder_24h_before: "🔔",
+  reminder_15m_before: "⏰",
+  starting_now: "🔴",
+  missing_join_link_warning: "⚠️",
+  call_passed_without_completion: "↻",
+  invite_claimed: "👋",
+  recap_posted: "📝",
+  weekly_connection_digest: "📊"
 };
 
 function buildNotificationsHref(input: {
@@ -47,14 +58,25 @@ function buildNotificationsHref(input: {
   return (`/notifications${params.size ? `?${params.toString()}` : ""}`) as Route;
 }
 
+function relativeTime(iso: string) {
+  const ms = Date.now() - new Date(iso).getTime();
+  const min = Math.floor(ms / 60000);
+  if (min < 1) return "now";
+  if (min < 60) return `${min}m`;
+  const hr = Math.floor(min / 60);
+  if (hr < 24) return `${hr}h`;
+  const d = Math.floor(hr / 24);
+  if (d < 7) return `${d}d`;
+  return new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+
 export function NotificationCenter({
   notifications,
   unreadCount,
   totalCount,
   typeCounts,
   readFilter,
-  typeFilter,
-  timezone
+  typeFilter
 }: {
   notifications: NotificationItem[];
   unreadCount: number;
@@ -62,54 +84,50 @@ export function NotificationCenter({
   typeCounts: NotificationTypeCount[];
   readFilter: NotificationReadFilter;
   typeFilter: NotificationType | "all";
-  timezone: string;
+  /** kept for back-compat — relative time renders from the system clock */
+  timezone?: string;
 }) {
+  const returnPath = buildNotificationsHref({ readFilter, typeFilter });
+
   return (
-    <div className="stack-md">
-      <div className="section-header-row">
-        <div>
-          <h2>All notifications</h2>
-          <p className="meta">
-            {unreadCount
-              ? `${unreadCount} unread family updates are still waiting on you.`
-              : "Everything here is caught up, but your recent family updates are easy to revisit."}
-          </p>
+    <div className="gmail-inbox-shell">
+      <div className="gmail-inbox-toolbar">
+        <div className="gmail-toolbar-left">
+          <h2>Inbox</h2>
+          <span className="meta">
+            {unreadCount ? `${unreadCount} unread` : "All caught up"} · {totalCount} total
+          </span>
         </div>
-        <div className="call-actions">
-          <span className="badge">{totalCount} total</span>
-          {unreadCount ? (
-            <form action={markAllNotificationsReadAction}>
-              <input name="returnPath" type="hidden" value={buildNotificationsHref({ readFilter, typeFilter })} />
-              <button className="button button-secondary" type="submit">
-                Mark all read
-              </button>
-            </form>
-          ) : null}
-        </div>
+        {unreadCount ? (
+          <form action={markAllNotificationsReadAction}>
+            <input name="returnPath" type="hidden" value={returnPath} />
+            <button className="button button-ghost gmail-mark-all" type="submit">
+              Mark all read
+            </button>
+          </form>
+        ) : null}
       </div>
 
-      <div className="notification-filters">
+      <div className="gmail-filter-row">
         {READ_FILTERS.map((filter) => (
           <Link
-            className={`filter-chip ${readFilter === filter.value ? "filter-chip-active" : ""}`}
+            className={`gmail-chip ${readFilter === filter.value ? "gmail-chip-active" : ""}`}
             href={buildNotificationsHref({ readFilter: filter.value, typeFilter })}
             key={filter.value}
           >
             {filter.label}
           </Link>
         ))}
-      </div>
-
-      <div className="notification-filters">
+        <span className="gmail-chip-divider" aria-hidden="true">·</span>
         <Link
-          className={`filter-chip ${typeFilter === "all" ? "filter-chip-active" : ""}`}
+          className={`gmail-chip ${typeFilter === "all" ? "gmail-chip-active" : ""}`}
           href={buildNotificationsHref({ readFilter, typeFilter: "all" })}
         >
           All types
         </Link>
         {typeCounts.map((item) => (
           <Link
-            className={`filter-chip ${typeFilter === item.type ? "filter-chip-active" : ""}`}
+            className={`gmail-chip ${typeFilter === item.type ? "gmail-chip-active" : ""}`}
             href={buildNotificationsHref({ readFilter, typeFilter: item.type })}
             key={item.type}
           >
@@ -118,61 +136,57 @@ export function NotificationCenter({
         ))}
       </div>
 
-      <div className="list">
-        {notifications.length ? (
-          notifications.map((notification) => (
-            <div
-              className={`list-item notification-list-item ${notification.readAt ? "notification-read" : "notification-unread"}`}
-              key={notification.id}
-            >
-              <div className="stack-sm">
-                <div className="call-actions">
-                  <p>{notification.title}</p>
-                  <span className="badge notification-type-badge">
-                    {TYPE_LABELS[notification.type]}
-                  </span>
-                </div>
-                <p className="meta">{notification.body}</p>
-                <p className="microcopy">{formatDateTime(notification.createdAt, timezone)}</p>
-                <div className="call-actions">
-                  {notification.ctaHref ? (
-                    <Link
-                      className="button button-secondary"
-                      href={notification.ctaHref as Route}
-                    >
-                      {notification.ctaLabel ?? "Open"}
-                    </Link>
-                  ) : (
-                    <Link className="button button-secondary" href={"/dashboard" as Route}>
-                      Open dashboard
-                    </Link>
-                  )}
-                  {!notification.readAt ? (
-                    <form action={markNotificationReadAction}>
-                      <input name="notificationId" type="hidden" value={notification.id} />
-                      <input
-                        name="returnPath"
-                        type="hidden"
-                        value={buildNotificationsHref({ readFilter, typeFilter })}
-                      />
-                      <button className="button button-secondary" type="submit">
-                        Mark read
-                      </button>
-                    </form>
-                  ) : (
-                    <span className="meta">Read</span>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))
-        ) : (
-          <EmptyState
-            title="This view is quiet for now"
-            description="Try a different filter, or give Kynfowk a little time to bring the next family update here."
-          />
-        )}
-      </div>
+      {notifications.length === 0 ? (
+        <EmptyState
+          title="This view is quiet for now"
+          description="Try a different filter, or give Kynfowk a little time to bring the next family update here."
+        />
+      ) : (
+        <ul className="gmail-list">
+          {notifications.map((n) => {
+            const isUnread = !n.readAt;
+            return (
+              <li className={`gmail-row ${isUnread ? "gmail-row-unread" : "gmail-row-read"}`} key={n.id}>
+                {isUnread ? (
+                  <form action={markNotificationReadAction} className="gmail-row-form">
+                    <input name="notificationId" type="hidden" value={n.id} />
+                    <input name="returnPath" type="hidden" value={n.ctaHref ?? "/dashboard"} />
+                    <button className="gmail-row-button" type="submit" aria-label={`Open ${n.title}`}>
+                      <RowContents notification={n} />
+                    </button>
+                  </form>
+                ) : (
+                  <Link className="gmail-row-link" href={(n.ctaHref ?? "/dashboard") as Route}>
+                    <RowContents notification={n} />
+                  </Link>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
     </div>
+  );
+}
+
+function RowContents({ notification }: { notification: NotificationItem }) {
+  const isUnread = !notification.readAt;
+  return (
+    <>
+      <span className="gmail-avatar" aria-hidden="true">
+        {TYPE_GLYPHS[notification.type] ?? "✉️"}
+      </span>
+      <span className="gmail-row-body">
+        <span className="gmail-row-top">
+          <span className="gmail-sender">{TYPE_LABELS[notification.type] ?? "Family update"}</span>
+          <span className="gmail-time">{relativeTime(notification.createdAt)}</span>
+        </span>
+        <span className="gmail-subject">
+          {isUnread ? <span className="gmail-unread-dot" aria-hidden="true" /> : null}
+          <span className="gmail-subject-text">{notification.title}</span>
+          <span className="gmail-snippet"> — {notification.body}</span>
+        </span>
+      </span>
+    </>
   );
 }
