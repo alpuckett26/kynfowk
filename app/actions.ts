@@ -2206,6 +2206,45 @@ export async function inviteFamilyMemberAction(formData: FormData) {
   const circle = family!.circle;
   const membership = family!.membership;
 
+  // Idempotency: if there's already an invited (or active) membership in
+  // this circle for this email, don't create a duplicate. The dialog
+  // doesn't show pending state on every form submit cleanly across all
+  // browsers, so a double-click previously created two rows.
+  const existing = await supabase
+    .from("family_memberships")
+    .select("id, status")
+    .eq("family_circle_id", circle.id)
+    .eq("invite_email", inviteEmail)
+    .limit(1)
+    .maybeSingle();
+  if (existing.data) {
+    if (existing.data.status === "active") {
+      redirectWithStatus("family-invite-already-claimed");
+    }
+    // Already invited — re-trigger the email but don't insert again.
+    if (hasSupabaseServiceRoleEnv()) {
+      const admin = createSupabaseAdminClient();
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+      const acceptUrl = new URL(`${siteUrl}/auth/accept-invite`);
+      acceptUrl.searchParams.set("circle", circle.name);
+      acceptUrl.searchParams.set("from", membership.display_name);
+      acceptUrl.searchParams.set("email", inviteEmail);
+      if (relationship) acceptUrl.searchParams.set("relationship", relationship);
+      await admin.auth.admin.inviteUserByEmail(inviteEmail, {
+        data: {
+          full_name: displayName,
+          family_circle_name: circle.name,
+          inviter_name: membership.display_name,
+          relationship_label: relationship || undefined
+        },
+        redirectTo: acceptUrl.toString()
+      });
+    }
+    revalidatePath("/family");
+    revalidatePath("/dashboard");
+    redirectWithStatus("member-invited");
+  }
+
   const memberInsert = await supabase
     .from("family_memberships")
     .insert({
