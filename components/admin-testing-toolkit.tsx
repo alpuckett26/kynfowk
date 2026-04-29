@@ -52,6 +52,8 @@ export function AdminTestingToolkit() {
   const [ttA, setTtA] = useState("");
   const [ttB, setTtB] = useState("");
   const [ttDays, setTtDays] = useState("8");
+  // release email form
+  const [releaseEmail, setReleaseEmail] = useState("");
 
   const run = async (key: string, fn: () => Promise<AdminCallResult>) => {
     setPending(key);
@@ -227,6 +229,38 @@ export function AdminTestingToolkit() {
           {pending === "tt" ? "Working..." : "Time-travel"}
         </button>
         <ResultDisplay label="time-travel" result={results.tt ?? null} />
+      </div>
+
+      <div className="stack-md">
+        <h2>Release invite email</h2>
+        <p className="meta">
+          Frees a pending invite email so it can be re-invited. Deletes the
+          pending family_memberships row(s) AND the unconfirmed Supabase
+          Auth user (if any). Won&apos;t touch active accounts.
+        </p>
+        <input
+          className="form-input"
+          value={releaseEmail}
+          onChange={(e) => setReleaseEmail(e.target.value)}
+          placeholder="email@example.com"
+          inputMode="email"
+        />
+        <button
+          type="button"
+          className="button button-secondary"
+          disabled={!releaseEmail || pending === "release"}
+          onClick={() =>
+            run("release", () =>
+              adminCall("/api/admin/release-email", {
+                method: "POST",
+                body: JSON.stringify({ email: releaseEmail }),
+              })
+            )
+          }
+        >
+          {pending === "release" ? "Releasing..." : "Release email"}
+        </button>
+        <ResultDisplay label="release" result={results.release ?? null} />
       </div>
 
       <div className="stack-md">
