@@ -42,23 +42,51 @@ export async function POST(request: Request) {
       );
     }
 
-    const memberInsert = await supabase
+    // Idempotency — same circle + email = same invite, not a new row.
+    // Prevents duplicate memberships when a slow network makes the user
+    // tap "Send invite" twice.
+    const existing = await supabase
       .from("family_memberships")
-      .insert({
-        family_circle_id: family.circle.id,
-        display_name: displayName,
-        invite_email: inviteEmail,
-        relationship_label: relationshipLabel || null,
-        status: "invited",
-        role: "member",
-      })
-      .select("id")
-      .single();
-    if (memberInsert.error || !memberInsert.data) {
-      return Response.json(
-        { error: memberInsert.error?.message ?? "Couldn't add member." },
-        { status: 400 }
-      );
+      .select("id, status")
+      .eq("family_circle_id", family.circle.id)
+      .eq("invite_email", inviteEmail)
+      .limit(1)
+      .maybeSingle();
+
+    let membershipId: string;
+    let alreadyExists = false;
+    if (existing.data) {
+      membershipId = existing.data.id;
+      alreadyExists = true;
+      if (existing.data.status === "active") {
+        return Response.json({
+          success: true,
+          membershipId,
+          alreadyClaimed: true,
+          inviteEmailSent: false,
+          inviteEmailWarning: "This person is already an active member.",
+        });
+      }
+    } else {
+      const memberInsert = await supabase
+        .from("family_memberships")
+        .insert({
+          family_circle_id: family.circle.id,
+          display_name: displayName,
+          invite_email: inviteEmail,
+          relationship_label: relationshipLabel || null,
+          status: "invited",
+          role: "member",
+        })
+        .select("id")
+        .single();
+      if (memberInsert.error || !memberInsert.data) {
+        return Response.json(
+          { error: memberInsert.error?.message ?? "Couldn't add member." },
+          { status: 400 }
+        );
+      }
+      membershipId = memberInsert.data.id;
     }
 
     let alreadyClaimed = false;
@@ -115,17 +143,20 @@ export async function POST(request: Request) {
         "Server isn't configured to send invite emails (SUPABASE_SERVICE_ROLE_KEY missing).";
     }
 
-    await supabase.from("family_activity").insert({
-      family_circle_id: family.circle.id,
-      actor_membership_id: family.membership.id,
-      activity_type: "members_invited",
-      summary: `${displayName} was invited to join the Family Circle.`,
-    });
+    if (!alreadyExists) {
+      await supabase.from("family_activity").insert({
+        family_circle_id: family.circle.id,
+        actor_membership_id: family.membership.id,
+        activity_type: "members_invited",
+        summary: `${displayName} was invited to join the Family Circle.`,
+      });
+    }
 
     return Response.json({
       success: true,
-      membershipId: memberInsert.data.id,
+      membershipId,
       alreadyClaimed,
+      alreadyExists,
       inviteEmailSent,
       inviteEmailWarning,
     });

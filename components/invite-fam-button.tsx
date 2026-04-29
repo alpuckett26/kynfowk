@@ -1,9 +1,19 @@
 "use client";
 
 import { useRef } from "react";
+import { useFormStatus } from "react-dom";
 
 import { inviteFamilyMemberAction } from "@/app/actions";
 import { RELATIONSHIP_OPTIONS } from "@/lib/relationship-classifier";
+
+function SubmitButton() {
+  const { pending } = useFormStatus();
+  return (
+    <button className="button" disabled={pending} type="submit">
+      {pending ? "Sending…" : "Send invite"}
+    </button>
+  );
+}
 
 export function InviteFamButton() {
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -79,9 +89,7 @@ export function InviteFamButton() {
               <span className="field-hint">Places them in your Family Tree automatically</span>
             </div>
             <div className="invite-form-actions">
-              <button className="button" type="submit">
-                Send invite
-              </button>
+              <SubmitButton />
               <button className="button button-secondary" onClick={close} type="button">
                 Cancel
               </button>
