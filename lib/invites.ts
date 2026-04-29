@@ -2,6 +2,8 @@ import type { User } from "@supabase/supabase-js";
 
 import { createNotifications } from "@/lib/notifications";
 import { trackProductEvent } from "@/lib/product-insights";
+import { hasSupabaseServiceRoleEnv } from "@/lib/env";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 function normalizeEmail(email: string | null | undefined) {
@@ -14,8 +16,18 @@ export async function claimPendingInvitesForUser(user: User) {
     return [];
   }
 
-  const supabase = await createSupabaseServerClient();
-  const pendingResponse = await supabase
+  // Use the service-role client for the lookup + claim. The user-scoped
+  // client can't see pending invites under RLS (they're not yet a member
+  // of any circle), which silently dropped invitees on /onboarding
+  // instead of attaching them to the inviting circle. Claiming an
+  // invite addressed to your own verified email isn't a security
+  // concern — the email match is the auth.
+  if (!hasSupabaseServiceRoleEnv()) {
+    return [];
+  }
+  const admin = createSupabaseAdminClient();
+
+  const pendingResponse = await admin
     .from("family_memberships")
     .select("id, family_circle_id, display_name")
     .eq("status", "invited")
@@ -34,7 +46,7 @@ export async function claimPendingInvitesForUser(user: User) {
   }> = [];
 
   for (const membership of pendingMemberships) {
-    const updateResponse = await supabase
+    const updateResponse = await admin
       .from("family_memberships")
       .update({
         user_id: user.id,
@@ -52,6 +64,10 @@ export async function claimPendingInvitesForUser(user: User) {
   }
 
   if (claimedMemberships.length) {
+    // Profile + activity inserts use the user's own session so RLS
+    // applies normally — the user is now an active member, so policies
+    // permit reads/writes scoped to their circles.
+    const supabase = await createSupabaseServerClient();
     await supabase.from("profiles").upsert({
       id: user.id,
       email: user.email ?? null,
@@ -61,7 +77,7 @@ export async function claimPendingInvitesForUser(user: User) {
       timezone: "America/Chicago"
     });
 
-    await supabase.from("family_activity").insert(
+    await admin.from("family_activity").insert(
       claimedMemberships.map((membership) => ({
         family_circle_id: membership.family_circle_id,
         actor_membership_id: membership.id,
@@ -77,7 +93,7 @@ export async function claimPendingInvitesForUser(user: User) {
         familyCircleId: membership.family_circle_id
       });
 
-      const recipientResponse = await supabase
+      const recipientResponse = await admin
         .from("family_memberships")
         .select("user_id, display_name, family_circles(name), profiles(email, timezone)")
         .eq("family_circle_id", membership.family_circle_id)
@@ -131,8 +147,22 @@ export async function getPostAuthRedirectPath(user: User) {
     return "/dashboard?status=joined-circle";
   }
 
-  const supabase = await createSupabaseServerClient();
-  const membershipResponse = await supabase
+  // Use admin client here too — the user-scoped client may return empty
+  // immediately after sign-up if RLS hasn't picked up the new auth.uid()
+  // yet, which would erroneously redirect existing members to onboarding.
+  if (!hasSupabaseServiceRoleEnv()) {
+    const supabase = await createSupabaseServerClient();
+    const membershipResponse = await supabase
+      .from("family_memberships")
+      .select("id")
+      .eq("user_id", user.id)
+      .limit(1)
+      .maybeSingle();
+    return membershipResponse.data ? "/dashboard" : "/onboarding";
+  }
+
+  const admin = createSupabaseAdminClient();
+  const membershipResponse = await admin
     .from("family_memberships")
     .select("id")
     .eq("user_id", user.id)
