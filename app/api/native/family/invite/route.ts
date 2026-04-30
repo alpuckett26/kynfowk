@@ -5,6 +5,7 @@ import {
 import { getViewerFamilyCircleWith } from "@/lib/data";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { hasSupabaseServiceRoleEnv } from "@/lib/env";
+import { sendFamilyInviteEmail } from "@/lib/branded-email";
 
 type Body = {
   displayName?: string;
@@ -101,42 +102,22 @@ export async function POST(request: Request) {
       acceptUrl.searchParams.set("email", inviteEmail);
       if (relationshipLabel) acceptUrl.searchParams.set("relationship", relationshipLabel);
 
-      const inviteCall = admin.auth.admin.inviteUserByEmail(inviteEmail, {
-        data: {
-          full_name: displayName,
-          family_circle_name: family.circle.name,
-          inviter_name: family.membership.display_name,
-          relationship_label: relationshipLabel || undefined,
-        },
-        redirectTo: acceptUrl.toString(),
+      const result = await sendFamilyInviteEmail({
+        email: inviteEmail,
+        displayName,
+        inviterName: family.membership.display_name,
+        circleName: family.circle.name,
+        relationshipLabel: relationshipLabel || null,
+        acceptUrlBase: acceptUrl.toString(),
+        adminClient: admin,
       });
-      const timeoutMs = 8000;
-      const inviteResponse = await Promise.race([
-        inviteCall,
-        new Promise<{ error: { message: string }; data: null }>((resolve) =>
-          setTimeout(
-            () =>
-              resolve({
-                error: {
-                  message: `Supabase Auth invite did not respond in ${timeoutMs}ms (likely SMTP/redirect-allow-list config).`,
-                },
-                data: null,
-              }),
-            timeoutMs
-          )
-        ),
-      ]);
-      if (inviteResponse.error) {
-        const msg = inviteResponse.error.message;
-        const lower = msg.toLowerCase();
-        if (lower.includes("already") || lower.includes("exists")) {
-          alreadyClaimed = true;
-        } else {
-          inviteEmailWarning = msg;
-          console.error("[invite] Supabase Auth invite error:", msg);
-        }
-      } else {
+      if (result.alreadyExists) {
+        alreadyClaimed = true;
+      } else if (result.status === "sent") {
         inviteEmailSent = true;
+      } else if (result.status === "failed") {
+        inviteEmailWarning = result.errorMessage ?? "Email failed to send.";
+        console.error("[invite] branded send failed:", inviteEmailWarning);
       }
     } else {
       inviteEmailWarning =

@@ -7,6 +7,7 @@ import { redirect } from "next/navigation";
 import { getViewerFamilyCircle, requireViewer } from "@/lib/data";
 import { hasSupabaseEnv, hasSupabaseServiceRoleEnv, isAdminEmail } from "@/lib/env";
 import { getPostAuthRedirectPath } from "@/lib/invites";
+import { sendBrandedTransactionalEmail, sendFamilyInviteEmail } from "@/lib/branded-email";
 import {
   createNotifications,
   dismissCallNotifications,
@@ -313,24 +314,82 @@ export async function forgotPasswordAction(
 ): Promise<ForgotPasswordState> {
   if (!hasSupabaseEnv()) return { status: "error", message: "Service unavailable." };
 
-  const email = String(formData.get("email") ?? "").trim();
+  const email = String(formData.get("email") ?? "").trim().toLowerCase();
   if (!email) return { status: "error", message: "Email is required." };
 
-  const supabase = await createSupabaseServerClient();
-  const siteUrl   = process.env.NEXT_PUBLIC_SITE_URL   ?? "https://kynfowk.com";
-  // When NEXT_PUBLIC_APP_SCHEME=kynfowk is set (native app live in stores),
-  // reset links open the app directly instead of the browser.
-  const appScheme = process.env.NEXT_PUBLIC_APP_SCHEME;
-  const callbackBase = appScheme ? `${appScheme}://` : `${siteUrl}/`;
+  // Always return the same success response to avoid leaking whether an
+  // email belongs to a real account.
+  const successResponse: ForgotPasswordState = {
+    status: "success",
+    message: "If that email is in our system, a reset link is on its way.",
+  };
 
-  const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${callbackBase}auth/callback?type=recovery`
+  if (!hasSupabaseServiceRoleEnv()) {
+    // Fall back to Supabase's managed email pipeline when service-role
+    // isn't configured (local dev). It's plain-text but at least works.
+    const supabase = await createSupabaseServerClient();
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://kynfowk.com";
+    await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${siteUrl}/auth/callback?type=recovery`,
+    });
+    return successResponse;
+  }
+
+  const admin = createSupabaseAdminClient();
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://kynfowk.com";
+  const link = await admin.auth.admin.generateLink({
+    type: "recovery",
+    email,
+    options: {
+      redirectTo: `${siteUrl}/auth/callback?type=recovery`,
+    },
+  });
+  if (link.error) {
+    const msg = link.error.message.toLowerCase();
+    // User-not-found and similar — still return success to avoid enumeration.
+    if (msg.includes("user not found") || msg.includes("invalid")) {
+      return successResponse;
+    }
+    return { status: "error", message: link.error.message };
+  }
+  const actionLink = link.data?.properties?.action_link;
+  if (!actionLink) {
+    return successResponse;
+  }
+
+  // Pull the user's display name to personalize the greeting. Fall back
+  // to "friend" if the auth.users row has no metadata.
+  let firstName = "friend";
+  const list = await admin.auth.admin.listUsers();
+  const target = list.data?.users?.find(
+    (u) => (u.email ?? "").toLowerCase() === email
+  );
+  if (target) {
+    const fullName = (target.user_metadata?.full_name as string | undefined) ?? null;
+    const profile = await admin
+      .from("profiles")
+      .select("full_name")
+      .eq("id", target.id)
+      .maybeSingle();
+    const profileName = (profile.data as { full_name: string | null } | null)
+      ?.full_name;
+    const candidate = profileName ?? fullName;
+    if (candidate) firstName = candidate.trim().split(/\s+/)[0] ?? "friend";
+  }
+
+  await sendBrandedTransactionalEmail({
+    to: email,
+    subject: "Reset your Kynfowk password",
+    greeting: `Hi ${firstName},`,
+    paragraphs: [
+      "We got a request to reset your password. Tap the button below to choose a new one — the link is good for the next hour.",
+    ],
+    cta: { label: "Reset password", url: actionLink },
+    postscript:
+      "If you didn't ask for this, you can ignore this email — your password stays the same.",
   });
 
-  // Always return success to avoid email enumeration
-  if (error && error.message !== "Email not found") return { status: "error", message: error.message };
-
-  return { status: "success", message: "If that email is in our system, a reset link is on its way." };
+  return successResponse;
 }
 
 export interface ResetPasswordState {
@@ -2230,14 +2289,14 @@ export async function inviteFamilyMemberAction(formData: FormData) {
       acceptUrl.searchParams.set("from", membership.display_name);
       acceptUrl.searchParams.set("email", inviteEmail);
       if (relationship) acceptUrl.searchParams.set("relationship", relationship);
-      await admin.auth.admin.inviteUserByEmail(inviteEmail, {
-        data: {
-          full_name: displayName,
-          family_circle_name: circle.name,
-          inviter_name: membership.display_name,
-          relationship_label: relationship || undefined
-        },
-        redirectTo: acceptUrl.toString()
+      await sendFamilyInviteEmail({
+        email: inviteEmail,
+        displayName,
+        inviterName: membership.display_name,
+        circleName: circle.name,
+        relationshipLabel: relationship || null,
+        acceptUrlBase: acceptUrl.toString(),
+        adminClient: admin,
       });
     }
     revalidatePath("/family");
@@ -2270,21 +2329,17 @@ export async function inviteFamilyMemberAction(formData: FormData) {
     acceptUrl.searchParams.set("from", membership.display_name);
     acceptUrl.searchParams.set("email", inviteEmail);
     if (relationship) acceptUrl.searchParams.set("relationship", relationship);
-    const inviteResponse = await admin.auth.admin.inviteUserByEmail(inviteEmail, {
-      data: {
-        full_name: displayName,
-        family_circle_name: circle.name,
-        inviter_name: membership.display_name,
-        relationship_label: relationship || undefined
-      },
-      redirectTo: acceptUrl.toString()
+    const inviteResponse = await sendFamilyInviteEmail({
+      email: inviteEmail,
+      displayName,
+      inviterName: membership.display_name,
+      circleName: circle.name,
+      relationshipLabel: relationship || null,
+      acceptUrlBase: acceptUrl.toString(),
+      adminClient: admin,
     });
-
-    if (inviteResponse.error) {
-      const msg = inviteResponse.error.message.toLowerCase();
-      if (msg.includes("already") || msg.includes("exists")) {
-        redirectWithStatus("family-invite-already-claimed");
-      }
+    if (inviteResponse.alreadyExists) {
+      redirectWithStatus("family-invite-already-claimed");
     }
   }
 
