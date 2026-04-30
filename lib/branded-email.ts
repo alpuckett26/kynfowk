@@ -145,6 +145,9 @@ function renderHtml(input: BrandedEmailInput): string {
     ? `<p style="color:#8a7a66;font-size:13px;margin-top:24px;">${escapeHtml(input.postscript)}</p>`
     : "";
 
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://kynfowk.com";
+  const markUrl = `${siteUrl}/email-mark.png`;
+
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -158,9 +161,17 @@ function renderHtml(input: BrandedEmailInput): string {
       <td align="center" style="padding:32px 16px;">
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;background:#ffffff;border-radius:16px;border:1px solid #ecdcc5;overflow:hidden;">
           <tr>
-            <td style="padding:28px 32px 0 32px;text-align:center;">
-              <p style="margin:0;font-size:13px;letter-spacing:1px;text-transform:uppercase;color:${ACCENT_COLOR};font-weight:700;">${BRAND_NAME}</p>
-              <p style="margin:6px 0 0 0;font-size:13px;color:#6a584a;">${BRAND_TAGLINE}</p>
+            <td style="padding:32px 32px 8px 32px;text-align:center;">
+              <a href="${escapeHtml(siteUrl)}" style="text-decoration:none;color:inherit;">
+                <img src="${escapeHtml(markUrl)}" alt="Kynfowk" width="56" height="56"
+                     style="display:inline-block;border:none;outline:none;" />
+                <h1 style="margin:8px 0 0 0;font-family:Georgia,'Times New Roman',serif;font-weight:700;font-size:32px;letter-spacing:-0.5px;color:${BRAND_COLOR};">
+                  Kynfowk
+                </h1>
+                <p style="margin:4px 0 0 0;font-size:12px;letter-spacing:1px;text-transform:uppercase;color:${ACCENT_COLOR};font-weight:600;">
+                  ${BRAND_TAGLINE}
+                </p>
+              </a>
             </td>
           </tr>
           <tr>
@@ -174,7 +185,9 @@ function renderHtml(input: BrandedEmailInput): string {
           <tr>
             <td style="padding:20px 32px;background:${BRAND_BG};text-align:center;font-size:12px;color:#8a7a66;border-top:1px solid #ecdcc5;">
               You're receiving this because you have a Kynfowk account.<br />
-              <a href="${escapeHtml(process.env.NEXT_PUBLIC_SITE_URL ?? "https://kynfowk.com")}/notifications" style="color:${ACCENT_COLOR};">Manage notifications</a>
+              <a href="${escapeHtml(siteUrl)}/notifications" style="color:${ACCENT_COLOR};">Manage notifications</a>
+              &nbsp;·&nbsp;
+              <a href="${escapeHtml(siteUrl)}" style="color:${ACCENT_COLOR};">kynfowk.com</a>
             </td>
           </tr>
         </table>
@@ -276,6 +289,9 @@ export async function sendFamilyInviteEmail(args: {
 
 function renderText(input: BrandedEmailInput): string {
   const lines: string[] = [];
+  lines.push(`KYNFOWK · ${BRAND_TAGLINE}`);
+  lines.push("─────────────────────────────");
+  lines.push("");
   if (input.greeting) {
     lines.push(input.greeting);
     lines.push("");
@@ -292,7 +308,7 @@ function renderText(input: BrandedEmailInput): string {
     lines.push(input.postscript);
     lines.push("");
   }
-  lines.push("—");
-  lines.push(`${BRAND_NAME} · ${BRAND_TAGLINE}`);
+  lines.push("─────────────────────────────");
+  lines.push("kynfowk.com — manage notifications at /notifications");
   return lines.join("\n");
 }
