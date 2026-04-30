@@ -43,7 +43,7 @@ export function NotificationPreferencesForm({
             name="weeklyDigestEnabled"
             type="checkbox"
           />
-          <span>Weekly digest</span>
+          <span>Weekly briefing (Sunday)</span>
         </label>
         <label className="attendance-item">
           <input

@@ -232,7 +232,8 @@ export interface Database {
             | "call_passed_without_completion"
             | "invite_claimed"
             | "recap_posted"
-            | "weekly_connection_digest";
+            | "weekly_connection_digest"
+            | "weekly_briefing";
           title: string;
           body: string;
           cta_label: string | null;
@@ -256,7 +257,8 @@ export interface Database {
             | "call_passed_without_completion"
             | "invite_claimed"
             | "recap_posted"
-            | "weekly_connection_digest";
+            | "weekly_connection_digest"
+            | "weekly_briefing";
           title: string;
           body: string;
           cta_label?: string | null;

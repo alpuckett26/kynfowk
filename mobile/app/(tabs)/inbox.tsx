@@ -29,6 +29,7 @@ const TYPE_GLYPHS: Record<NotificationType, string> = {
   invite_claimed: "👋",
   recap_posted: "📝",
   weekly_connection_digest: "📊",
+  weekly_briefing: "📖",
 };
 
 type State =

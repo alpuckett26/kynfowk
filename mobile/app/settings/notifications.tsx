@@ -208,8 +208,8 @@ export default function NotificationSettingsScreen() {
           onToggle={() => setField("startingNowEnabled", !draft.startingNowEnabled)}
         />
         <Toggle
-          label="Weekly digest"
-          subtitle="A short summary every Sunday"
+          label="Weekly briefing"
+          subtitle="Sunday morning preview of the week + recap of last week"
           checked={draft.weeklyDigestEnabled}
           onToggle={() => setField("weeklyDigestEnabled", !draft.weeklyDigestEnabled)}
         />
