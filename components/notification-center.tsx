@@ -28,7 +28,8 @@ const TYPE_LABELS: Record<NotificationType, string> = {
   call_passed_without_completion: "Missed call",
   invite_claimed: "Invite claimed",
   recap_posted: "Recap posted",
-  weekly_connection_digest: "Weekly digest"
+  weekly_connection_digest: "Weekly digest",
+  weekly_briefing: "Weekly briefing"
 };
 
 const TYPE_GLYPHS: Record<NotificationType, string> = {
@@ -40,7 +41,8 @@ const TYPE_GLYPHS: Record<NotificationType, string> = {
   call_passed_without_completion: "↻",
   invite_claimed: "👋",
   recap_posted: "📝",
-  weekly_connection_digest: "📊"
+  weekly_connection_digest: "📊",
+  weekly_briefing: "📖"
 };
 
 function buildNotificationsHref(input: {

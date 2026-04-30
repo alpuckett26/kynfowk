@@ -95,6 +95,7 @@ function wantsNotificationType(
 ) {
   switch (type) {
     case "weekly_connection_digest":
+    case "weekly_briefing":
       return prefs.weeklyDigestEnabled;
     case "reminder_24h_before":
       return prefs.reminder24hEnabled;
@@ -128,7 +129,7 @@ function getNotificationPriority(type: NotificationType) {
     return 4;
   }
 
-  if (type === "weekly_connection_digest") {
+  if (type === "weekly_connection_digest" || type === "weekly_briefing") {
     return 6;
   }
 
@@ -807,6 +808,81 @@ function getDigestBody(input: {
   return `${input.circleName} shared ${input.completedCalls} completed call${input.completedCalls === 1 ? "" : "s"}, ${input.totalMinutes} minutes together, and ${input.uniqueConnected} family member${input.uniqueConnected === 1 ? "" : "s"} connected this week. Your streak is ${input.weeklyStreak} week${input.weeklyStreak === 1 ? "" : "s"} strong.`;
 }
 
+function getWeeklyBriefingBody(input: {
+  circleName: string;
+  upcomingCalls: { title: string; scheduled_start: string }[];
+  completedThisWeek: number;
+  totalMinutes: number;
+  uniqueConnected: number;
+  weeklyStreak: number;
+}) {
+  const lines: string[] = [];
+
+  // Forward-looking section
+  if (input.upcomingCalls.length) {
+    lines.push("This week's calls:");
+    for (const call of input.upcomingCalls.slice(0, 8)) {
+      const dt = new Date(call.scheduled_start);
+      const day = dt.toLocaleDateString("en-US", { weekday: "short" });
+      const time = dt
+        .toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })
+        .replace(" ", "");
+      lines.push(`  ${day} ${time} — ${call.title}`);
+    }
+    if (input.upcomingCalls.length > 8) {
+      lines.push(`  …plus ${input.upcomingCalls.length - 8} more`);
+    }
+  } else {
+    lines.push(
+      "Nothing on the calendar this week yet — Sunday's a great time to plan a moment with someone."
+    );
+  }
+
+  lines.push("");
+
+  // Backward-looking section (reuses existing recap shape)
+  if (input.completedThisWeek > 0) {
+    const minuteLabel = input.totalMinutes === 1 ? "minute" : "minutes";
+    const memberLabel = input.uniqueConnected === 1 ? "member" : "members";
+    const callLabel = input.completedThisWeek === 1 ? "call" : "calls";
+    const streakLabel = input.weeklyStreak === 1 ? "week" : "weeks";
+    lines.push(
+      `Last week: ${input.completedThisWeek} ${callLabel}, ${input.totalMinutes} ${minuteLabel} together, ${input.uniqueConnected} family ${memberLabel} reached. Reconnection streak: ${input.weeklyStreak} ${streakLabel}.`
+    );
+  } else {
+    lines.push(
+      `Last week was quiet — no completed calls. Reconnection streak: ${input.weeklyStreak} week${input.weeklyStreak === 1 ? "" : "s"}.`
+    );
+  }
+
+  return lines.join("\n");
+}
+
+function getLocalWeekday(date: Date, timezone: string) {
+  const tz = isValidTimezone(timezone)
+    ? timezone
+    : DEFAULT_NOTIFICATION_PREFERENCES.timezone;
+  try {
+    const fmt = new Intl.DateTimeFormat("en-US", {
+      weekday: "short",
+      timeZone: tz,
+    });
+    const weekdayName = fmt.format(date);
+    const map: Record<string, number> = {
+      Sun: 0,
+      Mon: 1,
+      Tue: 2,
+      Wed: 3,
+      Thu: 4,
+      Fri: 5,
+      Sat: 6,
+    };
+    return map[weekdayName] ?? date.getUTCDay();
+  } catch {
+    return date.getUTCDay();
+  }
+}
+
 function getWeeklyStreak(dates: Date[]) {
   if (!dates.length) {
     return 0;
@@ -989,7 +1065,37 @@ export async function sweepFamilyCircleNotifications(
     (call) => getWeekKey(new Date(call.scheduled_start)) === weekKey
   );
 
-  if (completedThisWeek.length && activeRecipients.length) {
+  // ── Sunday Family Briefing ─────────────────────────────────────────────
+  // Anchors the weekly rhythm. Fires Sunday 9–11am in the recipient's
+  // local timezone. The dedupe key is per-week per-circle so a member
+  // who's online during the window only gets one. Always fires (even on
+  // empty weeks) — Sunday is the anchor and silent weeks would erode it.
+  const briefingNow = new Date();
+  const sundayMorningRecipients = activeRecipients.filter((recipient) => {
+    const dow = getLocalWeekday(briefingNow, recipient.timezone);
+    const hour = getLocalHour(briefingNow, recipient.timezone);
+    return dow === 0 && hour >= 9 && hour < 11;
+  });
+
+  if (sundayMorningRecipients.length) {
+    const horizonStart = Date.now();
+    const horizonEnd = horizonStart + 7 * 24 * 60 * 60 * 1000;
+    const upcomingCalls = calls
+      .filter((call) => call.status === "scheduled" || call.status === "live")
+      .filter((call) => {
+        const t = new Date(call.scheduled_start).getTime();
+        return t >= horizonStart && t < horizonEnd;
+      })
+      .sort(
+        (a, b) =>
+          new Date(a.scheduled_start).getTime() -
+          new Date(b.scheduled_start).getTime()
+      )
+      .map((call) => ({
+        title: call.title,
+        scheduled_start: call.scheduled_start,
+      }));
+
     const participantResponse = await supabase
       .from("call_participants")
       .select("membership_id, call_session_id, attended")
@@ -1006,29 +1112,31 @@ export async function sweepFamilyCircleNotifications(
       (participantResponse.data ?? [])
         .filter(
           (participant) =>
-            completedThisWeek.some((call) => call.id === participant.call_session_id) &&
-            participant.attended === true
+            completedThisWeek.some(
+              (call) => call.id === participant.call_session_id
+            ) && participant.attended === true
         )
         .map((participant) => participant.membership_id)
     ).size;
 
     notificationsCreated += await createNotifications(supabase, {
       familyCircleId: input.familyCircleId,
-      type: "weekly_connection_digest",
-      title: `${input.circleName} weekly digest`,
-      body: getDigestBody({
+      type: "weekly_briefing",
+      title: `This week with ${input.circleName}`,
+      body: getWeeklyBriefingBody({
         circleName: input.circleName,
-        completedCalls: completedThisWeek.length,
+        upcomingCalls,
+        completedThisWeek: completedThisWeek.length,
         totalMinutes,
         uniqueConnected,
         weeklyStreak: getWeeklyStreak(
           completedCalls.map((call) => new Date(call.scheduled_start))
-        )
+        ),
       }),
       ctaLabel: "Open dashboard",
       ctaHref: "/dashboard",
-      dedupeKeyPrefix: `weekly-digest:${input.familyCircleId}:${weekKey}`,
-      recipients: activeRecipients
+      dedupeKeyPrefix: `weekly-briefing:${input.familyCircleId}:${weekKey}`,
+      recipients: sundayMorningRecipients,
     });
   }
 

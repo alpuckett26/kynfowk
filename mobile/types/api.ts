@@ -17,7 +17,8 @@ export type NotificationType =
   | "call_passed_without_completion"
   | "invite_claimed"
   | "recap_posted"
-  | "weekly_connection_digest";
+  | "weekly_connection_digest"
+  | "weekly_briefing";
 
 export interface Suggestion {
   start_at: string;
