@@ -8,16 +8,24 @@ export async function GET(request: Request) {
   const code = requestUrl.searchParams.get("code");
   const type = requestUrl.searchParams.get("type");
 
+  // Recovery (password reset) — Supabase's generateLink({ type: 'recovery' })
+  // redirects here with #access_token=... in the URL fragment (implicit
+  // grant), not ?code=... in query params. Browsers carry the fragment
+  // through redirects, so we just need to bounce to /auth/reset-password
+  // where a client component can read window.location.hash and call
+  // supabase.auth.setSession before showing the form.
+  if (type === "recovery") {
+    return NextResponse.redirect(
+      new URL("/auth/reset-password", requestUrl.origin)
+    );
+  }
+
   if (code) {
     const supabase = await createSupabaseServerClient();
     await supabase.auth.exchangeCodeForSession(code);
 
-    if (type === "recovery") {
-      return NextResponse.redirect(new URL("/auth/reset-password", requestUrl.origin));
-    }
-
     const {
-      data: { user }
+      data: { user },
     } = await supabase.auth.getUser();
 
     if (user) {

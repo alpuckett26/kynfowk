@@ -202,7 +202,7 @@ type AdminClientLike = {
   auth: {
     admin: {
       generateLink: (input: {
-        type: "invite";
+        type: "invite" | "magiclink" | "recovery";
         email: string;
         options?: {
           data?: Record<string, unknown>;
@@ -223,9 +223,13 @@ type AdminClientLike = {
  * endpoint, replacing supabase.auth.admin.inviteUserByEmail (which
  * routes through Supabase's spammy default template).
  *
- * Returns the same shape as sendBrandedTransactionalEmail so callers
- * can surface delivery failures without needing to know about the
- * link-generation step.
+ * If the recipient already has an auth.users row (signed up previously
+ * for any reason), Supabase rejects generateLink({ type: 'invite' })
+ * with a "User already registered" error. In that case we fall back
+ * to a magic-link sign-in so they still get an actionable email — the
+ * accept-invite page they land on after sign-in claims the pending
+ * family_membership the same way (M36 fix runs on every signed-in
+ * landing).
  */
 export async function sendFamilyInviteEmail(args: {
   email: string;
@@ -236,8 +240,11 @@ export async function sendFamilyInviteEmail(args: {
   /** Pre-built /auth/accept-invite URL with the friendly query params. */
   acceptUrlBase: string;
   adminClient: AdminClientLike;
-}): Promise<BrandedEmailResult & { alreadyExists?: boolean }> {
-  const link = await args.adminClient.auth.admin.generateLink({
+}): Promise<BrandedEmailResult & { existingUser?: boolean }> {
+  let actionLink: string | null = null;
+  let existingUser = false;
+
+  const inviteResp = await args.adminClient.auth.admin.generateLink({
     type: "invite",
     email: args.email,
     options: {
@@ -250,16 +257,33 @@ export async function sendFamilyInviteEmail(args: {
       redirectTo: args.acceptUrlBase,
     },
   });
-  if (link.error) {
-    const msg = (link.error.message ?? "").toLowerCase();
-    if (msg.includes("already") || msg.includes("exists")) {
-      return { status: "skipped", alreadyExists: true, errorMessage: link.error.message };
+
+  if (!inviteResp.error) {
+    actionLink = inviteResp.data?.properties?.action_link ?? null;
+  } else {
+    const msg = (inviteResp.error.message ?? "").toLowerCase();
+    if (msg.includes("already") || msg.includes("registered") || msg.includes("exists")) {
+      existingUser = true;
+      const magicResp = await args.adminClient.auth.admin.generateLink({
+        type: "magiclink",
+        email: args.email,
+        options: { redirectTo: args.acceptUrlBase },
+      });
+      if (magicResp.error) {
+        return {
+          status: "failed",
+          existingUser: true,
+          errorMessage: magicResp.error.message,
+        };
+      }
+      actionLink = magicResp.data?.properties?.action_link ?? null;
+    } else {
+      return { status: "failed", errorMessage: inviteResp.error.message };
     }
-    return { status: "failed", errorMessage: link.error.message };
   }
-  const actionLink = link.data?.properties?.action_link;
+
   if (!actionLink) {
-    return { status: "failed", errorMessage: "No action_link returned." };
+    return { status: "failed", existingUser, errorMessage: "No action_link returned." };
   }
 
   const greeting = args.displayName
@@ -270,21 +294,30 @@ export async function sendFamilyInviteEmail(args: {
     ? ` as ${args.relationshipLabel.toLowerCase()}`
     : "";
 
-  return await sendBrandedTransactionalEmail({
+  // Body shifts slightly for existing-user vs. brand-new invitee:
+  // new users see "create your account", existing users see "sign in".
+  const ctaLabel = existingUser ? "Open the family circle" : "Accept the invite";
+  const paragraphs = existingUser
+    ? [
+        `${args.inviterName} added you to their Family Circle on Kynfowk${relationshipPhrase}.`,
+        "You already have a Kynfowk account, so just tap below to sign in and you'll land in the right circle.",
+      ]
+    : [
+        `${args.inviterName} added you to their Family Circle on Kynfowk${relationshipPhrase} and wants to stay connected.`,
+        "Kynfowk helps families share real availability, schedule calls that actually happen, and build a streak of Time Together.",
+      ];
+
+  const result = await sendBrandedTransactionalEmail({
     to: args.email,
     subject: `${args.inviterName} invited you to ${args.circleName}`,
     greeting,
-    paragraphs: [
-      `${args.inviterName} added you to their Family Circle on Kynfowk${relationshipPhrase} and wants to stay connected.`,
-      "Kynfowk helps families share real availability, schedule calls that actually happen, and build a streak of Time Together.",
-    ],
-    cta: {
-      label: "Accept the invite",
-      url: actionLink,
-    },
-    postscript:
-      "Free for families. No credit card needed. If this came as a surprise, you can ignore this email — nothing happens until you accept.",
+    paragraphs,
+    cta: { label: ctaLabel, url: actionLink },
+    postscript: existingUser
+      ? "If you didn't expect this, you can ignore this email — the link expires shortly."
+      : "Free for families. No credit card needed. If this came as a surprise, you can ignore this email — nothing happens until you accept.",
   });
+  return { ...result, existingUser };
 }
 
 function renderText(input: BrandedEmailInput): string {

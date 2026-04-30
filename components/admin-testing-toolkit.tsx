@@ -54,6 +54,7 @@ export function AdminTestingToolkit() {
   const [ttDays, setTtDays] = useState("8");
   // release email form
   const [releaseEmail, setReleaseEmail] = useState("");
+  const [testEmailAddress, setTestEmailAddress] = useState("");
 
   const run = async (key: string, fn: () => Promise<AdminCallResult>) => {
     setPending(key);
@@ -261,6 +262,42 @@ export function AdminTestingToolkit() {
           {pending === "release" ? "Releasing..." : "Release email"}
         </button>
         <ResultDisplay label="release" result={results.release ?? null} />
+      </div>
+
+      <div className="stack-md">
+        <h2>Diagnose invite email</h2>
+        <p className="meta">
+          Fires the full invite-email pipeline against a test address and
+          returns Supabase&apos;s raw response so you can see exactly where
+          the send is failing.
+        </p>
+        <input
+          className="form-input"
+          value={testEmailAddress}
+          onChange={(e) => setTestEmailAddress(e.target.value)}
+          placeholder="test@example.com"
+          inputMode="email"
+        />
+        <button
+          type="button"
+          className="button button-secondary"
+          disabled={!testEmailAddress || pending === "diagnose"}
+          onClick={() =>
+            run("diagnose", () =>
+              adminCall("/api/admin/test-invite-email", {
+                method: "POST",
+                body: JSON.stringify({
+                  email: testEmailAddress,
+                  displayName: "Test Recipient",
+                  circleName: "Diagnostic",
+                }),
+              })
+            )
+          }
+        >
+          {pending === "diagnose" ? "Sending..." : "Diagnose invite send"}
+        </button>
+        <ResultDisplay label="diagnose" result={results.diagnose ?? null} />
       </div>
 
       <div className="stack-md">

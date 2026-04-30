@@ -111,13 +111,25 @@ export async function POST(request: Request) {
         acceptUrlBase: acceptUrl.toString(),
         adminClient: admin,
       });
-      if (result.alreadyExists) {
+      // existingUser=true means recipient had an auth.users row already,
+      // so we sent a magic-link sign-in instead of an invite. The email
+      // still went out; just mark them as alreadyClaimed for UX.
+      if (result.existingUser) {
         alreadyClaimed = true;
-      } else if (result.status === "sent") {
+      }
+      if (result.status === "sent") {
         inviteEmailSent = true;
       } else if (result.status === "failed") {
         inviteEmailWarning = result.errorMessage ?? "Email failed to send.";
-        console.error("[invite] branded send failed:", inviteEmailWarning);
+        console.error(
+          `[invite] sendFamilyInviteEmail failed for ${inviteEmail}: ${inviteEmailWarning}`
+        );
+      } else if (result.status === "skipped") {
+        inviteEmailWarning =
+          result.errorMessage ?? "Email send was skipped.";
+        console.warn(
+          `[invite] sendFamilyInviteEmail skipped for ${inviteEmail}: ${inviteEmailWarning}`
+        );
       }
     } else {
       inviteEmailWarning =
