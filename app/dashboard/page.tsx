@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 
 import { scheduleSuggestedCallAction } from "@/app/actions";
+import { AdSlot } from "@/components/ad-slot";
 import { AICallSuggestion } from "@/components/ai-call-suggestion";
 import { Card } from "@/components/card";
 import { CarouselPhotoUpload } from "@/components/carousel-photo-upload";
@@ -85,6 +86,8 @@ export default async function DashboardPage({
         <StatsGrid stats={data.stats} />
         <StrengthScoreInputTable />
         <DashboardHighlights highlights={data.highlights} />
+
+        <AdSlot userId={user.id} placement="dashboard-top" />
 
         {personalNudge && (
           <div className="poll-nudge-banner">

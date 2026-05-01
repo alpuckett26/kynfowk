@@ -5661,3 +5661,32 @@ a.phonebook-detail:hover { text-decoration: underline; }
   align-items: center;
   gap: 0.4rem;
 }
+
+/* ── M44 — paid-tier gated <AdSlot> placeholder ──────────────────────── */
+.ad-slot {
+  background: #ffffff;
+  border: 1px dashed rgba(121, 83, 55, 0.28);
+  border-radius: 16px;
+  padding: 1rem 1.25rem;
+  margin: 1rem 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.4rem;
+}
+.ad-slot-eyebrow {
+  font-size: 0.68rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(121, 83, 55, 0.7);
+  font-weight: 700;
+}
+.ad-slot-body {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--ink, #1f1916);
+  opacity: 0.75;
+}
+.ad-slot-leaderboard { min-height: 90px; }
+.ad-slot-rectangle   { min-height: 250px; }
+.ad-slot-skyscraper  { min-height: 600px; max-width: 320px; }
