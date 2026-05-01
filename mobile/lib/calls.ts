@@ -11,6 +11,45 @@ import type {
   ScheduleCallResponse,
 } from "@/types/api";
 
+// M42 — spontaneous "ring now" call.
+export interface RingResponse {
+  success: true;
+  callId: string;
+  ringExpiresAt: string;
+  participantCount: number;
+  pushedTo: number;
+}
+
+export function ringFamilyMembers(input: {
+  participantMembershipIds: string[];
+  title?: string;
+}): Promise<RingResponse> {
+  return apiFetch<RingResponse>("/api/native/calls/ring", {
+    method: "POST",
+    body: input,
+  });
+}
+
+export function answerIncomingCall(
+  callId: string
+): Promise<{ success: true; callId: string; alreadyLive?: boolean }> {
+  return apiFetch(`/api/native/calls/${callId}/answer`, { method: "POST" });
+}
+
+export function declineIncomingCall(
+  callId: string
+): Promise<{ success: true; callId: string; alreadyClosed?: boolean }> {
+  return apiFetch(`/api/native/calls/${callId}/decline`, { method: "POST" });
+}
+
+export function cancelOutgoingRing(
+  callId: string
+): Promise<{ success: true; callId: string; alreadyClosed?: boolean }> {
+  return apiFetch(`/api/native/calls/${callId}/cancel-ring`, {
+    method: "POST",
+  });
+}
+
 export function fetchCallDetail(callId: string): Promise<CallDetailResponse> {
   return apiFetch<CallDetailResponse>(`/api/native/calls/${callId}`);
 }

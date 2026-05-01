@@ -29,7 +29,10 @@ const TYPE_LABELS: Record<NotificationType, string> = {
   invite_claimed: "Invite claimed",
   recap_posted: "Recap posted",
   weekly_connection_digest: "Weekly digest",
-  weekly_briefing: "Weekly briefing"
+  weekly_briefing: "Weekly briefing",
+  incoming_call: "Incoming call",
+  call_missed: "Missed call",
+  call_declined: "Call declined"
 };
 
 const TYPE_GLYPHS: Record<NotificationType, string> = {
@@ -42,7 +45,10 @@ const TYPE_GLYPHS: Record<NotificationType, string> = {
   invite_claimed: "👋",
   recap_posted: "📝",
   weekly_connection_digest: "📊",
-  weekly_briefing: "📖"
+  weekly_briefing: "📖",
+  incoming_call: "📞",
+  call_missed: "📵",
+  call_declined: "🚫"
 };
 
 function buildNotificationsHref(input: {

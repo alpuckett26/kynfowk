@@ -17,6 +17,9 @@ export const NOTIFICATION_TYPE_LABELS: Record<NotificationType, string> = {
   recap_posted: "Recap posted",
   weekly_connection_digest: "Weekly digest",
   weekly_briefing: "Weekly briefing",
+  incoming_call: "Incoming call",
+  call_missed: "Missed call",
+  call_declined: "Call declined",
 };
 
 export function fetchNotifications(filters?: {

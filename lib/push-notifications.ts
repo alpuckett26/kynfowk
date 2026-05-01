@@ -15,7 +15,10 @@ export type NotificationType =
   | "circle_message"       // a message posted to your circle
   | "birthday_reminder"    // a family member's birthday is coming up
   | "care_checkin"         // periodic "how are you?" prompt
-  | "memory_prompt";       // "share a memory with the family"
+  | "memory_prompt"        // "share a memory with the family"
+  | "incoming_call"        // M42 — spontaneous "ring now" — open ring screen
+  | "call_declined"        // M42 — recipient declined a ring
+  | "call_missed";         // M42 — ring went unanswered for 30s
 
 // Every push notification payload should include these fields in `data`.
 // Additional type-specific keys are allowed.

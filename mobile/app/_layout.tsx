@@ -5,6 +5,7 @@ import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { colors } from "@/lib/theme";
 import { useSession } from "@/hooks/useSession";
+import { usePushRouting } from "@/hooks/usePushRouting";
 import { SplashOverlay } from "@/components/SplashOverlay";
 
 function AuthGate({ children }: { children: React.ReactNode }) {
@@ -35,11 +36,17 @@ function AuthGate({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+function PushRouter() {
+  usePushRouting();
+  return null;
+}
+
 export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <StatusBar style="dark" />
       <AuthGate>
+        <PushRouter />
         <Stack
           screenOptions={{
             headerShown: false,
@@ -49,6 +56,10 @@ export default function RootLayout() {
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="calls/[callId]/index" />
           <Stack.Screen name="calls/[callId]/live" />
+          <Stack.Screen
+            name="calls/[callId]/ring"
+            options={{ presentation: "fullScreenModal", gestureEnabled: false }}
+          />
           <Stack.Screen name="schedule/new" />
           <Stack.Screen name="family/invite" />
           <Stack.Screen name="family/placeholder" />

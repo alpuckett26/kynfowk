@@ -233,7 +233,10 @@ export interface Database {
             | "invite_claimed"
             | "recap_posted"
             | "weekly_connection_digest"
-            | "weekly_briefing";
+            | "weekly_briefing"
+            | "incoming_call"
+            | "call_missed"
+            | "call_declined";
           title: string;
           body: string;
           cta_label: string | null;
@@ -258,7 +261,10 @@ export interface Database {
             | "invite_claimed"
             | "recap_posted"
             | "weekly_connection_digest"
-            | "weekly_briefing";
+            | "weekly_briefing"
+            | "incoming_call"
+            | "call_missed"
+            | "call_declined";
           title: string;
           body: string;
           cta_label?: string | null;

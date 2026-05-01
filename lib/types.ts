@@ -12,7 +12,10 @@ export type NotificationType =
   | "invite_claimed"
   | "recap_posted"
   | "weekly_connection_digest"
-  | "weekly_briefing";
+  | "weekly_briefing"
+  | "incoming_call"
+  | "call_missed"
+  | "call_declined";
 
 export type NotificationChannel = "in_app" | "email" | "push";
 
