@@ -2289,7 +2289,7 @@ export async function inviteFamilyMemberAction(formData: FormData) {
       acceptUrl.searchParams.set("from", membership.display_name);
       acceptUrl.searchParams.set("email", inviteEmail);
       if (relationship) acceptUrl.searchParams.set("relationship", relationship);
-      await sendFamilyInviteEmail({
+      const reinvite = await sendFamilyInviteEmail({
         email: inviteEmail,
         displayName,
         inviterName: membership.display_name,
@@ -2298,6 +2298,11 @@ export async function inviteFamilyMemberAction(formData: FormData) {
         acceptUrlBase: acceptUrl.toString(),
         adminClient: admin,
       });
+      if (reinvite.status === "failed") {
+        console.error(
+          `[invite] re-invite send failed for ${inviteEmail}: ${reinvite.errorMessage}`
+        );
+      }
     }
     revalidatePath("/family");
     revalidatePath("/dashboard");
@@ -2338,8 +2343,14 @@ export async function inviteFamilyMemberAction(formData: FormData) {
       acceptUrlBase: acceptUrl.toString(),
       adminClient: admin,
     });
-    if (inviteResponse.alreadyExists) {
-      redirectWithStatus("family-invite-already-claimed");
+    if (inviteResponse.status === "failed") {
+      console.error(
+        `[invite] sendFamilyInviteEmail failed for ${inviteEmail}: ${inviteResponse.errorMessage}`
+      );
+    } else if (inviteResponse.status === "skipped") {
+      console.warn(
+        `[invite] sendFamilyInviteEmail skipped for ${inviteEmail}: ${inviteResponse.errorMessage}`
+      );
     }
   }
 
