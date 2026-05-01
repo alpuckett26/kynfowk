@@ -16,6 +16,7 @@ import { NotificationInbox } from "@/components/notification-inbox";
 import { NotificationPreferencesForm } from "@/components/notification-preferences-form";
 import { PostCallSummaryForm } from "@/components/post-call-summary-form";
 import { StatsGrid } from "@/components/stats-grid";
+import { StrengthScoreInputTable } from "@/components/strength-score-input-table";
 import { StatusBanner } from "@/components/status-banner";
 import {
   getDashboardData,
@@ -82,6 +83,7 @@ export default async function DashboardPage({
         </section>
 
         <StatsGrid stats={data.stats} />
+        <StrengthScoreInputTable />
         <DashboardHighlights highlights={data.highlights} />
 
         {personalNudge && (

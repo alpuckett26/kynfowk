@@ -18,7 +18,7 @@
  */
 
 const BRAND_NAME = "Kynfowk";
-const BRAND_TAGLINE = "Family connection, one warm call at a time.";
+const BRAND_TAGLINE = "Make family time more rewarding.";
 const BRAND_COLOR = "#1f1916";
 const BRAND_BG = "#fdf6ec";
 const ACCENT_COLOR = "#8a6a3a";

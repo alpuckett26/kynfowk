@@ -62,7 +62,7 @@ export function SplashOverlay() {
         <View style={styles.trunk} />
       </View>
       <Text style={styles.brand}>Kynfowk</Text>
-      <Text style={styles.tagline}>Your Family Circle</Text>
+      <Text style={styles.tagline}>Make family time more rewarding</Text>
     </Animated.View>
   );
 }
