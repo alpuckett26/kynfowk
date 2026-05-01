@@ -9,6 +9,7 @@ import {
 } from "@/app/actions";
 import { EmptyState } from "@/components/empty-state";
 import { MemberAvatarUpload } from "@/components/member-avatar-upload";
+import { RingMemberButton } from "@/components/ring-member-button";
 import { RELATIONSHIP_OPTIONS } from "@/lib/relationship-classifier";
 
 type Member = {
@@ -97,6 +98,15 @@ function ActiveMemberRow({
           </form>
 
           <div className="call-actions">
+            {/* M43 — Ring now (web caller). Active members with an
+                account, excluding the viewer themselves. */}
+            {member.status === "active" && !isViewer ? (
+              <RingMemberButton
+                membershipId={member.id}
+                displayName={member.display_name}
+              />
+            ) : null}
+
             {member.status === "invited" && member.invite_email ? (
               <form action={resendFamilyInviteAction}>
                 <input name="familyCircleId" type="hidden" value={familyCircleId} />
