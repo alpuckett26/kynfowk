@@ -2,6 +2,7 @@ import type { Route } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import { AcceptInviteFragmentHandler } from "@/components/accept-invite-fragment-handler";
 import { getPostAuthRedirectPath } from "@/lib/invites";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -50,6 +51,16 @@ export default async function AcceptInvitePage({
     <main className="page-shell">
       <div className="container">
         <div className="accept-invite-shell">
+          {/*
+            Server-rendered welcome content below.
+            The fragment handler is a no-op on most loads. When the
+            visitor arrives via a Supabase action_link (the fragment
+            carries access_token + refresh_token), it sets the session
+            and bounces to /auth/callback?type=invite_claim — the
+            visitor never sees the "Create your account" prompt below.
+          */}
+          <AcceptInviteFragmentHandler />
+
           <div className="accept-invite-card">
             <span className="eyebrow">You&apos;re invited</span>
 
