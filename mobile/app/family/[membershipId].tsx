@@ -18,6 +18,7 @@ import {
   updateMember,
 } from "@/lib/family";
 import { setMinorParentalConsent } from "@/lib/auto-schedule";
+import { ringFamilyMembers } from "@/lib/calls";
 import { pickAndUploadAvatar } from "@/lib/photos";
 import { colors, fontSize, fontWeight, spacing } from "@/lib/theme";
 import type { FamilyMember } from "@/types/api";
@@ -50,6 +51,7 @@ export default function MemberDetailScreen() {
   const [savingEdit, setSavingEdit] = useState(false);
   const [editMessage, setEditMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [ringing, setRinging] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -267,6 +269,28 @@ export default function MemberDetailScreen() {
     }
   };
 
+  const onRingNow = async () => {
+    if (ringing) return;
+    setRinging(true);
+    try {
+      const result = await ringFamilyMembers({
+        participantMembershipIds: [member.id],
+        title: `Ringing ${member.display_name}`,
+      });
+      // Navigate to the live call screen so the caller is in the room
+      // when the recipient picks up. The recipient's phone is already
+      // pinging — sendPush ran synchronously before the response.
+      router.push(`/calls/${result.callId}/live`);
+    } catch (e) {
+      Alert.alert(
+        "Couldn't ring",
+        e instanceof Error ? e.message : "Try again?"
+      );
+    } finally {
+      setRinging(false);
+    }
+  };
+
   const onRemove = () => {
     Alert.alert(
       "Remove member?",
@@ -324,6 +348,28 @@ export default function MemberDetailScreen() {
           ) : null}
         </View>
       </View>
+
+      {/* M42 — Ring now. Only when the member has a real auth user
+          (signed up + active) and isn't the viewer themselves. */}
+      {member.status === "active" &&
+      !member.is_placeholder &&
+      !member.is_deceased &&
+      !member.blocked_at ? (
+        <Card>
+          <SectionHeader title="Reach out" />
+          <Button
+            label={ringing ? "Ringing…" : `Call ${member.display_name.split(/\s+/)[0]}`}
+            onPress={onRingNow}
+            loading={ringing}
+            disabled={ringing}
+          />
+          <Button
+            label="Schedule a call"
+            variant="secondary"
+            onPress={() => router.push("/schedule/new")}
+          />
+        </Card>
+      ) : null}
 
       {canEdit ? (
         <>
