@@ -5456,3 +5456,104 @@ a.phonebook-detail:hover { text-decoration: underline; }
   pointer-events: none;
   white-space: nowrap;
 }
+
+/* ── M42/M43 — Ring now / incoming-call overlay ─────────────────────── */
+.ring-button-shell {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.incoming-call-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(31, 25, 22, 0.78);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  animation: incoming-call-fade-in 180ms ease-out;
+}
+
+@keyframes incoming-call-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes incoming-call-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.04); }
+}
+
+.incoming-call-card {
+  background: var(--cream, #fdf6ec);
+  border-radius: 24px;
+  padding: 2.25rem 1.75rem 2rem;
+  width: 100%;
+  max-width: 360px;
+  text-align: center;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.35);
+  animation: incoming-call-pulse 1.2s ease-in-out infinite;
+}
+
+.incoming-call-eyebrow {
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent, #8a6a3a);
+  font-weight: 700;
+  margin: 0 0 1.25rem 0;
+}
+
+.incoming-call-name {
+  font-family: var(--font-display, Georgia), serif;
+  font-size: 1.85rem;
+  font-weight: 700;
+  color: var(--ink, #1f1916);
+  margin: 0;
+  line-height: 1.15;
+}
+
+.incoming-call-circle {
+  font-size: 0.95rem;
+  color: var(--ink, #1f1916);
+  margin: 0.35rem 0 0;
+  opacity: 0.75;
+}
+
+.incoming-call-hint {
+  font-size: 0.85rem;
+  color: rgba(31, 25, 22, 0.55);
+  margin: 1rem 0 1.75rem;
+}
+
+.incoming-call-actions {
+  display: flex;
+  justify-content: center;
+  gap: 2.25rem;
+}
+
+.incoming-call-decline,
+.incoming-call-accept {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: none;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #fff;
+  cursor: pointer;
+  transition: transform 120ms ease, opacity 120ms ease;
+}
+.incoming-call-decline { background: #b8453a; }
+.incoming-call-accept { background: #3a7a4a; }
+
+.incoming-call-decline:hover,
+.incoming-call-accept:hover { transform: scale(1.06); }
+.incoming-call-decline:active,
+.incoming-call-accept:active { transform: scale(0.94); }
+.incoming-call-decline:disabled,
+.incoming-call-accept:disabled { opacity: 0.5; cursor: not-allowed; }
