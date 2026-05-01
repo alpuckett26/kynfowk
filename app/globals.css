@@ -5557,3 +5557,80 @@ a.phonebook-detail:hover { text-decoration: underline; }
 .incoming-call-accept:active { transform: scale(0.94); }
 .incoming-call-decline:disabled,
 .incoming-call-accept:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ── M44 — Strength Score input table + Give Time placeholder ────────── */
+.strength-score-input-table {
+  background: #ffffff;
+  border: 1px solid rgba(121, 83, 55, 0.14);
+  border-radius: 16px;
+  padding: 1.25rem 1.5rem;
+  margin: 1rem 0;
+  overflow-x: auto;
+}
+.strength-score-input-table h3 {
+  margin: 0 0 0.25rem 0;
+  font-size: 1.05rem;
+}
+.strength-score-input-table table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 0.75rem;
+  font-size: 0.9rem;
+}
+.strength-score-input-table th {
+  text-align: left;
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(121, 83, 55, 0.85);
+  padding: 0.4rem 0.5rem;
+  border-bottom: 1px solid rgba(121, 83, 55, 0.18);
+  font-weight: 700;
+}
+.strength-score-input-table td {
+  padding: 0.6rem 0.5rem;
+  border-bottom: 1px solid rgba(121, 83, 55, 0.08);
+  vertical-align: top;
+}
+.score-input-coming-soon { background: rgba(248, 236, 220, 0.4); }
+.score-input-soon-badge {
+  background: rgba(75, 122, 98, 0.16);
+  color: #3a7a4a;
+  font-weight: 600;
+  font-size: 0.7rem;
+}
+
+.give-time-card {
+  background: #ffffff;
+  border: 1px solid rgba(121, 83, 55, 0.14);
+  border-radius: 16px;
+  padding: 1.25rem 1.5rem;
+  margin: 1rem 0;
+}
+.give-time-eyebrow {
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent, #8a6a3a);
+  font-weight: 700;
+  margin: 0 0 0.5rem;
+}
+.give-time-headline {
+  margin: 0 0 0.5rem;
+  font-family: var(--font-display, Georgia), serif;
+  font-size: 1.2rem;
+}
+.give-time-body { font-size: 0.9rem; color: var(--ink, #1f1916); margin: 0 0 1rem; opacity: 0.8; }
+.give-time-button {
+  background: rgba(75, 122, 98, 0.16);
+  color: #3a7a4a;
+  border: none;
+  padding: 0.55rem 1rem;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: not-allowed;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}

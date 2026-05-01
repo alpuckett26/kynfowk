@@ -188,6 +188,19 @@ export default function FamilyTab() {
           ))}
         </View>
       </Card>
+
+      {/* M44 — Give Time placeholder. v1 surface for the upcoming
+          Community Roots feature; partner API for care-facility
+          matching is TBD. Button intentionally non-interactive. */}
+      <Card>
+        <Text style={styles.giveTimeEyebrow}>Coming soon · Earns the most points</Text>
+        <Text style={styles.giveTimeHeadline}>Give Time</Text>
+        <Text style={styles.giveTimeBody}>
+          Calls to seniors in nursing homes count toward Community Roots —
+          a high-weight Strength Score input. Launching in the next release.
+        </Text>
+        <Button label="Coming soon · v2" variant="ghost" disabled onPress={() => {}} />
+      </Card>
     </Screen>
   );
 }
@@ -207,4 +220,24 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   lede: { fontSize: fontSize.sm, color: colors.textMuted, lineHeight: 20 },
+  giveTimeEyebrow: {
+    textTransform: "uppercase",
+    letterSpacing: 1.5,
+    fontSize: fontSize.xs,
+    fontWeight: fontWeight.bold,
+    color: colors.accent,
+  },
+  giveTimeHeadline: {
+    fontSize: fontSize.lg,
+    fontWeight: fontWeight.bold,
+    color: colors.text,
+    marginTop: 4,
+  },
+  giveTimeBody: {
+    fontSize: fontSize.sm,
+    color: colors.textMuted,
+    lineHeight: 20,
+    marginTop: 8,
+    marginBottom: 12,
+  },
 });

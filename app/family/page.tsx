@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { Card } from "@/components/card";
 import { FamilyManagementList } from "@/components/family-management-list";
+import { GiveTimePlaceholderCard } from "@/components/give-time-placeholder-card";
 import { StatusBanner } from "@/components/status-banner";
 import { getFamilyManagementData, requireViewer } from "@/lib/data";
 
@@ -81,6 +82,8 @@ export default async function FamilyPage({
             />
           </div>
         </Card>
+
+        <GiveTimePlaceholderCard />
       </div>
     </main>
   );

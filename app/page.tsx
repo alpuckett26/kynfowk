@@ -37,13 +37,13 @@ export default async function HomePage() {
           <div className="home-hero-copy">
             <span className="eyebrow">Family video calls, made effortless</span>
             <h1 className="home-headline">
-              Stop missing each other.<br />
-              <em className="home-headline-accent">Start showing up.</em>
+              A family that is more connected{" "}
+              <em className="home-headline-accent">earns more.</em>
             </h1>
             <p className="home-lede">
               Kynfowk finds the window where your whole family can actually
-              get on a video call together — then puts it on the calendar
-              automatically. No back-and-forth. No forgotten plans.
+              get on a video call together — then rewards you for showing up.
+              Real points. Real cash. Real time together.
             </p>
             {hasCircle ? (
               <div className="home-cta-row home-cta-row-personal">
