@@ -2,6 +2,7 @@ import {
   authenticateNativeRequest,
   nativeErrorResponse,
 } from "@/lib/native-auth";
+import { sendFamilyInviteEmail } from "@/lib/branded-email";
 import { getViewerFamilyCircleWith } from "@/lib/data";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { hasSupabaseServiceRoleEnv } from "@/lib/env";
@@ -38,7 +39,7 @@ export async function POST(
 
     const membershipResponse = await supabase
       .from("family_memberships")
-      .select("id, display_name, invite_email, status")
+      .select("id, display_name, invite_email, status, relationship_label")
       .eq("id", membershipId)
       .eq("family_circle_id", family.circle.id)
       .maybeSingle();
@@ -61,36 +62,31 @@ export async function POST(
     acceptUrl.searchParams.set("from", family.membership.display_name);
     acceptUrl.searchParams.set("email", pending.invite_email!);
 
-    const inviteCall = admin.auth.admin.inviteUserByEmail(
-      pending.invite_email!,
-      {
-        data: {
-          full_name: pending.display_name,
-          family_circle_name: family.circle.name,
-          inviter_name: family.membership.display_name,
-        },
-        redirectTo: acceptUrl.toString(),
-      }
-    );
     const timeoutMs = 8000;
     const inviteResponse = await Promise.race([
-      inviteCall,
-      new Promise<{ error: { message: string }; data: null }>((resolve) =>
+      sendFamilyInviteEmail({
+        email: pending.invite_email!,
+        displayName: pending.display_name,
+        inviterName: family.membership.display_name,
+        circleName: family.circle.name,
+        relationshipLabel: pending.relationship_label ?? null,
+        acceptUrlBase: acceptUrl.toString(),
+        adminClient: admin,
+      }),
+      new Promise<{ status: "failed"; errorMessage: string }>((resolve) =>
         setTimeout(
           () =>
             resolve({
-              error: {
-                message: `Supabase Auth invite did not respond in ${timeoutMs}ms.`,
-              },
-              data: null,
+              status: "failed",
+              errorMessage: `Supabase Auth invite did not respond in ${timeoutMs}ms.`,
             }),
           timeoutMs
         )
       ),
     ]);
 
-    if (inviteResponse.error) {
-      const lower = inviteResponse.error.message.toLowerCase();
+    if (inviteResponse.status === "failed") {
+      const lower = (inviteResponse.errorMessage ?? "").toLowerCase();
       if (lower.includes("already") || lower.includes("exists")) {
         return Response.json(
           { error: "That email already has an account.", alreadyClaimed: true },
@@ -98,7 +94,7 @@ export async function POST(
         );
       }
       return Response.json(
-        { error: inviteResponse.error.message },
+        { error: inviteResponse.errorMessage ?? "Failed to send invite." },
         { status: 502 }
       );
     }
