@@ -7,6 +7,7 @@ import type {
   NotificationTypeCount,
   NotificationType
 } from "@/lib/types";
+import { sendBrandedTransactionalEmail } from "@/lib/branded-email";
 import { getWeekKey } from "@/lib/utils";
 import webpush from "web-push";
 
@@ -204,44 +205,42 @@ async function sendEmailThroughProvider(input: {
   body: string;
   ctaHref?: string | null;
 }) {
-  const resendKey = process.env.RESEND_API_KEY;
-  const fromEmail = process.env.NOTIFICATION_FROM_EMAIL;
-
-  if (!resendKey || !fromEmail) {
-    console.info(`[notifications] Resend not configured — skipping email to ${input.to}: ${input.subject}`);
+  // Route every notification email through the branded transactional
+  // pipeline so they get HTML body + plain-text fallback, a proper
+  // From display name, Reply-To, and List-Unsubscribe. Plain "noreply"
+  // sender + bare-link plain text was getting filtered to spam by
+  // Gmail with "similar to messages identified as spam in the past".
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://kynfowk.com";
+  const ctaUrl = input.ctaHref
+    ? input.ctaHref.startsWith("http")
+      ? input.ctaHref
+      : `${siteUrl}${input.ctaHref}`
+    : null;
+  const paragraphs = input.body
+    .split(/\n{2,}/)
+    .map((p) => p.trim())
+    .filter((p) => p.length > 0);
+  const result = await sendBrandedTransactionalEmail({
+    to: input.to,
+    subject: input.subject,
+    paragraphs: paragraphs.length > 0 ? paragraphs : [input.body],
+    cta: ctaUrl ? { label: "Open in Kynfowk", url: ctaUrl } : undefined
+  });
+  if (result.status === "skipped") {
     return {
       status: "skipped" as NotificationDeliveryStatus,
-      errorMessage: "RESEND_API_KEY or NOTIFICATION_FROM_EMAIL not set."
+      errorMessage: result.errorMessage ?? "Email not configured."
     };
   }
-
-  const response = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${resendKey}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      from: fromEmail,
-      to: [input.to],
-      subject: input.subject,
-      text: input.ctaHref
-        ? `${input.body}\n\nJoin here: ${input.ctaHref.startsWith("http") ? input.ctaHref : `${process.env.NEXT_PUBLIC_SITE_URL ?? "https://kynfowk.com"}${input.ctaHref}`}`
-        : input.body
-    })
-  });
-
-  if (!response.ok) {
+  if (result.status === "failed") {
     return {
       status: "failed" as NotificationDeliveryStatus,
-      errorMessage: `Resend returned ${response.status}.`
+      errorMessage: result.errorMessage ?? "Email send failed."
     };
   }
-
-  const payload = (await response.json()) as { id?: string };
   return {
     status: "sent" as NotificationDeliveryStatus,
-    providerMessageId: payload.id ?? null
+    providerMessageId: result.providerMessageId ?? null
   };
 }
 
