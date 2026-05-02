@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { AdSlot } from "@/components/ad-slot";
 import { Card } from "@/components/card";
 import { FamilyManagementList } from "@/components/family-management-list";
 import { GiveTimePlaceholderCard } from "@/components/give-time-placeholder-card";
@@ -84,6 +85,8 @@ export default async function FamilyPage({
         </Card>
 
         <GiveTimePlaceholderCard />
+
+        <AdSlot userId={user.id} placement="family-bottom" size="rectangle" />
       </div>
     </main>
   );
