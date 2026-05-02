@@ -16,6 +16,8 @@ export interface PlanPanelProps {
   timezone: string;
   /** Pre-rendered AICallSuggestion (server component) — passed as a slot. */
   aiSuggestion: ReactNode;
+  /** Server-rendered AdSlot — appears below the active pane. */
+  adSlot?: ReactNode;
 }
 
 export function PlanPanel({
@@ -24,6 +26,7 @@ export function PlanPanel({
   suggestions,
   timezone,
   aiSuggestion,
+  adSlot,
 }: PlanPanelProps) {
   // Default to Overlap pane if user has set availability — they're past
   // the setup step and want to act on suggestions.
@@ -129,6 +132,8 @@ export function PlanPanel({
           schedule a call from any of them in one tap.
         </p>
       </details>
+
+      {adSlot}
     </>
   );
 }

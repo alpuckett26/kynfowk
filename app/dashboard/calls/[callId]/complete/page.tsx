@@ -1,6 +1,7 @@
 import type { Route } from "next";
 import Link from "next/link";
 
+import { AdSlot } from "@/components/ad-slot";
 import { Card } from "@/components/card";
 import { CompleteCallForm } from "@/components/complete-call-form";
 import { EmptyState } from "@/components/empty-state";
@@ -60,6 +61,12 @@ export default async function CompleteCallPage({
             />
           )}
         </Card>
+
+        <AdSlot
+          userId={user.id}
+          placement="post-call-interstitial"
+          size="rectangle"
+        />
       </div>
     </main>
   );

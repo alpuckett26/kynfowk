@@ -1,6 +1,7 @@
 import type { Route } from "next";
 import Link from "next/link";
 
+import { AdSlot } from "@/components/ad-slot";
 import { Card } from "@/components/card";
 import { CarouselPhotoUpload } from "@/components/carousel-photo-upload";
 import { FamilyManagementList } from "@/components/family-management-list";
@@ -26,6 +27,7 @@ export interface FamilyPanelMember {
 }
 
 export interface FamilyPanelProps {
+  userId: string;
   familyCircleId: string;
   viewerMembershipId: string;
   canManage: boolean;
@@ -39,6 +41,7 @@ export interface FamilyPanelProps {
 }
 
 export function FamilyPanel({
+  userId,
   familyCircleId,
   viewerMembershipId,
   canManage,
@@ -81,6 +84,8 @@ export function FamilyPanel({
           />
         </div>
       </Card>
+
+      <AdSlot userId={userId} placement="family-panel" size="leaderboard" />
     </>
   );
 }

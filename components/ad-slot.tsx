@@ -1,19 +1,27 @@
+import { AdSenseUnit } from "@/components/adsense-unit";
+import { type AdPlacement, getAdSenseClientId, getAdSenseSlotId } from "@/lib/ads";
 import { getViewerBilling } from "@/lib/billing";
 
 /**
- * M44 — paid-tier gated ad slot.
+ * M44 — paid-tier gated ad surface.
+ * M54 — switches between real AdSense ad unit (when env vars are
+ *       configured) and the neutral "Sponsored" placeholder.
  *
- * v1: server component that returns null for paid-tier viewers and a
- * neutral "Sponsored" placeholder for free-tier viewers. The actual
- * AdSense / AdMob / Meta Audience Network rendering lands in a follow-up
- * PR — this slot just reserves the layout space and proves the gate.
+ * Server component. Always render this inside an authenticated surface
+ * where requireViewer() has already run; pass the viewer's user id.
  *
- * Always render this inside an authenticated surface where requireViewer()
- * has already run. Pass `userId` from that viewer.
+ * Behavior:
+ *   - Paid tier: returns null (no slot, no layout reservation).
+ *   - Free tier + AdSense client ID and per-placement slot ID set:
+ *     renders the live `<ins class="adsbygoogle">` unit via the
+ *     AdSenseUnit client component.
+ *   - Free tier but missing AdSense config: renders the "Sponsored"
+ *     placeholder card so layout stays stable and the upgrade prompt
+ *     is still visible.
  *
- * `placement` is a free-form string echoed into the placeholder so the
- * design / ops team can spot which slot they are looking at when ad units
- * are wired up. It is also what the eventual ad-fetch will key off.
+ * `placement` keys into lib/ads.ts to find the matching slot ID.
+ * `size` reserves a layout-stable height regardless of which branch
+ * renders.
  */
 export async function AdSlot({
   userId,
@@ -21,12 +29,26 @@ export async function AdSlot({
   size = "leaderboard",
 }: {
   userId: string;
-  placement: string;
+  placement: AdPlacement;
   size?: "leaderboard" | "rectangle" | "skyscraper";
 }) {
   const billing = await getViewerBilling(userId);
   if (billing.isPaidTier) {
     return null;
+  }
+
+  const clientId = getAdSenseClientId();
+  const slotId = getAdSenseSlotId(placement);
+
+  if (clientId && slotId) {
+    return (
+      <AdSenseUnit
+        client={clientId}
+        slot={slotId}
+        placement={placement}
+        size={size}
+      />
+    );
   }
 
   return (

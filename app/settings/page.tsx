@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { AdSlot } from "@/components/ad-slot";
 import { Card } from "@/components/card";
 import { NotificationPreferencesForm } from "@/components/notification-preferences-form";
 import { ProfileSettingsForm } from "@/components/profile-settings-form";
@@ -72,6 +73,8 @@ export default async function SettingsPage() {
             </Card>
           </div>
         </section>
+
+        <AdSlot userId={user.id} placement="settings-page" size="leaderboard" />
       </div>
     </main>
   );
