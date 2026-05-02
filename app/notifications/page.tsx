@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { AdSlot } from "@/components/ad-slot";
 import { Card } from "@/components/card";
 import { NotificationCenter } from "@/components/notification-center";
 import { NotificationPreferencesForm } from "@/components/notification-preferences-form";
@@ -78,6 +79,8 @@ export default async function NotificationsPage({
             </Card>
           </div>
         </section>
+
+        <AdSlot userId={user.id} placement="notifications-feed" size="leaderboard" />
       </div>
     </main>
   );

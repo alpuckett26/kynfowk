@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 
+import { AdSlot } from "@/components/ad-slot";
 import { AICallSuggestion } from "@/components/ai-call-suggestion";
 import { DashboardShell } from "@/components/dashboard-shell";
 import { FamilyPollPopup } from "@/components/family-poll-popup";
@@ -63,6 +64,7 @@ export default async function DashboardPage({
 
   const familyPanel = (
     <FamilyPanel
+      userId={user.id}
       familyCircleId={familyData.circle.id}
       viewerMembershipId={familyData.viewer.membershipId}
       canManage={familyData.viewer.canManage}
@@ -101,6 +103,13 @@ export default async function DashboardPage({
             status: m.status,
           })),
           timezone: data.viewerTimezone,
+          adSlot: (
+            <AdSlot
+              userId={user.id}
+              placement="connect-panel"
+              size="leaderboard"
+            />
+          ),
         }}
         plan={{
           familyCircleId: data.circle.id,
@@ -116,6 +125,13 @@ export default async function DashboardPage({
                 userId={user.id}
               />
             </Suspense>
+          ),
+          adSlot: (
+            <AdSlot
+              userId={user.id}
+              placement="plan-panel"
+              size="leaderboard"
+            />
           ),
         }}
         earnPanel={earnPanel}

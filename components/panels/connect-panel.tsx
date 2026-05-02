@@ -1,5 +1,6 @@
 "use client";
 
+import { type ReactNode } from "react";
 import Link from "next/link";
 
 import { Card } from "@/components/card";
@@ -40,6 +41,9 @@ export interface ConnectPanelProps {
   timezone: string;
   /** Called when the user taps "Schedule a call" — should swipe to Plan. */
   onSchedule?: () => void;
+  /** Server-rendered AdSlot — passed in so this client component
+   *  doesn't need to do the billing query itself. */
+  adSlot?: ReactNode;
 }
 
 export function ConnectPanel({
@@ -52,6 +56,7 @@ export function ConnectPanel({
   members,
   timezone,
   onSchedule,
+  adSlot,
 }: ConnectPanelProps) {
   const ringableMembers = members
     .filter((m) => m.status === "active")
@@ -142,6 +147,8 @@ export function ConnectPanel({
           </div>
         </Card>
       ) : null}
+
+      {adSlot}
     </>
   );
 }

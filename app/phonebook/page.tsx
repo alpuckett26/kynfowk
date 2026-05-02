@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { AdSlot } from "@/components/ad-slot";
 import { Card } from "@/components/card";
 import { PhonebookEntry } from "@/components/phonebook-entry";
 import { StatusBanner } from "@/components/status-banner";
@@ -52,6 +53,8 @@ export default async function PhonebookPage({
             </div>
           </div>
         </Card>
+
+        <AdSlot userId={user.id} placement="phonebook-page" size="leaderboard" />
       </div>
     </main>
   );

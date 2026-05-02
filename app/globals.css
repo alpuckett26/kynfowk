@@ -5553,3 +5553,68 @@ a.phonebook-detail:hover { text-decoration: underline; }
 .ad-slot-leaderboard { min-height: 90px; }
 .ad-slot-rectangle   { min-height: 250px; }
 .ad-slot-skyscraper  { min-height: 600px; max-width: 320px; }
+
+/* ── M54 — live AdSense unit container + pre-roll + caption ─────────── */
+/* When AdSense env vars are configured, AdSlot renders this variant
+   instead of the dashed placeholder. Solid card, soft shadow, with a
+   pre-roll overlay above and a muted caption below. */
+.ad-slot-live {
+  position: relative;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 0.75rem;
+  margin: 1rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  box-shadow: 0 1px 2px rgba(113, 73, 44, 0.04),
+              0 8px 24px rgba(113, 73, 44, 0.06);
+}
+.ad-slot-live ins.adsbygoogle {
+  display: block;
+  width: 100%;
+}
+.ad-slot-caption {
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  color: rgba(121, 83, 55, 0.6);
+  text-align: center;
+}
+
+/* The "Sorry fam, gotta pay bills 🤷🏾‍♂️" overlay, shown once per
+   session above the first ad. Sits absolutely over the unit so the
+   real ad behind it can be loading at the same time. Fade-out is
+   driven by the component unmounting after 1500ms. */
+.ad-pre-roll {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  background: linear-gradient(180deg, #fff7ef, #fdf6ec);
+  border-radius: 16px;
+  padding: 1rem;
+  text-align: center;
+  animation: ad-pre-roll-fade 1500ms ease-out forwards;
+}
+.ad-pre-roll-headline {
+  font-family: var(--font-display, Georgia), serif;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text, #34211b);
+}
+.ad-pre-roll-body {
+  font-size: 0.82rem;
+  color: rgba(121, 83, 55, 0.85);
+}
+@keyframes ad-pre-roll-fade {
+  0%, 70% { opacity: 1; }
+  100% { opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ad-pre-roll { animation: none; }
+}
