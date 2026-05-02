@@ -153,20 +153,30 @@ export function IncomingCallWatcher() {
           };
           if (row.created_by === viewerId) return; // I initiated this ring
 
-          // Verify I'm a participant + grab caller's display name.
-          const partsResp = await supabase
-            .from("call_participants")
-            .select(
-              "membership_id, family_memberships(user_id, display_name)"
-            )
-            .eq("call_session_id", row.id);
-          const parts = (partsResp.data ?? []) as Array<{
+          // Race window: the ring API route inserts call_sessions and
+          // call_participants in two separate transactions. The Realtime
+          // INSERT for call_sessions can land before the participants
+          // have committed, so verify-then-bail returns false on the
+          // first read. Retry up to ~1s before giving up.
+          type ParticipantRow = {
             membership_id: string;
             family_memberships:
               | { user_id: string | null; display_name: string }[]
               | { user_id: string | null; display_name: string }
               | null;
-          }>;
+          };
+          let parts: ParticipantRow[] = [];
+          for (let attempt = 0; attempt < 6; attempt++) {
+            const partsResp = await supabase
+              .from("call_participants")
+              .select(
+                "membership_id, family_memberships(user_id, display_name)"
+              )
+              .eq("call_session_id", row.id);
+            parts = (partsResp.data ?? []) as ParticipantRow[];
+            if (parts.length > 0) break;
+            await new Promise((r) => setTimeout(r, 200));
+          }
 
           const amParticipant = parts.some((p) => {
             const fm = p.family_memberships;
