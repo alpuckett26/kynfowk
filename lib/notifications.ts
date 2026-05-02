@@ -913,6 +913,7 @@ export async function sweepFamilyCircleNotifications(
       .from("call_sessions")
       .select("id, title, scheduled_start, scheduled_end, status, meeting_url, actual_duration_minutes, actual_started_at, reminder_status")
       .eq("family_circle_id", input.familyCircleId)
+      .eq("is_ring", false)
       .order("scheduled_start", { ascending: true })
   ]);
 
