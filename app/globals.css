@@ -2321,6 +2321,12 @@ body.in-call .chat-widget {
 .call-room-end-button:hover { background: #dc2626; }
 .call-room-end-button svg { display: block; }
 
+/* Hidden audio sink for remote-stream audio. iOS Safari refuses to
+   produce sound from <video srcObject> reliably, so we mirror the
+   stream into a dedicated <audio> element. Display:none keeps it out
+   of the layout while still letting the browser play it. */
+.call-remote-audio { display: none; }
+
 .call-room-status-badge {
   font-size: 0.78rem;
   background: rgba(255, 255, 255, 0.12);

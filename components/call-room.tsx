@@ -555,29 +555,44 @@ export function CallRoom({
 
 function RemoteVideo({ peer }: { peer: PeerState }) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
 
-  // iOS Safari is finicky about remote-stream audio playback: setting
-  // srcObject + relying on the autoPlay attribute is enough for Chrome /
-  // desktop Safari but not for iOS, where each new track added to a live
-  // MediaStream needs an explicit play() to start producing sound. The
-  // initiating click on Accept (or on the caller side, the click that
-  // started the call) provides the user-gesture audio unlock; we just
-  // have to actually trigger play() each time tracks land.
+  // iOS Safari has a long-standing WebRTC quirk: a <video> element with
+  // srcObject reliably plays the video frames but often refuses to
+  // produce audio, even when audio tracks are present and the element
+  // is unmuted. The pattern that works across Chrome / Firefox / desktop
+  // Safari / iOS Safari is to render a *separate* hidden <audio>
+  // element, attach the same MediaStream there (or only its audio
+  // tracks), and call play() on it after a user gesture. The Accept
+  // button click provides that gesture for the recipient; for the
+  // caller, the Ring Now button click does.
   useEffect(() => {
     const v = videoRef.current;
+    const a = audioRef.current;
     const stream = peer.stream;
-    if (!v || !stream) return;
-    if (v.srcObject !== stream) v.srcObject = stream;
-    v.play().catch(() => undefined);
-    const onTrack = () => v.play().catch(() => undefined);
-    stream.addEventListener("addtrack", onTrack);
-    return () => stream.removeEventListener("addtrack", onTrack);
+    if (!stream) return;
+
+    if (v && v.srcObject !== stream) v.srcObject = stream;
+    if (a && a.srcObject !== stream) a.srcObject = stream;
+
+    v?.play().catch(() => undefined);
+    a?.play().catch(() => undefined);
+
+    const kick = () => {
+      v?.play().catch(() => undefined);
+      a?.play().catch(() => undefined);
+    };
+    stream.addEventListener("addtrack", kick);
+    return () => stream.removeEventListener("addtrack", kick);
   }, [peer.stream]);
 
   return (
     <div className="call-video-tile">
       {peer.stream ? (
-        <video autoPlay playsInline ref={videoRef} className="call-video" />
+        <>
+          <video autoPlay muted playsInline ref={videoRef} className="call-video" />
+          <audio autoPlay ref={audioRef} className="call-remote-audio" />
+        </>
       ) : (
         <div className="call-video-placeholder">
           <span className="call-video-initials">{peer.displayName.charAt(0).toUpperCase()}</span>
