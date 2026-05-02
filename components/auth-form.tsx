@@ -1,5 +1,6 @@
 "use client";
 
+import type { Route } from "next";
 import Link from "next/link";
 import { useActionState } from "react";
 
@@ -127,6 +128,14 @@ export function AuthForm({ action, mode, defaultEmail }: AuthFormProps) {
               ? "Create your Family Circle account"
               : "Open dashboard"}
         </button>
+
+        {mode === "sign-up" ? (
+          <p className="microcopy">
+            By creating an account, you agree to our{" "}
+            <Link href={"/terms" as Route}>Terms</Link> and{" "}
+            <Link href={"/privacy" as Route}>Privacy Policy</Link>.
+          </p>
+        ) : null}
 
         <p className="microcopy">
           {mode === "sign-up" ? "Already have an account?" : "Need an account?"}{" "}
