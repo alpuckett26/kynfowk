@@ -23,7 +23,7 @@ export default function TermsPage() {
         <section className="stack-md">
           <p>
             These terms govern your use of Kynfowk. By creating an account or
-            using the service you agree to them. If you don't agree, don't use
+            using the service you agree to them. If you don’t agree, don’t use
             the service.
           </p>
           <p>
@@ -37,7 +37,7 @@ export default function TermsPage() {
           <p>
             You must be at least 13 years old to create an account, or have
             an adult Family Circle owner manage a profile on your behalf.
-            You're responsible for keeping your password secure and for
+            You’re responsible for keeping your password secure and for
             activity under your account.
           </p>
         </section>
@@ -52,18 +52,18 @@ export default function TermsPage() {
               <strong>Members</strong> can edit their own profile, share availability, attend calls, and post within the circle.
             </li>
             <li>
-              When you invite someone to a circle, you're confirming you have a relationship with them and that contacting them through Kynfowk is appropriate.
+              When you invite someone to a circle, you’re confirming you have a relationship with them and that contacting them through Kynfowk is appropriate.
             </li>
           </ul>
         </section>
 
         <section className="stack-md">
           <h2>3. Acceptable use</h2>
-          <p>Don't use Kynfowk to:</p>
+          <p>Don’t use Kynfowk to:</p>
           <ul>
             <li>Impersonate someone else.</li>
             <li>Harass, threaten, or stalk anyone — inside your circle or outside it.</li>
-            <li>Upload illegal content, sexual content involving minors, or content you don't have rights to share.</li>
+            <li>Upload illegal content, sexual content involving minors, or content you don’t have rights to share.</li>
             <li>Disrupt the service (scraping, automated abuse, attacks on infrastructure).</li>
             <li>
               Game the Connection Score, rewards pool, or referral system. We log unusual patterns and reserve the right to disqualify accounts that try to inflate metrics through fake calls, fake members, or sock-puppet circles.
@@ -77,11 +77,11 @@ export default function TermsPage() {
             You keep ownership of the photos, prompts, recap notes, and
             messages you create. By uploading them you grant Kynfowk a
             limited license to display them inside your Family Circle and to
-            store them on our service providers' infrastructure for as long
+            store them on our service providers’ infrastructure for as long
             as your account is active.
           </p>
           <p>
-            We don't sell your content, and we don't show your content to
+            We don’t sell your content, and we don’t show your content to
             anyone outside your Family Circle without your permission.
           </p>
         </section>
@@ -101,7 +101,7 @@ export default function TermsPage() {
             When the paid Kynfowk Plus plan launches, billing is processed
             through Square. Subscriptions auto-renew monthly and you can
             cancel anytime from <a href="/settings">Settings</a>; cancellation
-            takes effect at the end of the current billing period. We don't
+            takes effect at the end of the current billing period. We don’t
             offer prorated refunds for partial months unless required by law.
           </p>
         </section>
@@ -109,7 +109,7 @@ export default function TermsPage() {
         <section className="stack-md">
           <h2>7. Rewards</h2>
           <p>
-            Kynfowk's rewards pool, Connection Score, and any cash payouts
+            Kynfowk’s rewards pool, Connection Score, and any cash payouts
             via Tremendous are discretionary programs. Eligibility, amounts,
             and rules can change. We may pause payouts if we suspect fraud
             or abuse, and we may require additional identity verification
@@ -130,7 +130,7 @@ export default function TermsPage() {
           <h2>9. Disclaimers</h2>
           <p>
             Kynfowk is provided &ldquo;as is&rdquo; without warranty of any
-            kind. We work hard to keep the service running, but we don't
+            kind. We work hard to keep the service running, but we don’t
             guarantee uninterrupted availability or that scheduling
             suggestions will always be perfect.
           </p>
@@ -139,7 +139,7 @@ export default function TermsPage() {
         <section className="stack-md">
           <h2>10. Limitation of liability</h2>
           <p>
-            To the maximum extent permitted by law, Kynfowk's total liability
+            To the maximum extent permitted by law, Kynfowk’s total liability
             for any claim arising from your use of the service is limited to
             the amount you paid us in the twelve months preceding the claim,
             or one hundred United States dollars, whichever is greater.

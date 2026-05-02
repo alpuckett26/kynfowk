@@ -90,7 +90,7 @@ export default function PrivacyPage() {
               <strong>Other members of your Family Circle</strong> see your
               display name, relationship label, availability, call
               participation, and any photos or prompts you choose to share.
-              You control what's shared from <a href="/settings">Settings</a>.
+              You control what’s shared from <a href="/settings">Settings</a>.
             </li>
             <li>
               <strong>Service providers</strong> we use to operate Kynfowk:
@@ -124,14 +124,14 @@ export default function PrivacyPage() {
           <p>
             We use cookies to keep you signed in and to remember your
             preferences. We use <code>sessionStorage</code> in your browser to
-            remember small per-tab values (which dashboard panel you're on,
+            remember small per-tab values (which dashboard panel you’re on,
             the once-per-session ad pre-roll). Third-party cookies set by
-            Google AdSense are subject to AdSense's own policies and to your
-            browser's cookie controls.
+            Google AdSense are subject to AdSense’s own policies and to your
+            browser’s cookie controls.
           </p>
           <p>
             If you visit Kynfowk from the European Economic Area, the United
-            Kingdom, or Switzerland, AdSense's consent banner will ask
+            Kingdom, or Switzerland, AdSense’s consent banner will ask
             permission before personalized ads are shown.
           </p>
         </section>
@@ -161,7 +161,7 @@ export default function PrivacyPage() {
             Kynfowk accounts are intended for adults aged 13 and over. Adults
             in a Family Circle can create <em>managed profiles</em> for
             children under 13 — those profiles are controlled entirely by the
-            adult and don't have their own login. We don't knowingly collect
+            adult and don’t have their own login. We don’t knowingly collect
             personal information directly from children under 13, and
             personalized ads are not shown on managed-profile sessions.
           </p>
@@ -170,9 +170,9 @@ export default function PrivacyPage() {
         <section className="stack-md">
           <h2>7. Changes to this policy</h2>
           <p>
-            We'll post any updates here and bump the &ldquo;Last updated&rdquo;
+            We’ll post any updates here and bump the &ldquo;Last updated&rdquo;
             date above. If a change materially affects how we handle your
-            information, we'll also email you.
+            information, we’ll also email you.
           </p>
         </section>
 
