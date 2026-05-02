@@ -138,9 +138,7 @@ function ActiveMemberRow({
             ) : null}
           </div>
         </div>
-      ) : (
-        <span className="meta">Only the circle owner can update membership details.</span>
-      )}
+      ) : null}
     </div>
   );
 }
@@ -196,6 +194,11 @@ export function FamilyManagementList({
 
   return (
     <div className="stack-md">
+      {!canManage && activeMembers.length > 0 ? (
+        <p className="meta">
+          Only the circle owner can update membership details.
+        </p>
+      ) : null}
       {activeMembers.length === 0 ? (
         <EmptyState
           title="No family members yet"
