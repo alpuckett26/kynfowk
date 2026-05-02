@@ -204,6 +204,18 @@ export function CallRoom({
     [membershipId, createPeerConnection]
   );
 
+  // While the call-room is mounted, hide the global SiteHeader, Chyron,
+  // MobileBottomNav, and ChatWidget so the call takes the full viewport.
+  // Without this the "Leave" button at the bottom of .call-room-controls
+  // gets pushed off-screen by the SiteHeader/Chyron above and overlapped
+  // by the fixed bottom nav + chat widget below — i.e. no way to hang up.
+  useEffect(() => {
+    document.body.classList.add("in-call");
+    return () => {
+      document.body.classList.remove("in-call");
+    };
+  }, []);
+
   useEffect(() => {
     let active = true;
     const peers = peersRef.current;
@@ -433,6 +445,15 @@ export function CallRoom({
             Room full ({ROOM_CAP} max)
           </span>
         )}
+        <button
+          aria-label="End call"
+          className="call-room-end-button"
+          onClick={leaveCall}
+          type="button"
+        >
+          <HangUpIcon />
+          <span>End</span>
+        </button>
       </div>
 
       <div className={`call-video-grid call-video-grid-${tileCount}`}>
@@ -535,10 +556,22 @@ export function CallRoom({
 function RemoteVideo({ peer }: { peer: PeerState }) {
   const videoRef = useRef<HTMLVideoElement>(null);
 
+  // iOS Safari is finicky about remote-stream audio playback: setting
+  // srcObject + relying on the autoPlay attribute is enough for Chrome /
+  // desktop Safari but not for iOS, where each new track added to a live
+  // MediaStream needs an explicit play() to start producing sound. The
+  // initiating click on Accept (or on the caller side, the click that
+  // started the call) provides the user-gesture audio unlock; we just
+  // have to actually trigger play() each time tracks land.
   useEffect(() => {
-    if (videoRef.current && peer.stream) {
-      videoRef.current.srcObject = peer.stream;
-    }
+    const v = videoRef.current;
+    const stream = peer.stream;
+    if (!v || !stream) return;
+    if (v.srcObject !== stream) v.srcObject = stream;
+    v.play().catch(() => undefined);
+    const onTrack = () => v.play().catch(() => undefined);
+    stream.addEventListener("addtrack", onTrack);
+    return () => stream.removeEventListener("addtrack", onTrack);
   }, [peer.stream]);
 
   return (
