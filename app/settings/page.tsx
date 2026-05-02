@@ -13,30 +13,10 @@ export default async function SettingsPage() {
   return (
     <main className="page-shell">
       <div className="container stack-lg">
-        <section className="dashboard-hero">
-          <div className="stack-md">
-            <span className="eyebrow">{data.circle?.name ?? "Kynfowk settings"}</span>
-            <h1>Keep the details behind the rhythm trustworthy.</h1>
-            <p className="lede">
-              Your profile, timezone, and notification defaults shape how Kynfowk displays
-              schedules and sends reminders across your Family Circle.
-            </p>
-          </div>
-
-          <Card className="hero-summary-card">
-            <p className="stat-label">Current timing setup</p>
-            <p className="highlight-value">{formatTimezoneLabel(data.profile.timezone)}</p>
-            <p className="meta">
-              Quiet hours and reminder defaults follow this timezone so scheduled moments feel
-              timely instead of noisy.
-            </p>
-            <div className="pill-row compact-pills">
-              <Link className="button button-secondary" href="/dashboard">
-                Back to dashboard
-              </Link>
-            </div>
-          </Card>
-        </section>
+        <header>
+          <h1>Settings</h1>
+          <p className="meta">{formatTimezoneLabel(data.profile.timezone)}</p>
+        </header>
 
         <section className="dashboard-grid">
           <div className="dashboard-main">

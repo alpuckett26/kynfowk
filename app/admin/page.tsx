@@ -30,32 +30,12 @@ export default async function AdminPage() {
   return (
     <main className="page-shell">
       <div className="container stack-lg">
-        <section className="dashboard-hero">
-          <div className="stack-md">
-            <span className="eyebrow">Internal admin</span>
-            <h1>See how Kynfowk is holding up before family testing widens.</h1>
-            <p className="lede">
-              This view is read-only and operator-facing. It is meant to catch adoption,
-              follow-through, and reliability signals before the product meets more real families.
-            </p>
-          </div>
-
-          <Card className="hero-summary-card">
-            <p className="stat-label">Access and readiness</p>
-            <p className="highlight-value">
-              {hasSupabaseServiceRoleEnv() ? "Admin ready" : "Needs service role"}
-            </p>
-            <p className="meta">
-              Signed in as {data.viewerEmail ?? "unknown"}. {configuredAdmins.length} admin
-              email{configuredAdmins.length === 1 ? "" : "s"} configured.
-            </p>
-            <div className="pill-row compact-pills">
-              <Link className="button button-secondary" href="/dashboard">
-                Back to dashboard
-              </Link>
-            </div>
-          </Card>
-        </section>
+        <header>
+          <h1>Admin</h1>
+          <p className="meta">
+            {hasSupabaseServiceRoleEnv() ? "Service role configured" : "Needs service role"} · Signed in as {data.viewerEmail ?? "unknown"}
+          </p>
+        </header>
 
         <section className="stats-grid">
           <Card className="counter-card">

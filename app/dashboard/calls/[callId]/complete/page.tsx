@@ -36,9 +36,7 @@ export default async function CompleteCallPage({
               {formatDateTimeRange(data.call.scheduled_start, data.call.scheduled_end)}
             </p>
             <div className="pill-row compact-pills">
-              <Link className="button button-secondary" href={"/dashboard" as Route}>
-                Back to dashboard
-              </Link>
+              
             </div>
           </Card>
         </section>

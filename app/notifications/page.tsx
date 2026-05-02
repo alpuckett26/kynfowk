@@ -43,31 +43,12 @@ export default async function NotificationsPage({
       <div className="container stack-lg">
         <StatusBanner code={params?.status} />
 
-        <section className="dashboard-hero">
-          <div className="stack-md">
-            <span className="eyebrow">{data.circle.name}</span>
-            <h1>Your family inbox, in full.</h1>
-            <p className="lede">
-              Keep every reminder, recap, and gentle nudge in one calm place so the
-              dashboard can stay focused on what is next.
-            </p>
-          </div>
-
-          <Card className="hero-summary-card">
-            <p className="stat-label">Notification overview</p>
-            <p className="highlight-value">{data.inbox.unreadCount} unread</p>
-            <p className="meta">
-              {data.inbox.totalCount
-                ? `${data.inbox.totalCount} family updates are saved here across calls, recaps, invites, and reminders.`
-                : "Fresh family updates will start appearing here as soon as your circle gets moving."}
-            </p>
-            <div className="pill-row compact-pills">
-              <Link className="button button-secondary" href="/dashboard">
-                Back to dashboard
-              </Link>
-            </div>
-          </Card>
-        </section>
+        <header>
+          <h1>Updates</h1>
+          <p className="meta">
+            {data.inbox.unreadCount} unread · {data.inbox.totalCount} total
+          </p>
+        </header>
 
         <section className="dashboard-grid">
           <div className="dashboard-main">
