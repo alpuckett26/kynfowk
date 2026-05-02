@@ -1,0 +1,14 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '── git state ──────────────────────────────────────────'; git log --oneline -10; echo; echo '── current branch ─────────────────────────────────────'; git rev-parse --abbrev-ref HEAD; echo; echo '── working tree ───────────────────────────────────────'; git status --short; echo; echo '── milestone numbers (last 5) ─────────────────────────'; git log --oneline | grep -oE 'M[0-9]+' | sort -V -u | tail -5; echo; echo '── open PRs reminder ──────────────────────────────────'; echo 'Use mcp__github__list_pull_requests to check open PRs before starting new work.'"
+          }
+        ]
+      }
+    ]
+  }
+}
