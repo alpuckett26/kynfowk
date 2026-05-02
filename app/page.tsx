@@ -167,6 +167,18 @@ export default async function HomePage() {
             </div>
           </div>
         </section>
+
+        <footer className="landing-footer">
+          <div className="container">
+            <p className="meta">© {new Date().getFullYear()} Kynfowk</p>
+            <nav aria-label="Footer">
+              <Link href={"/privacy" as Route}>Privacy</Link>
+              <Link href={"/terms" as Route}>Terms</Link>
+              <Link href="/case-studies">Case studies</Link>
+              <Link href="/feedback">Feedback</Link>
+            </nav>
+          </div>
+        </footer>
       </main>
     </>
   );

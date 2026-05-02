@@ -4237,6 +4237,76 @@ body.in-swipe-shell .chat-widget {
   gap: 0.75rem;
   justify-content: center;
 }
+
+/* M55 — landing footer (legal links etc.) */
+.landing-footer {
+  padding: 1.5rem 1rem calc(1.5rem + var(--sab));
+  border-top: 1px solid var(--border);
+  background: var(--surface, #fff7ef);
+}
+.landing-footer .container {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.landing-footer nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  font-size: 0.85rem;
+}
+.landing-footer nav a {
+  color: var(--accent-deep, #8d4428);
+  text-decoration: none;
+}
+.landing-footer nav a:hover { text-decoration: underline; }
+
+/* M55 — legal pages (privacy, terms). Article-style readability with
+   the same warm palette as the rest of the app. */
+.legal-page {
+  background: var(--bg);
+  padding-bottom: 4rem;
+}
+.legal-page article {
+  max-width: 720px;
+  padding: 2rem 1.25rem;
+}
+.legal-page h1 {
+  font-family: var(--font-display, Georgia), serif;
+  font-size: clamp(1.8rem, 5vw, 2.4rem);
+  margin: 0 0 0.25rem;
+}
+.legal-page h2 {
+  font-family: var(--font-display, Georgia), serif;
+  font-size: 1.15rem;
+  margin: 0 0 0.5rem;
+}
+.legal-page p,
+.legal-page li {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--text);
+}
+.legal-page a {
+  color: var(--accent-deep, #8d4428);
+  text-decoration: underline;
+}
+.legal-page ul {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+.legal-page ul ul {
+  margin-top: 0.4rem;
+}
+.legal-page section + section {
+  margin-top: 0.5rem;
+}
+.legal-page .meta {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
 .landing-three-up {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
