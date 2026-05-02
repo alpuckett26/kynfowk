@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode, useCallback, useRef } from "react";
+import { type ReactNode, useCallback, useEffect, useRef } from "react";
 
 import { ConnectPanel, type ConnectPanelProps } from "@/components/panels/connect-panel";
 import { PlanPanel, type PlanPanelProps } from "@/components/panels/plan-panel";
@@ -27,6 +27,15 @@ export function DashboardShell({
   earnPanel,
   familyPanel,
 }: DashboardShellProps) {
+  // M51 — flag the body while the shell is mounted so global chrome
+  // (chat widget) can hide via CSS.
+  useEffect(() => {
+    document.body.classList.add("in-swipe-shell");
+    return () => {
+      document.body.classList.remove("in-swipe-shell");
+    };
+  }, []);
+
   // We need a way for ConnectPanel to ask the shell to swipe to Plan.
   // SwipeShell exposes its scroll behavior through its tab buttons; we
   // mimic that by scrolling the matching panel into view from a callback.
