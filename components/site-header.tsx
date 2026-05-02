@@ -1,7 +1,6 @@
 import Link from "next/link";
 
-import { signOutAction } from "@/app/actions";
-import { Button } from "@/components/button";
+import { HeaderKebabMenu } from "@/components/header-kebab-menu";
 import { InviteFamButton } from "@/components/invite-fam-button";
 import { NAV_LINKS } from "@/lib/constants";
 import { getViewer } from "@/lib/data";
@@ -9,30 +8,28 @@ import { isAdminEmail } from "@/lib/env";
 
 export async function SiteHeader() {
   const user = await getViewer();
+  const showAdmin = !!(user?.email && isAdminEmail(user.email));
 
   return (
     <header className="site-header">
       <div className="container header-inner">
-        <Link className="brand" href="/">
+        <Link className="brand" href={user ? "/dashboard" : "/"}>
           Kynfowk
         </Link>
 
-        {user && (
+        {user ? (
           <Link className="header-tree-link" href="/family/tree" aria-label="View family tree">
-            {/* Full oak-tree silhouette */}
-            <svg viewBox="0 0 56 72" width="38" height="49" fill="currentColor" aria-hidden>
-              {/* Canopy — overlapping rounded lobes */}
+            <svg viewBox="0 0 56 72" width="34" height="44" fill="currentColor" aria-hidden>
               <circle cx="28" cy="22" r="20" />
               <circle cx="11" cy="32" r="15" />
               <circle cx="45" cy="32" r="15" />
               <circle cx="28" cy="10" r="13" />
               <circle cx="18" cy="14" r="11" />
               <circle cx="38" cy="14" r="11" />
-              {/* Trunk */}
               <path d="M23 46 Q22 52 20 72 L36 72 Q34 52 33 46 Z" />
             </svg>
           </Link>
-        )}
+        ) : null}
 
         <nav className="nav">
           {NAV_LINKS.map((link) => (
@@ -46,18 +43,7 @@ export async function SiteHeader() {
           {user ? (
             <>
               <InviteFamButton />
-              <div className="header-secondary-actions">
-                {isAdminEmail(user.email) ? <a href="/admin">Admin</a> : null}
-                <a href="/family">Family</a>
-                <a href="/phonebook">Phonebook</a>
-                <a href="/settings">Settings</a>
-                <a href="/onboarding">Update Circle</a>
-                <form action={signOutAction}>
-                  <Button type="submit" variant="secondary">
-                    Sign out
-                  </Button>
-                </form>
-              </div>
+              <HeaderKebabMenu showAdmin={showAdmin} />
             </>
           ) : (
             <>

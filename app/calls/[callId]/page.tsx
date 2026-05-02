@@ -68,9 +68,7 @@ export default async function CallDetailPage({
               • {data.viewerTimezoneLabel}
             </p>
             <div className="pill-row compact-pills">
-              <Link className="button button-secondary" href={"/dashboard" as Route}>
-                Back to dashboard
-              </Link>
+              
               {(data.call.status === "scheduled" || data.call.status === "live") ? (
                 <Link
                   className="button button-secondary"

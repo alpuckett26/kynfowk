@@ -4096,463 +4096,311 @@ body.in-call .chat-widget {
   }
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   SCRAPBOOK PAGE — dashboard visual prototype
-   ═══════════════════════════════════════════════════════════════════════════ */
-
-/* Cork board background */
-.scrapbook-page {
-  background:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='80' height='80' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E"),
-    repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent 3px,
-      rgba(0,0,0,0.015) 3px,
-      rgba(0,0,0,0.015) 4px
-    ),
-    linear-gradient(135deg, #c9a96e 0%, #b8895a 40%, #c4a472 70%, #b98f5e 100%);
-  min-height: 100vh;
-}
-
-/* ── Base paper card reset ────────────────────────────────────────────────── */
-
-.scrapbook-page .card {
-  border: none;
-  border-radius: 3px;
-  position: relative;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.scrapbook-page .card:hover {
-  z-index: 2;
-}
-
-/* Pushpin for select cards */
-.scrapbook-page .card::after {
-  content: "📌";
-  position: absolute;
-  top: -10px;
-  right: 16px;
-  font-size: 1.1rem;
-  filter: drop-shadow(0 2px 3px rgba(0,0,0,0.3));
-  z-index: 3;
-}
-
-/* ── Sticky note — yellow (1st, 4th, 7th…) ───────────────────────────────── */
-
-.scrapbook-page .card:nth-child(3n+1) {
-  background: #fef08a;
-  background-image: linear-gradient(
-    to bottom right,
-    rgba(255,255,255,0.4) 0%,
-    transparent 50%
-  );
-  box-shadow:
-    3px 4px 0 rgba(0,0,0,0.08),
-    6px 8px 16px rgba(0,0,0,0.18),
-    inset 0 -3px 6px rgba(0,0,0,0.05);
-  transform: rotate(-1.2deg);
-  padding: 1.6rem 1.4rem 2rem;
-}
-
-.scrapbook-page .card:nth-child(3n+1):hover {
-  transform: rotate(-0.4deg) translateY(-3px);
-  box-shadow:
-    4px 6px 0 rgba(0,0,0,0.1),
-    8px 14px 24px rgba(0,0,0,0.22);
-}
-
-/* Sticky note fold corner */
-.scrapbook-page .card:nth-child(3n+1)::before {
-  content: "";
-  position: absolute;
-  bottom: 0;
-  right: 0;
-  width: 28px;
-  height: 28px;
-  background: linear-gradient(
-    225deg,
-    rgba(0,0,0,0.06) 45%,
-    #f5d800 45%
-  );
-  border-top-left-radius: 4px;
-}
-
-/* Remove pushpin on sticky notes */
-.scrapbook-page .card:nth-child(3n+1)::after {
-  content: none;
-}
-
-/* ── Notebook paper (2nd, 5th, 8th…) ────────────────────────────────────── */
-
-.scrapbook-page .card:nth-child(3n+2) {
-  background-color: #fffef7;
-  background-image:
-    linear-gradient(#6eb5ff 1px, transparent 1px),
-    linear-gradient(to right, #ff9999 1px, transparent 1px);
-  background-size: 100% 1.65rem, 38px 100%;
-  background-position: 0 52px, 0 0;
-  border-left: none;
-  padding: 1.6rem 1.4rem 1.4rem 2.6rem;
-  box-shadow:
-    2px 3px 0 rgba(0,0,0,0.06),
-    4px 8px 20px rgba(0,0,0,0.15);
-  transform: rotate(0.6deg);
-}
-
-.scrapbook-page .card:nth-child(3n+2):hover {
-  transform: rotate(0.1deg) translateY(-3px);
-  box-shadow: 4px 10px 28px rgba(0,0,0,0.2);
-}
-
-/* Hole punches on notebook paper */
-.scrapbook-page .card:nth-child(3n+2)::before {
-  content: "";
-  position: absolute;
-  left: 14px;
-  top: 0;
-  bottom: 0;
-  width: 12px;
-  background:
-    radial-gradient(circle at 50% 22%, #c8a96e 40%, transparent 41%),
-    radial-gradient(circle at 50% 50%, #c8a96e 40%, transparent 41%),
-    radial-gradient(circle at 50% 78%, #c8a96e 40%, transparent 41%);
-  background-size: 12px 100%;
-}
-
-/* Pushpin on notebook pages */
-.scrapbook-page .card:nth-child(3n+2)::after {
-  content: "📌";
-  top: -8px;
-  right: 20px;
-}
-
-/* ── Index card — pink/blue (3rd, 6th, 9th…) ────────────────────────────── */
-
-.scrapbook-page .card:nth-child(3n) {
-  background: #fce7f3;
-  background-image: linear-gradient(#d1aac4 1px, transparent 1px);
-  background-size: 100% 1.65rem;
-  background-position: 0 56px;
-  border-top: 6px solid #db2777;
-  border-radius: 2px;
-  padding: 1.4rem 1.4rem 1.6rem;
-  box-shadow:
-    2px 3px 0 rgba(0,0,0,0.07),
-    5px 10px 18px rgba(0,0,0,0.16);
-  transform: rotate(-0.4deg);
-}
-
-.scrapbook-page .card:nth-child(3n):hover {
-  transform: rotate(0.2deg) translateY(-3px);
-  box-shadow: 4px 12px 26px rgba(0,0,0,0.2);
-}
-
-.scrapbook-page .card:nth-child(3n)::after {
-  content: "📎";
-  top: -4px;
-  left: 12px;
-  right: auto;
-  font-size: 1.3rem;
-}
-
-/* ── Washi tape strips on some cards ────────────────────────────────────── */
-
-.scrapbook-page .card:nth-child(4n+1)::after {
-  content: "";
-  position: absolute;
-  top: -8px;
-  left: 50%;
-  transform: translateX(-50%) rotate(-2deg);
-  width: 72px;
-  height: 20px;
-  background: rgba(147, 197, 253, 0.55);
-  border-radius: 2px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-}
-
-/* ── Hero summary card — big sticky ──────────────────────────────────────── */
-
-.scrapbook-page .hero-summary-card {
-  background: #fde68a !important;
-  background-image: linear-gradient(
-    to bottom right,
-    rgba(255,255,255,0.35) 0%,
-    transparent 60%
-  ) !important;
-  transform: rotate(1.4deg) !important;
-  border-top: none !important;
-  border: none !important;
-  box-shadow:
-    4px 5px 0 rgba(0,0,0,0.1),
-    8px 14px 24px rgba(0,0,0,0.2) !important;
-}
-
-/* ── Typography adjustments on scrapbook ─────────────────────────────────── */
-
-.scrapbook-page h1,
-.scrapbook-page h2 {
-  font-family: var(--font-display), serif;
-}
-
-.scrapbook-page .card h2 {
-  font-size: 1.15rem;
-  border-bottom: 1.5px solid rgba(0,0,0,0.08);
-  padding-bottom: 0.5rem;
-  margin-bottom: 0.25rem;
-}
-
-/* ── Scrapbook page header area ──────────────────────────────────────────── */
-
-.scrapbook-page .dashboard-hero {
-  background: rgba(255,255,255,0.12);
-  border-radius: 8px;
-  padding: 1.5rem;
-  backdrop-filter: blur(4px);
-  border: 1px solid rgba(255,255,255,0.2);
-}
-
-.scrapbook-page .dashboard-hero h1,
-.scrapbook-page .dashboard-hero p {
-  color: #fff;
-  text-shadow: 0 1px 3px rgba(0,0,0,0.2);
-}
-
-.scrapbook-page .dashboard-hero .eyebrow {
-  background: rgba(255,255,255,0.25);
-  color: #fff;
-}
-
-@media (max-width: 680px) {
-  .scrapbook-page .card:nth-child(3n+1),
-  .scrapbook-page .card:nth-child(3n+2),
-  .scrapbook-page .card:nth-child(3n) {
-    transform: none;
-  }
-}
-
-/* ═══════════════════════════════════════════════════════════════════════════
-   GRANDMOTHER'S PHONE JOURNAL — Global notebook aesthetic
-   Cream ruled paper, red margin, navy ink, address-book list entries.
-   ═══════════════════════════════════════════════════════════════════════════ */
-
-/* Notebook palette */
+/* ── Legacy notebook tokens, now modern ─────────────────────────────────────
+   The scrapbook + grandmother's-phone-journal decorative skin was removed
+   in M50. A handful of components (.tree-node-button, .tree-placeholder-panel,
+   .member-panel) still reference --paper / --ruled / --ink-faded with
+   fallbacks that resolved to cream + blue-ruled backgrounds. Override the
+   tokens to clean modern values so those components render as plain white
+   surfaces without needing JSX edits. */
 :root {
-  --ruled:       rgba(110, 181, 255, 0.26);
-  --margin-ink:  rgba(220, 80, 80, 0.2);
-  --paper:       #fffef7;
-  --ink:         #1c1c3a;
-  --ink-faded:   #6b6b8a;
-  --punch:       #c8a96e;
-  --spiral:      #c8b89a;
+  --paper: #ffffff;
+  --ruled: transparent;
+  --margin-ink: transparent;
+  --ink: var(--text);
+  --ink-faded: var(--muted);
+  --punch: transparent;
+  --spiral: transparent;
 }
 
-/* ── Body: add a faint ruled-paper cadence to the warm background ─────────── */
+/* ── M50 swipe shell — horizontal CSS scroll-snap carousel for the
+   signed-in dashboard and onboarding. Each panel is one viewport tall;
+   the user swipes horizontally to move between jobs (Connect / Plan /
+   Earn / Family) or onboarding steps. */
+.shell-track {
+  display: flex;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  height: calc(100dvh - var(--shell-header-h, 4rem));
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+}
+.shell-track::-webkit-scrollbar { display: none; }
 
-body {
-  background-image:
-    linear-gradient(var(--ruled) 1px, transparent 1px),
-    radial-gradient(circle at top left, rgba(255, 215, 186, 0.55), transparent 30%),
-    radial-gradient(circle at right 20%, rgba(244, 208, 178, 0.45), transparent 24%),
-    linear-gradient(180deg, #fffaf5 0%, #fcf7f1 42%, #f6eee5 100%);
-  background-size: 100% 1.72rem, auto, auto, auto;
+.shell-panel {
+  flex: 0 0 100%;
+  height: 100%;
+  scroll-snap-align: start;
+  overflow-y: auto;
+  padding: 1.25rem 1.25rem calc(5rem + var(--sab));
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
-/* ── Cards: ruled notebook paper sheets ──────────────────────────────────── */
+.shell-tabs {
+  position: fixed;
+  bottom: calc(0.75rem + var(--sab));
+  left: 50%;
+  transform: translateX(-50%);
+  display: inline-flex;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(18px);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.3rem;
+  z-index: 40;
+  box-shadow: 0 12px 32px rgba(113, 73, 44, 0.12);
+}
+.shell-tab {
+  appearance: none;
+  background: transparent;
+  border: none;
+  padding: 0.55rem 1rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--muted);
+  cursor: pointer;
+  transition: background 120ms ease, color 120ms ease;
+}
+.shell-tab:hover { color: var(--text); }
+.shell-tab[aria-current="true"] {
+  background: var(--accent);
+  color: #fff;
+}
 
+@media (prefers-reduced-motion: reduce) {
+  .shell-track { scroll-behavior: auto; }
+}
+
+/* ── Modern card aesthetic — replaces the scrapbook + journal skin.
+   The base .card rule above (line 243) already uses clean tokens; these
+   refinements drop the decorative rotation/pseudo-elements + tighten
+   the shadow scale for a sharper modern feel. */
 .card {
-  background: var(--paper);
-  background-image:
-    linear-gradient(to right, var(--margin-ink) 1px, transparent 1px),
-    linear-gradient(var(--ruled) 1px, transparent 1px);
-  background-size: 44px 100%, 100% 1.72rem;
-  background-position: 0 0, 0 3.4rem;
-  border: 1px solid rgba(110, 181, 255, 0.18);
-  border-radius: 4px;
+  background: #ffffff;
+  border-radius: 18px;
   box-shadow:
-    0 1px 0 rgba(0, 0, 0, 0.03),
-    0 3px 10px rgba(113, 73, 44, 0.08),
-    0 12px 32px rgba(113, 73, 44, 0.07);
+    0 1px 2px rgba(113, 73, 44, 0.04),
+    0 8px 24px rgba(113, 73, 44, 0.06);
+  transition: box-shadow 160ms ease, transform 160ms ease;
+}
+.card:hover {
+  box-shadow:
+    0 1px 2px rgba(113, 73, 44, 0.06),
+    0 12px 32px rgba(113, 73, 44, 0.08);
 }
 
-/* Hole-punch column on every card */
-.card::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  width: 36px;
-  background:
-    radial-gradient(circle at 50% 18%, var(--punch) 42%, #f0e6d8 43%, transparent 55%),
-    radial-gradient(circle at 50% 50%, var(--punch) 42%, #f0e6d8 43%, transparent 55%),
-    radial-gradient(circle at 50% 82%, var(--punch) 42%, #f0e6d8 43%, transparent 55%);
-  pointer-events: none;
-  z-index: 0;
+/* ── M50 landing — vertical snap-scroll, one section per viewport ─────── */
+.landing-track {
+  scroll-snap-type: y mandatory;
+  height: 100dvh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.landing-section {
+  scroll-snap-align: start;
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+}
+.landing-section > .container {
+  width: 100%;
+  max-width: 920px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  align-items: center;
+  text-align: center;
+}
+.landing-section h1,
+.landing-section h2 { margin: 0; }
+.landing-section p { margin: 0; max-width: 56ch; }
+.landing-cta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: center;
+}
+.landing-three-up {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  width: 100%;
+}
+.landing-three-up > .card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  text-align: left;
+  padding: 1.25rem;
+}
+@media (max-width: 720px) {
+  .landing-three-up { grid-template-columns: 1fr; }
 }
 
-/* Push card content right of the hole-punch column */
-.card > * {
-  position: relative;
-  z-index: 1;
+/* ── M50 dashboard regions ─────────────────────────────────────────────── */
+.connect-greeting {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.connect-greeting h1 {
+  font-family: var(--font-display, Georgia), serif;
+  font-size: clamp(1.6rem, 5vw, 2.2rem);
+  margin: 0;
+}
+.connect-greeting .meta { font-size: 0.85rem; color: var(--muted); }
+
+.action-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+.action-bar .button { flex: 1 1 9rem; }
+.action-bar .button-primary {
+  background: var(--accent);
+  color: #fff;
 }
 
-/* ── Card headings: ruled underline like a hand-drawn section label ────────── */
+.next-call-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.7rem 0.9rem;
+  background: var(--accent-soft);
+  color: var(--accent-deep);
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.next-call-pill .pill-meta { color: var(--accent-deep); opacity: 0.8; font-weight: 500; }
 
-.card h2 {
-  padding-bottom: 0.4rem;
-  border-bottom: 1.5px solid rgba(199, 102, 63, 0.2);
-  margin-bottom: 0.2rem;
-  font-size: 1.05rem;
-  color: var(--ink);
-  letter-spacing: -0.02em;
+.score-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+.score-grid-item {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+.score-grid-item .label {
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 600;
+}
+.score-grid-item .weight {
+  font-size: 0.78rem;
+  color: var(--accent-deep);
+  font-weight: 600;
+}
+.score-grid-item.coming-soon { background: var(--accent-soft); }
+@media (min-width: 720px) {
+  .score-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
 
-/* ── List items: phone-journal address-book entries ──────────────────────── */
-
-.list-item {
-  border-top: 1px solid rgba(110, 181, 255, 0.3);
-  padding-top: 0.85rem;
-  padding-bottom: 0.85rem;
+.score-headline {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  align-items: flex-start;
 }
-
-/* Name/primary text in list items: bold navy ink */
-.list-item p:first-child,
-.list-item a {
+.score-headline .number {
+  font-family: var(--font-display, Georgia), serif;
+  font-size: clamp(2.4rem, 8vw, 3.2rem);
   font-weight: 700;
-  color: var(--ink);
+  line-height: 1;
+}
+.score-headline .label {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  font-weight: 600;
 }
 
-/* Meta / secondary lines: pencil / faded ink */
-.list-item .meta {
-  font-size: 0.82rem;
-  color: var(--ink-faded);
-  line-height: 1.4;
+/* ── M50 kebab menu in the site header ─────────────────────────────────── */
+.kebab-wrap { position: relative; }
+.kebab-button {
+  appearance: none;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  width: 2.4rem;
+  height: 2.4rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: var(--text);
 }
-
-/* ── Badges: ink-stamp feel ──────────────────────────────────────────────── */
-
-.badge {
-  border: 1px solid rgba(75, 122, 98, 0.22);
-  font-family: var(--font-body), sans-serif;
-  letter-spacing: 0.03em;
+.kebab-button:hover { background: var(--accent-soft); }
+.kebab-menu {
+  position: absolute;
+  top: calc(100% + 0.4rem);
+  right: 0;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  min-width: 12rem;
+  padding: 0.4rem;
+  box-shadow: 0 12px 32px rgba(113, 73, 44, 0.12);
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  z-index: 50;
 }
-
-/* ── Eyebrow tabs: index-card divider tabs ───────────────────────────────── */
-
-.eyebrow {
-  border-radius: 3px 3px 0 0;
-  font-size: 0.72rem;
-  letter-spacing: 0.1em;
+.kebab-menu a,
+.kebab-menu button {
+  appearance: none;
+  background: transparent;
+  border: none;
+  text-align: left;
+  padding: 0.55rem 0.7rem;
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
 }
+.kebab-menu a:hover,
+.kebab-menu button:hover { background: var(--accent-soft); color: var(--accent-deep); }
 
-/* ── Form inputs: written-in-pencil feel ─────────────────────────────────── */
-
-input,
-select,
-textarea {
-  background: rgba(255, 254, 247, 0.92);
-  border: 1px solid rgba(110, 181, 255, 0.35);
-  border-bottom: 2px solid rgba(110, 181, 255, 0.5);
-  border-radius: 6px;
-  color: var(--ink);
+.brand-badge {
+  position: relative;
+  display: inline-flex;
 }
-
-input:focus,
-select:focus,
-textarea:focus {
-  outline: none;
-  border-color: rgba(199, 102, 63, 0.4);
-  border-bottom-color: var(--accent);
-  background: #fffef5;
-  box-shadow: 0 2px 0 rgba(199, 102, 63, 0.12);
-}
-
-/* ── Section header rows: ruled tab divider ──────────────────────────────── */
-
-.section-header-row > div > h2 {
-  font-size: 1.05rem;
-}
-
-/* ── Dashboard hero: open notebook cover page ───────────────────────────── */
-
-.page-shell:not(.scrapbook-page) .dashboard-hero h1 {
-  font-size: clamp(1.6rem, 3vw, 2.4rem);
-  color: var(--ink);
-}
-
-/* ── Spiral binding decoration (desktop sidebar) ─────────────────────────── */
-
-@media (min-width: 1200px) {
-  .page-shell {
-    position: relative;
-  }
-
-  .page-shell::after {
-    content: "";
-    position: fixed;
-    top: 64px;
-    bottom: 0;
-    left: max(0px, calc(50% - 600px - 36px));
-    width: 22px;
-    background:
-      repeating-radial-gradient(
-        circle at 11px 11px,
-        var(--spiral) 0px,
-        var(--spiral) 8px,
-        transparent 8px,
-        transparent 11px
-      );
-    background-size: 22px 24px;
-    opacity: 0.55;
-    pointer-events: none;
-    z-index: 0;
-  }
-}
-
-/* ── Scrapbook page overrides: let dashboard keep its cork-board feel ──────── */
-
-.scrapbook-page body,
-.scrapbook-page {
-  /* scrapbook background wins over ruled paper */
-}
-
-.scrapbook-page .card {
-  background-image: none;  /* each scrapbook card variant sets its own background */
-}
-
-.scrapbook-page .card::before {
-  display: none;  /* no hole punches on scrapbook cards */
-}
-
-.scrapbook-page .card h2 {
-  border-bottom: 1.5px solid rgba(0, 0, 0, 0.08);
-}
-
-.scrapbook-page .list-item {
-  border-top: 1px solid rgba(0, 0, 0, 0.06);
-}
-
-/* ── Mobile: simplify ruled textures ─────────────────────────────────────── */
-
-@media (max-width: 640px) {
-  body {
-    background-size: 100% 1.72rem, auto, auto, auto;
-  }
-
-  .card::before {
-    display: none;  /* hide hole punches on small screens */
-  }
-
-  .card {
-    background-size: 44px 100%, 100% 1.72rem;
-    border-radius: 8px;
-  }
-
-  .page-shell::after {
-    display: none;
-  }
+.brand-badge .badge-dot {
+  position: absolute;
+  top: -4px;
+  right: -8px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.62rem;
+  font-weight: 700;
+  border-radius: 999px;
+  min-width: 1.1rem;
+  height: 1.1rem;
+  padding: 0 0.35rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* ── Family Polls ─────────────────────────────────────────────────────────── */

@@ -9,7 +9,6 @@ import { DeepLinkHandler } from "@/components/deep-link-handler";
 import { IncomingCallWatcher } from "@/components/incoming-call-watcher";
 import { PushNotificationHandler } from "@/components/push-notification-handler";
 import { InstallPrompt } from "@/components/install-prompt";
-import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 import { PageTransition } from "@/components/page-transition";
 import { PresenceTracker } from "@/components/presence-tracker";
 import { PwaBootstrap } from "@/components/pwa-bootstrap";
@@ -60,7 +59,6 @@ export default function RootLayout({
         <SiteHeader />
         <Chyron />
         {children}
-        <MobileBottomNav />
         <ChatWidget />
         <InstallPrompt />
         <IncomingCallWatcher />

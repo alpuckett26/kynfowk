@@ -16,30 +16,13 @@ export default async function FeedbackPage({
   return (
     <main className="page-shell">
       <div className="container stack-lg">
-        <section className="dashboard-hero">
-          <div className="stack-md">
-            <span className="eyebrow">Pilot feedback</span>
-            <h1>Tell us what felt smooth, or what still felt rough.</h1>
-            <p className="lede">
-              Short notes are enough. Kynfowk will save the page context when it is available so
-              the pilot team can understand what you were trying to do.
-            </p>
-          </div>
-
-          <Card className="hero-summary-card">
-            <p className="stat-label">Current context</p>
-            <p className="highlight-value">{params?.callId ? "Call-related" : "General note"}</p>
-            <p className="meta">
-              Page: {params?.page ?? "/feedback"}
-              {params?.callId ? ` • Call ${params.callId}` : ""}
-            </p>
-            <div className="pill-row compact-pills">
-              <Link className="button button-secondary" href="/dashboard">
-                Back to dashboard
-              </Link>
-            </div>
-          </Card>
-        </section>
+        <header>
+          <h1>Feedback</h1>
+          <p className="meta">
+            Page: {params?.page ?? "/feedback"}
+            {params?.callId ? ` · Call ${params.callId}` : ""}
+          </p>
+        </header>
 
         <Card>
           <div className="stack-md">

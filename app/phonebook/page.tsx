@@ -22,32 +22,10 @@ export default async function PhonebookPage({
       <div className="container stack-lg">
         <StatusBanner code={params?.status} />
 
-        <section className="dashboard-hero">
-          <div className="stack-md">
-            <span className="eyebrow">{data.circle.name}</span>
-            <h1>Family Phonebook</h1>
-            <p className="lede">
-              Everyone in one place — phone numbers, addresses, and a quick way to reach out
-              before or after a call.
-            </p>
-          </div>
-
-          <Card className="hero-summary-card">
-            <p className="stat-label">Contact snapshot</p>
-            <p className="highlight-value">{withContact.length} of {data.members.length}</p>
-            <p className="meta">
-              family member{withContact.length === 1 ? "" : "s"} have contact info saved.
-              {withoutContact.length > 0
-                ? ` ${withoutContact.length} still need${withoutContact.length === 1 ? "s" : ""} info added.`
-                : " Your circle is fully connected."}
-            </p>
-            <div className="pill-row compact-pills">
-              <Link className="button button-secondary" href="/dashboard">
-                Back to dashboard
-              </Link>
-            </div>
-          </Card>
-        </section>
+        <header>
+          <h1>Phonebook</h1>
+          <p className="meta">{withContact.length} of {data.members.length} have contact info</p>
+        </header>
 
         <Card className="soft-callout">
           <div className="stack-sm">

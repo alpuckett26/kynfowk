@@ -205,7 +205,7 @@ export function CallRoom({
   );
 
   // While the call-room is mounted, hide the global SiteHeader, Chyron,
-  // MobileBottomNav, and ChatWidget so the call takes the full viewport.
+  // and ChatWidget so the call takes the full viewport.
   // Without this the "Leave" button at the bottom of .call-room-controls
   // gets pushed off-screen by the SiteHeader/Chyron above and overlapped
   // by the fixed bottom nav + chat widget below — i.e. no way to hang up.

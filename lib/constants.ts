@@ -1,8 +1,8 @@
+// M50 — chrome shows only Home pre-auth. Signed-in primary nav is the
+// in-shell tab indicator (Connect/Plan/Earn/Family); Settings, Updates,
+// Phonebook, etc. live in the header kebab menu.
 export const NAV_LINKS = [
-  { href: "/", label: "Home" },
-  { href: "/case-studies", label: "Case Studies" },
-  { href: "/dashboard", label: "Dashboard" },
-  { href: "/notifications", label: "Notifications" }
+  { href: "/", label: "Home" }
 ] satisfies { href: string; label: string }[];
 
 export const DAYS = [
