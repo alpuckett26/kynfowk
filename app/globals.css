@@ -2266,6 +2266,17 @@ h3 {
 
 /* ── Call room ─────────────────────────────────────────────────────────────── */
 
+/* While a call is mounted, the call-room takes the full viewport. Hide
+   the global chrome so the bottom controls (Leave button) aren't pushed
+   off-screen by the SiteHeader/Chyron above or overlapped by the fixed
+   MobileBottomNav + ChatWidget. */
+body.in-call .site-header,
+body.in-call .chyron,
+body.in-call .mobile-bottom-nav,
+body.in-call .chat-widget {
+  display: none !important;
+}
+
 .call-room {
   display: flex;
   flex-direction: column;
@@ -2293,6 +2304,22 @@ h3 {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+.call-room-end-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: #b91c1c;
+  border: none;
+  border-radius: 999px;
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.4rem 0.85rem;
+}
+.call-room-end-button:hover { background: #dc2626; }
+.call-room-end-button svg { display: block; }
 
 .call-room-status-badge {
   font-size: 0.78rem;
