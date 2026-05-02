@@ -208,8 +208,78 @@ export async function signUpAction(
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "").trim();
   const fullName = String(formData.get("fullName") ?? "").trim();
-  const supabase = await createSupabaseServerClient();
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
+  // Branded sign-up flow (M47): create the auth user with the admin
+  // client (no email send), generate a signup confirmation link, and
+  // deliver it through the same branded transactional pipeline that
+  // invites and password resets use. Falls back to Supabase's default
+  // signUp() pipeline (spammy but functional) when service-role env
+  // isn't configured (local dev only).
+  if (hasSupabaseServiceRoleEnv()) {
+    const admin = createSupabaseAdminClient();
+
+    const created = await admin.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: false,
+      user_metadata: { full_name: fullName }
+    });
+    if (created.error) {
+      const lower = created.error.message.toLowerCase();
+      if (lower.includes("already") || lower.includes("registered")) {
+        return {
+          status: "error",
+          message: "An account with that email already exists. Try signing in instead."
+        };
+      }
+      return { status: "error", message: created.error.message };
+    }
+
+    const link = await admin.auth.admin.generateLink({
+      type: "signup",
+      email,
+      password,
+      options: { redirectTo: `${siteUrl}/auth/callback` }
+    } as Parameters<typeof admin.auth.admin.generateLink>[0]);
+    const actionLink = link.data?.properties?.action_link;
+    if (link.error || !actionLink) {
+      return {
+        status: "error",
+        message: link.error?.message ?? "Couldn't generate confirmation link."
+      };
+    }
+
+    const firstName = (fullName.split(/\s+/)[0] || "").trim() || "friend";
+    await sendBrandedTransactionalEmail({
+      to: email,
+      subject: "Confirm your Kynfowk account",
+      greeting: `Hi ${firstName},`,
+      paragraphs: [
+        "Welcome to Kynfowk — we're glad you're here.",
+        "Tap the button below to confirm your email and finish setting up your account. The link is good for the next hour."
+      ],
+      cta: { label: "Confirm and sign in", url: actionLink },
+      postscript:
+        "If you didn't sign up for Kynfowk, you can ignore this email — no account stays active until you confirm."
+    });
+
+    if (created.data.user) {
+      await trackProductEvent(admin, {
+        eventName: "signup_completed",
+        userId: created.data.user.id,
+        metadata: { email }
+      });
+    }
+
+    return {
+      status: "success",
+      message: `We sent a confirmation link to ${email}. Click it to finish setting up your account — any Family Circle invitation will be connected automatically.`
+    };
+  }
+
+  // Local-dev fallback: Supabase's default signUp pipeline.
+  const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
@@ -217,7 +287,7 @@ export async function signUpAction(
       data: {
         full_name: fullName
       },
-      emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"}/auth/callback`
+      emailRedirectTo: `${siteUrl}/auth/callback`
     }
   });
 
@@ -533,13 +603,14 @@ export async function completeOnboardingAction(
             acceptUrl.searchParams.set("circle", circleName);
             acceptUrl.searchParams.set("from", fullName);
             acceptUrl.searchParams.set("email", m.invite_email!);
-            return admin.auth.admin.inviteUserByEmail(m.invite_email!, {
-              data: {
-                full_name: m.display_name,
-                family_circle_name: circleName,
-                inviter_name: fullName
-              },
-              redirectTo: acceptUrl.toString()
+            return sendFamilyInviteEmail({
+              email: m.invite_email!,
+              displayName: m.display_name,
+              inviterName: fullName,
+              circleName,
+              relationshipLabel: m.relationship_label,
+              acceptUrlBase: acceptUrl.toString(),
+              adminClient: admin
             });
           })
       );
@@ -1981,7 +2052,7 @@ export async function resendFamilyInviteAction(formData: FormData) {
 
   const membershipResponse = await supabase
     .from("family_memberships")
-    .select("id, display_name, invite_email, status")
+    .select("id, display_name, invite_email, status, relationship_label")
     .eq("id", membershipId)
     .eq("family_circle_id", familyCircleId)
     .maybeSingle();
@@ -2001,20 +2072,18 @@ export async function resendFamilyInviteAction(formData: FormData) {
   acceptUrl.searchParams.set("circle", ownerFamily.circle.name);
   acceptUrl.searchParams.set("from", ownerFamily.membership.display_name);
   acceptUrl.searchParams.set("email", pendingMembership.invite_email);
-  const inviteResponse = await admin.auth.admin.inviteUserByEmail(
-    pendingMembership.invite_email,
-    {
-      data: {
-        full_name: pendingMembership.display_name,
-        family_circle_name: ownerFamily.circle.name,
-        inviter_name: ownerFamily.membership.display_name
-      },
-      redirectTo: acceptUrl.toString()
-    }
-  );
+  const inviteResponse = await sendFamilyInviteEmail({
+    email: pendingMembership.invite_email,
+    displayName: pendingMembership.display_name,
+    inviterName: ownerFamily.membership.display_name,
+    circleName: ownerFamily.circle.name,
+    relationshipLabel: pendingMembership.relationship_label ?? null,
+    acceptUrlBase: acceptUrl.toString(),
+    adminClient: admin
+  });
 
-  if (inviteResponse.error) {
-    const errorMessage = inviteResponse.error.message.toLowerCase();
+  if (inviteResponse.status === "failed") {
+    const errorMessage = (inviteResponse.errorMessage ?? "").toLowerCase();
     if (errorMessage.includes("already") || errorMessage.includes("exists")) {
       redirectWithStatus("family-invite-already-claimed");
     }
