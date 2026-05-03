@@ -136,6 +136,61 @@ Bump `version` for any change with user-visible features. Keep `0.x` until you'r
 
 ---
 
+---
+
+## Apple In-App Purchase (Plus subscription)
+
+M58 wired the iOS purchase flow. The server validator lives at
+`/api/native/iap/apple-receipt`; the mobile button lives at
+`mobile/components/UpgradeToPlusButton.tsx` and is rendered on the **Me** tab.
+
+### Required setup before subscriptions can serve
+
+**1. App Store Connect — create an auto-renewable subscription product.**
+
+- App Store Connect → **Kynfowk** → **Monetization → Subscriptions**.
+- Create a new **Subscription Group** (e.g. `KynfowkPlus`).
+- Inside the group, create a subscription with:
+  - **Product ID:** `kynfowk.plus.monthly` (must match the default in `mobile/lib/iap.ts`, or override via `EXPO_PUBLIC_IAP_PLUS_MONTHLY_PRODUCT_ID`).
+  - **Reference name:** "Kynfowk Plus — Monthly"
+  - **Subscription duration:** 1 month
+  - **Price:** whatever tier you want ($9.99/mo per the M44 plan)
+  - **Localized display name + description** (App Store reviewer sees these)
+  - **Review screenshot** (any iPhone screenshot of the Me tab showing the upgrade button works)
+- Repeat for `kynfowk.plus.yearly` if you want a yearly tier (optional).
+
+**2. App Store Connect — generate the App-Specific Shared Secret.**
+
+- App Store Connect → **Kynfowk** → **App Information** → scroll to **App-Specific Shared Secret** → **Generate** (or **Manage** if it exists).
+- Copy the long hex string.
+
+**3. Vercel env var for the server validator.**
+
+- Vercel → kynfowk → Settings → Environment Variables.
+- `APPLE_SHARED_SECRET` = the secret from step 2. Production + Preview.
+- Redeploy.
+
+**4. (Optional) EAS build env override**
+
+If you want to test against different product IDs (e.g. for a sandbox-only product), set EAS secrets:
+
+```bash
+npx eas-cli secret:create --scope project --name EXPO_PUBLIC_IAP_PLUS_MONTHLY_PRODUCT_ID --value 'kynfowk.plus.monthly.sandbox'
+```
+
+Otherwise the defaults in `mobile/lib/iap.ts` apply.
+
+### Sandbox testing (before going live)
+
+- App Store Connect → **Users and Access → Sandbox → Testers** → **+ Tester**. Create a sandbox Apple ID — use a fresh email you don't already have logged into the App Store.
+- On your iPhone, go to **Settings → App Store → Sandbox Account** and sign in with that tester.
+- Install the TestFlight build, open the Me tab, tap **Upgrade to Plus**.
+- The StoreKit sheet appears with `[Sandbox]` in the title. Confirm — Apple charges nothing.
+- Watch the server log: a request hits `/api/native/iap/apple-receipt`, Apple's verifyReceipt routes to `sandbox.itunes.apple.com`, profile flips to `is_paid_tier=true`.
+- Reload the Earn panel — ads should be gone.
+
+---
+
 ## AdMob (mobile ads)
 
 M60 wired AdMob via `react-native-google-mobile-ads` + the
@@ -210,8 +265,9 @@ The AdPreRoll ("Sorry fam, gotta pay bills 🤷🏾‍♂️") shows once per se
 
 ## What's NOT yet wired (queued)
 
-- **App Store Server Notifications V2** webhook (renewals, cancellations, refunds, billing failures) — see the IAP section. Without it, paid users keep `is_paid_tier=true` after Apple cancels; we reconcile lazily on next purchase or restore.
-- **Google Play Billing** for the Android Plus subscription — separate PR.
-- **Web Square checkout** for the same Plus tier — separate PR.
+- **App Store Server Notifications V2** webhook (renewals, cancellations, refunds, billing failures) — without it, paid users keep `is_paid_tier=true` after Apple cancels; we reconcile lazily on next purchase or restore. Separate PR.
+- **Family Sharing entitlement transfer** — disabled by default in App Store Connect; safe.
+- **Google Play Billing** for the Android Plus subscription — separate PR (Play Billing has different ergonomics; the receipt-validator pattern carries over).
+- **Web Square checkout** for the same Plus tier — separate PR (M61).
 - **Rewarded video** ads — separate PR; ties into the points / rewards-pool flow.
 - **AdMob interstitials** (full-screen between sessions) — separate PR.
