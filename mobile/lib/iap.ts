@@ -1,7 +1,12 @@
 /**
  * mobile/lib/iap.ts
  *
- * Thin wrapper over react-native-iap for the Kynfowk Plus subscription.
+ * Thin wrapper over expo-iap for the Kynfowk Plus subscription.
+ *
+ * expo-iap is the Expo-supported successor to react-native-iap (same
+ * author). Same API surface for our needs but builds cleanly against
+ * Expo SDK 54 / React Native 0.81 — react-native-iap had Kotlin
+ * compile errors against that toolchain.
  *
  * Lifecycle:
  *   1. App boot — call `ensureIapConnection()` once. Idempotent.
@@ -22,7 +27,6 @@
  */
 
 import { Platform, type EmitterSubscription } from "react-native";
-import * as RNIap from "react-native-iap";
 
 import { apiFetch } from "@/lib/api";
 
@@ -37,6 +41,22 @@ export type IapResult =
   | { ok: true; productId: string; environment: "Production" | "Sandbox"; expiresAt: string }
   | { ok: false; reason: "cancelled" | "pending" | "ineligible" | "network" | "other"; message?: string };
 
+// Lazy-load expo-iap so the module isn't pulled in when running on
+// platforms / surfaces that don't need it. Also lets the Android
+// preview build skip the entire IAP path until Play Billing lands.
+type ExpoIapModule = typeof import("expo-iap");
+let cachedModule: ExpoIapModule | null = null;
+async function loadIap(): Promise<ExpoIapModule | null> {
+  if (cachedModule) return cachedModule;
+  try {
+    cachedModule = await import("expo-iap");
+    return cachedModule;
+  } catch (err) {
+    console.warn("[iap] expo-iap unavailable", err);
+    return null;
+  }
+}
+
 let connected = false;
 let purchaseUpdateSubscription: EmitterSubscription | null = null;
 let purchaseErrorSubscription: EmitterSubscription | null = null;
@@ -48,14 +68,17 @@ let purchaseErrorSubscription: EmitterSubscription | null = null;
 export async function ensureIapConnection(): Promise<void> {
   if (Platform.OS !== "ios") return;
   if (connected) return;
-  await RNIap.initConnection();
+  const IAP = await loadIap();
+  if (!IAP) return;
+  await IAP.initConnection();
   connected = true;
 
   // Listener fires every time a purchase reaches purchased state —
   // including replays after app reinstall, so this is also our
   // restore-purchase handler.
-  purchaseUpdateSubscription = RNIap.purchaseUpdatedListener(async (purchase) => {
-    const receiptData = (purchase as RNIap.SubscriptionPurchase).transactionReceipt;
+  purchaseUpdateSubscription = IAP.purchaseUpdatedListener(async (purchase) => {
+    const receiptData = (purchase as { transactionReceipt?: string })
+      .transactionReceipt;
     if (!receiptData) return;
     try {
       await apiFetch("/api/native/iap/apple-receipt", {
@@ -64,7 +87,7 @@ export async function ensureIapConnection(): Promise<void> {
       });
       // Server validated + flipped is_paid_tier — finalize the
       // transaction so Apple stops re-broadcasting it.
-      await RNIap.finishTransaction({ purchase, isConsumable: false });
+      await IAP.finishTransaction({ purchase, isConsumable: false });
     } catch (err) {
       // Don't finishTransaction on server failure; Apple will replay
       // the purchase next launch and we'll retry.
@@ -72,7 +95,7 @@ export async function ensureIapConnection(): Promise<void> {
     }
   });
 
-  purchaseErrorSubscription = RNIap.purchaseErrorListener((err) => {
+  purchaseErrorSubscription = IAP.purchaseErrorListener((err) => {
     console.warn("[iap] purchase error:", err);
   });
 }
@@ -87,9 +110,24 @@ export async function teardownIapConnection(): Promise<void> {
   purchaseUpdateSubscription = null;
   purchaseErrorSubscription = null;
   if (connected) {
-    await RNIap.endConnection();
+    const IAP = cachedModule;
+    if (IAP) await IAP.endConnection();
     connected = false;
   }
+}
+
+/**
+ * Product details for the Kynfowk Plus subscription. The app stores
+ * use a loose schema across iOS/Android, so we surface a small
+ * normalized shape.
+ */
+export interface PlusProduct {
+  productId: string;
+  localizedPrice?: string;
+  price?: string;
+  currency?: string;
+  title?: string;
+  description?: string;
 }
 
 /**
@@ -97,11 +135,14 @@ export async function teardownIapConnection(): Promise<void> {
  * for the Kynfowk Plus subscription. Returns [] if products aren't
  * configured in App Store Connect yet, or if running on Android.
  */
-export async function fetchPlusProducts(): Promise<RNIap.Subscription[]> {
+export async function fetchPlusProducts(): Promise<PlusProduct[]> {
   if (Platform.OS !== "ios") return [];
   await ensureIapConnection();
+  const IAP = cachedModule;
+  if (!IAP) return [];
   try {
-    return await RNIap.getSubscriptions({ skus: PRODUCT_IDS });
+    const subs = await IAP.getSubscriptions({ skus: PRODUCT_IDS });
+    return (subs as PlusProduct[]) ?? [];
   } catch (err) {
     console.warn("[iap] fetchPlusProducts failed", err);
     return [];
@@ -118,8 +159,12 @@ export async function purchasePlus(productId: string): Promise<IapResult> {
     return { ok: false, reason: "ineligible", message: "iOS subscriptions only on this build." };
   }
   await ensureIapConnection();
+  const IAP = cachedModule;
+  if (!IAP) {
+    return { ok: false, reason: "other", message: "Subscriptions module not available on this build." };
+  }
   try {
-    await RNIap.requestSubscription({ sku: productId });
+    await IAP.requestSubscription({ sku: productId });
     return {
       ok: true,
       productId,
@@ -152,7 +197,7 @@ export async function purchasePlus(productId: string): Promise<IapResult> {
 export async function restorePurchases(): Promise<void> {
   if (Platform.OS !== "ios") return;
   await ensureIapConnection();
-  // getAvailablePurchases is the canonical call — react-native-iap
-  // routes its results through purchaseUpdatedListener.
-  await RNIap.getAvailablePurchases();
+  const IAP = cachedModule;
+  if (!IAP) return;
+  await IAP.getAvailablePurchases();
 }
