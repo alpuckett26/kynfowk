@@ -1,93 +1,119 @@
 # iOS Build From Your Phone
 
-Trigger production iOS builds from the GitHub mobile app — no laptop
-needed for routine builds. **One ~10 minute desktop session is
-required up front** to register Apple credentials with EAS.
+Trigger production iOS builds from the GitHub mobile app — **no
+desktop required at any point.** Uses an App Store Connect API key
+so EAS auto-generates the Apple Distribution Certificate +
+Provisioning Profile on the first build.
 
-## One-time setup
+## One-time setup (≈15 min, all on phone)
 
-### Step 1 — Generate `EXPO_TOKEN` (phone-doable)
+### Step 1 — Create an App Store Connect API key
+
+1. **App Store Connect** in mobile Safari → **Users and Access** →
+   **Integrations** tab → **App Store Connect API**.
+2. Tap **+** → name it `EAS CI` → role **Admin** → **Generate**.
+3. After it's created you'll see three things to capture:
+   - **Issuer ID** — the UUID at the top of the API Keys page.
+     Long-press → Copy.
+   - **Key ID** — 10-char string next to the key name. Copy.
+   - **Download API Key** button → tap. iOS saves
+     `AuthKey_XXXXXXXXXX.p8` to your **Files** app (Downloads
+     folder by default).
+
+> ⚠️ Apple only lets you download the .p8 ONCE. If you lose it you
+> have to revoke + regenerate the key.
+
+### Step 2 — Convert the .p8 to base64 (one tap, in Files)
+
+GitHub Secrets need a string, not a file. iOS Files app can
+base64-encode via the Shortcuts app — but the easiest path is to
+use a free web converter:
+
+1. Open `https://www.base64encode.org/` in mobile Safari.
+2. Tap **Choose File** → **Browse** → Files → Downloads →
+   `AuthKey_XXXXXXXXXX.p8`.
+3. Tap **ENCODE** → tap **Copy to clipboard** under the result.
+
+The resulting base64 string is what GitHub Secrets needs.
+
+### Step 3 — Generate `EXPO_TOKEN`
 
 1. Sign in to https://expo.dev on phone.
 2. Account avatar (top-right) → **Account Settings** → **Access
    Tokens** → **+ Create**.
-3. Name: `github-actions-ios`. Copy the token.
-4. GitHub → **alpuckett26/kynfowk** → **Settings** → **Secrets and
-   variables** → **Actions** → **New repository secret**:
-   - Name: `EXPO_TOKEN`
-   - Value: (the token)
+3. Name: `github-actions-ios`. **Copy** the token.
 
-### Step 2 — Confirm the three other secrets exist
+### Step 4 — Add all secrets to GitHub
 
-The Android workflow already uses these. Check Settings → Secrets:
+GitHub mobile app → **alpuckett26/kynfowk** → **Settings** →
+**Secrets and variables** → **Actions** → **New repository secret**
+(repeat for each):
 
-- `EXPO_PUBLIC_SUPABASE_URL`
-- `EXPO_PUBLIC_SUPABASE_ANON_KEY`
-- `WEB_API_BASE_URL` (= `https://kynfowk.com`)
+| Name | Value |
+|---|---|
+| `EXPO_TOKEN` | (from Step 3) |
+| `ASC_API_KEY_P8_BASE64` | (the base64 from Step 2) |
+| `ASC_API_KEY_ID` | (10-char Key ID from Step 1) |
+| `ASC_API_ISSUER_ID` | (UUID Issuer ID from Step 1) |
 
-If any are missing, add them.
+These three are reused from the Android workflow — confirm they
+exist; add if not:
 
-### Step 3 — Register Apple credentials with EAS (desktop, one time)
+| Name | Value |
+|---|---|
+| `EXPO_PUBLIC_SUPABASE_URL` | `https://YOUR.supabase.co` |
+| `EXPO_PUBLIC_SUPABASE_ANON_KEY` | (Supabase project anon key) |
+| `WEB_API_BASE_URL` | `https://kynfowk.com` |
 
-This is the only step that needs a desktop. Borrow a Mac/Linux/Windows
-machine for ~10 minutes:
+That's it for setup. Every routine build from now on is a tap.
 
-```bash
-git clone https://github.com/alpuckett26/kynfowk.git
-cd kynfowk/mobile
-npx eas-cli login                # enter Expo account creds
-npx eas-cli credentials          # interactive — see below
-```
+## Routine build (60 sec on phone)
 
-In the `credentials` flow:
-
-1. Pick **iOS** → **production**.
-2. **Distribution Certificate** → "Set up a new Distribution
-   Certificate". EAS prompts for your Apple Developer account
-   (`aaron.elitetelecom@icloud.com` + 2FA) and auto-generates a cert
-   in App Store Connect.
-3. **Provisioning Profile** → "Set up a new Provisioning Profile" —
-   auto-generates one for `com.kynfowk.app`.
-4. **App Store Connect API Key** (recommended for `eas submit`):
-   - In App Store Connect → **Users and Access** → **Integrations** →
-     **App Store Connect API** → **+** → role **Admin** → download the
-     `.p8` key file.
-   - Back in the EAS credentials prompt: provide the `.p8` path,
-     issuer ID (top of the API Keys page), and key ID. EAS uploads +
-     stores it.
-
-Once done, EAS holds everything it needs. Future builds skip the
-interactive prompts.
-
-## Routine build (phone-friendly)
-
-1. Open the **GitHub mobile app** → kynfowk repo → **Actions** tab.
+1. **GitHub mobile app** → kynfowk repo → **Actions** tab.
 2. Pick **Mobile iOS — EAS Build** workflow on the left.
 3. Tap **Run workflow** (top-right).
 4. Choose:
-   - **profile:** `production` (or `preview` for an internal-only build)
-   - **submit:** toggle on if you want EAS to auto-upload to App Store
-     Connect / TestFlight after the build finishes
+   - **profile:** `production` (or `preview` for an internal-only
+     build)
+   - **submit:** toggle on if you want EAS to auto-upload to App
+     Store Connect / TestFlight after the build finishes.
 5. Tap **Run workflow**.
 
-The Action runs `eas build --non-interactive --no-wait` which queues
-the build on EAS's macOS infrastructure and returns immediately. The
-GitHub Action job finishes in ~2 min; the underlying EAS build takes
-~15–30 min. Watch progress at https://expo.dev → kynfowk project →
-**Builds**.
+The Action runs `eas build --non-interactive --no-wait` which
+queues the build on EAS's macOS infrastructure and returns
+immediately. The GitHub Action job finishes in ~2 min; the actual
+iOS build takes ~15–30 min on EAS.
+
+Watch progress at https://expo.dev → kynfowk → **Builds** (mobile
+Safari renders this fine).
 
 If you opted in to submit, EAS also runs `eas submit --wait` which
-blocks until the build completes, then uploads to App Store Connect.
-Build appears in TestFlight ~10 min after that.
+blocks until the build completes, then uploads to App Store
+Connect. Build appears in TestFlight ~10 min after that.
+
+## What happens on the first build
+
+EAS sees you've configured an ASC API key but no Distribution
+Certificate / Provisioning Profile yet. It uses the API key to:
+
+1. Generate a new Distribution Certificate in your Apple Developer
+   account (visible at developer.apple.com → Certificates).
+2. Generate a Provisioning Profile for `com.kynfowk.app` (visible
+   at developer.apple.com → Profiles).
+3. Sign the build with both.
+
+These get cached in EAS's project credentials store. Subsequent
+builds reuse them silently.
 
 ## Troubleshooting
 
-**"No matching credential found"** — Step 3 (desktop) wasn't done, or
-was done against a different EAS project. Check `mobile/eas.json` →
-`extra.eas.projectId` matches the project on expo.dev.
+**Workflow fails at "Decode App Store Connect API key" step** —
+`ASC_API_KEY_P8_BASE64` secret missing or malformed. Re-encode the
+.p8 from Step 2 and re-add the secret.
 
-**"Apple session expired"** — App Store Connect API key expired or
-was revoked. Regenerate from ASC and re-run `eas credentials`.
+**"Apple session expired" mid-build** — API key was revoked. Repeat
+Steps 1–2 to generate + base64 a new one, then update the
+`ASC_API_KEY_P8_BASE64` secret in GitHub.
 
 **Build fails on type check** — fix locally and push; the workflow
 runs `tsc --noEmit` before kicking off the EAS build, so type errors
@@ -97,3 +123,7 @@ fail fast in GitHub Actions before burning EAS minutes.
 processing. Wait for the build to show "finished" on expo.dev, then
 re-run with submit on (it'll pick up the latest finished build via
 `--latest`).
+
+**"There was an error verifying your App Store Connect API
+credentials"** — Issuer ID / Key ID typo, or the .p8 base64 doesn't
+decode cleanly. Verify Step 1 values and re-encode the .p8.
