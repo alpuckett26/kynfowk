@@ -29,6 +29,11 @@ const SANDBOX_URL = "https://sandbox.itunes.apple.com/verifyReceipt";
 export interface ParsedReceipt {
   /** App Store transaction id for the most recent active subscription. */
   transactionId: string;
+  /**
+   * Stable id that doesn't change across renewals. We use this to
+   * look the user up when an App Store Server Notification arrives.
+   */
+  originalTransactionId: string;
   /** Apple's product identifier (e.g. "kynfowk.plus.monthly"). */
   productId: string;
   /** Original purchase date — never changes for a renewing subscription. */
@@ -46,6 +51,7 @@ interface AppleVerifyResponse {
   environment?: string;
   latest_receipt_info?: Array<{
     transaction_id: string;
+    original_transaction_id: string;
     product_id: string;
     original_purchase_date_ms: string;
     expires_date_ms: string;
@@ -103,6 +109,7 @@ export async function verifyAppleReceipt(
 
   return {
     transactionId: match.transaction_id,
+    originalTransactionId: match.original_transaction_id,
     productId: match.product_id,
     originalPurchaseDateMs: Number(match.original_purchase_date_ms),
     expiresDateMs,

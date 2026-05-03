@@ -13,12 +13,12 @@
  *      latest transaction id + expires-at for the eventual webhook
  *      reconciliation.
  *
+ * Renewal / cancellation / refund reconciliation lives in
+ * /api/webhook/apple-app-store (M62 — App Store Server Notifications
+ * V2). This route stores `apple_original_transaction_id` so that
+ * webhook can find the profile when Apple notifies us.
+ *
  * Out of scope here (separate PRs):
- *   - App Store Server Notifications V2 webhook for renewals,
- *     cancellations, billing failures, refunds. Without that webhook,
- *     a paid user keeps is_paid_tier=true even after Apple cancels;
- *     we'd reconcile lazily on next purchase or on a periodic cron.
- *   - Refund handling.
  *   - Cross-device entitlement transfer (Family Sharing).
  */
 
@@ -71,12 +71,17 @@ export async function POST(request: Request) {
 
     if (!parsed.isActive) {
       // Receipt parsed but the subscription has lapsed — make sure
-      // we mirror that state on the profile too.
+      // we mirror that state on the profile too. Still record the
+      // original transaction id so a later App Store Server
+      // Notification (e.g. a re-subscribe) can find this profile.
       await supabase
         .from("profiles")
         .update({
           is_paid_tier: false,
           subscription_tier: "free",
+          apple_original_transaction_id: parsed.originalTransactionId,
+          apple_expires_at: new Date(parsed.expiresDateMs).toISOString(),
+          apple_environment: parsed.environment,
         })
         .eq("id", user.id);
       return Response.json(
@@ -91,12 +96,17 @@ export async function POST(request: Request) {
 
     // Active subscription — flip the bit. Tier stays "paid" regardless
     // of which product (monthly vs yearly) for now; we can split later
-    // if pricing tiers diverge.
+    // if pricing tiers diverge. Capture the original transaction id +
+    // expiry so the M62 webhook can later reconcile renewals/cancels
+    // against this profile.
     const update = await supabase
       .from("profiles")
       .update({
         is_paid_tier: true,
         subscription_tier: "paid",
+        apple_original_transaction_id: parsed.originalTransactionId,
+        apple_expires_at: new Date(parsed.expiresDateMs).toISOString(),
+        apple_environment: parsed.environment,
       })
       .eq("id", user.id);
 
