@@ -21,7 +21,7 @@
  * PR (Google Play Billing has different ergonomics).
  */
 
-import { Platform } from "react-native";
+import { Platform, type EmitterSubscription } from "react-native";
 import * as RNIap from "react-native-iap";
 
 import { apiFetch } from "@/lib/api";
@@ -38,8 +38,8 @@ export type IapResult =
   | { ok: false; reason: "cancelled" | "pending" | "ineligible" | "network" | "other"; message?: string };
 
 let connected = false;
-let purchaseUpdateSubscription: RNIap.EmitterSubscription | null = null;
-let purchaseErrorSubscription: RNIap.EmitterSubscription | null = null;
+let purchaseUpdateSubscription: EmitterSubscription | null = null;
+let purchaseErrorSubscription: EmitterSubscription | null = null;
 
 /**
  * Initialize the StoreKit connection + the purchase listener. Safe to

@@ -124,11 +124,11 @@ const styles = StyleSheet.create({
   headline: {
     fontSize: fontSize.lg,
     fontWeight: "600",
-    color: colors.ink,
+    color: colors.text,
   },
   body: {
     fontSize: fontSize.md,
-    color: colors.muted,
+    color: colors.textMuted,
     lineHeight: 22,
   },
 });
