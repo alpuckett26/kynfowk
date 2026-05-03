@@ -1,32 +1,29 @@
 /**
  * mobile/lib/iap.ts
  *
- * Thin wrapper over expo-iap for the Kynfowk Plus subscription.
+ * Thin wrapper over expo-iap (v3.x) for the Kynfowk Plus subscription.
  *
- * expo-iap is the Expo-supported successor to react-native-iap (same
- * author). Same API surface for our needs but builds cleanly against
- * Expo SDK 54 / React Native 0.81 — react-native-iap had Kotlin
- * compile errors against that toolchain.
+ * expo-iap v3 changed several method names from the v2 / react-native-iap
+ * shape. We wrap them so the rest of the app keeps a stable surface
+ * (`fetchPlusProducts`, `purchasePlus`, `restorePurchases`) regardless
+ * of how the underlying SDK evolves.
  *
  * Lifecycle:
  *   1. App boot — call `ensureIapConnection()` once. Idempotent.
- *   2. Settings / Earn — `fetchPlusProducts()` returns the localized
+ *   2. Settings — `fetchPlusProducts()` returns the localized
  *      price/title for the products configured in App Store Connect.
  *   3. Purchase tap — `purchasePlus(productId)` opens the StoreKit
- *      sheet, awaits the user's confirmation, returns the resolved
- *      purchase. The `purchaseUpdatedListener` set up in
- *      `ensureIapConnection()` automatically POSTs the receipt to
- *      our server and finishes the transaction once accepted.
+ *      sheet, awaits the user's confirmation. The
+ *      `purchaseUpdatedListener` set up in `ensureIapConnection()`
+ *      automatically POSTs the receipt to our server and finishes the
+ *      transaction once accepted.
  *   4. Restore — `restorePurchases()` for users who reinstalled.
- *
- * Apple StoreKit error codes are noisy; we collapse common cancellations
- * into a typed `IapResult` so callers can render friendly messages.
  *
  * iOS-only by design. Android Plus subscriptions land in a separate
  * PR (Google Play Billing has different ergonomics).
  */
 
-import { Platform, type EmitterSubscription } from "react-native";
+import { Platform } from "react-native";
 
 import { apiFetch } from "@/lib/api";
 
@@ -41,16 +38,43 @@ export type IapResult =
   | { ok: true; productId: string; environment: "Production" | "Sandbox"; expiresAt: string }
   | { ok: false; reason: "cancelled" | "pending" | "ineligible" | "network" | "other"; message?: string };
 
-// Lazy-load expo-iap so the module isn't pulled in when running on
-// platforms / surfaces that don't need it. Also lets the Android
-// preview build skip the entire IAP path until Play Billing lands.
-type ExpoIapModule = typeof import("expo-iap");
-let cachedModule: ExpoIapModule | null = null;
-async function loadIap(): Promise<ExpoIapModule | null> {
+// expo-iap exports a moving target across versions. We type the
+// surface we actually use loosely so a v3 → v4 rename doesn't break
+// our build. Failures fall back to runtime warnings + null returns
+// rather than module-init crashes.
+type IapSubscription = { remove: () => void };
+interface ExpoIapSurface {
+  initConnection: () => Promise<unknown>;
+  endConnection: () => Promise<unknown>;
+  finishTransaction: (args: { purchase: unknown; isConsumable?: boolean }) => Promise<unknown>;
+  purchaseUpdatedListener: (cb: (purchase: PurchasedItem) => void) => IapSubscription;
+  purchaseErrorListener: (cb: (err: unknown) => void) => IapSubscription;
+  getAvailablePurchases: () => Promise<unknown>;
+  // v3 unified products + subscriptions under requestProducts({type})
+  // and requestPurchase({type}). Falls back to v2 names if present.
+  requestProducts?: (args: { skus: string[]; type?: "subs" | "inapp" }) => Promise<unknown[]>;
+  getSubscriptions?: (args: { skus: string[] }) => Promise<unknown[]>;
+  requestPurchase?: (args: unknown) => Promise<unknown>;
+  requestSubscription?: (args: { sku: string }) => Promise<unknown>;
+}
+
+interface PurchasedItem {
+  productId: string;
+  transactionReceipt?: string;
+  // v3 wraps the iOS-specific receipt in purchaseToken, ios.transactionReceipt,
+  // or transactionReceipt. We try them all.
+  purchaseToken?: string;
+  ios?: { transactionReceipt?: string };
+}
+
+let cachedModule: ExpoIapSurface | null = null;
+
+async function loadIap(): Promise<ExpoIapSurface | null> {
   if (cachedModule) return cachedModule;
   try {
-    cachedModule = await import("expo-iap");
-    return cachedModule;
+    const mod = (await import("expo-iap")) as unknown as ExpoIapSurface;
+    cachedModule = mod;
+    return mod;
   } catch (err) {
     console.warn("[iap] expo-iap unavailable", err);
     return null;
@@ -58,8 +82,17 @@ async function loadIap(): Promise<ExpoIapModule | null> {
 }
 
 let connected = false;
-let purchaseUpdateSubscription: EmitterSubscription | null = null;
-let purchaseErrorSubscription: EmitterSubscription | null = null;
+let purchaseUpdateSubscription: IapSubscription | null = null;
+let purchaseErrorSubscription: IapSubscription | null = null;
+
+function extractReceipt(purchase: PurchasedItem): string | null {
+  return (
+    purchase.ios?.transactionReceipt ??
+    purchase.transactionReceipt ??
+    purchase.purchaseToken ??
+    null
+  );
+}
 
 /**
  * Initialize the StoreKit connection + the purchase listener. Safe to
@@ -73,24 +106,18 @@ export async function ensureIapConnection(): Promise<void> {
   await IAP.initConnection();
   connected = true;
 
-  // Listener fires every time a purchase reaches purchased state —
-  // including replays after app reinstall, so this is also our
-  // restore-purchase handler.
   purchaseUpdateSubscription = IAP.purchaseUpdatedListener(async (purchase) => {
-    const receiptData = (purchase as { transactionReceipt?: string })
-      .transactionReceipt;
+    const receiptData = extractReceipt(purchase);
     if (!receiptData) return;
     try {
       await apiFetch("/api/native/iap/apple-receipt", {
         method: "POST",
         body: { receiptData, productId: purchase.productId },
       });
-      // Server validated + flipped is_paid_tier — finalize the
-      // transaction so Apple stops re-broadcasting it.
       await IAP.finishTransaction({ purchase, isConsumable: false });
     } catch (err) {
-      // Don't finishTransaction on server failure; Apple will replay
-      // the purchase next launch and we'll retry.
+      // Don't finishTransaction on server failure; Apple replays the
+      // purchase next launch and we'll retry then.
       console.warn("[iap] receipt POST failed; will retry on next launch", err);
     }
   });
@@ -109,18 +136,12 @@ export async function teardownIapConnection(): Promise<void> {
   purchaseErrorSubscription?.remove();
   purchaseUpdateSubscription = null;
   purchaseErrorSubscription = null;
-  if (connected) {
-    const IAP = cachedModule;
-    if (IAP) await IAP.endConnection();
+  if (connected && cachedModule) {
+    await cachedModule.endConnection();
     connected = false;
   }
 }
 
-/**
- * Product details for the Kynfowk Plus subscription. The app stores
- * use a loose schema across iOS/Android, so we surface a small
- * normalized shape.
- */
 export interface PlusProduct {
   productId: string;
   localizedPrice?: string;
@@ -131,9 +152,9 @@ export interface PlusProduct {
 }
 
 /**
- * Look up the localized product details (price string, period, etc.)
- * for the Kynfowk Plus subscription. Returns [] if products aren't
- * configured in App Store Connect yet, or if running on Android.
+ * Look up the localized product details for the Kynfowk Plus
+ * subscriptions. Tries v3's `requestProducts({ type: 'subs' })` first,
+ * falls back to v2's `getSubscriptions` if the v3 entry isn't there.
  */
 export async function fetchPlusProducts(): Promise<PlusProduct[]> {
   if (Platform.OS !== "ios") return [];
@@ -141,8 +162,13 @@ export async function fetchPlusProducts(): Promise<PlusProduct[]> {
   const IAP = cachedModule;
   if (!IAP) return [];
   try {
-    const subs = await IAP.getSubscriptions({ skus: PRODUCT_IDS });
-    return (subs as PlusProduct[]) ?? [];
+    let raw: unknown[] = [];
+    if (typeof IAP.requestProducts === "function") {
+      raw = await IAP.requestProducts({ skus: PRODUCT_IDS, type: "subs" });
+    } else if (typeof IAP.getSubscriptions === "function") {
+      raw = await IAP.getSubscriptions({ skus: PRODUCT_IDS });
+    }
+    return raw as PlusProduct[];
   } catch (err) {
     console.warn("[iap] fetchPlusProducts failed", err);
     return [];
@@ -151,8 +177,8 @@ export async function fetchPlusProducts(): Promise<PlusProduct[]> {
 
 /**
  * Open the StoreKit purchase sheet. Resolves once the user has
- * confirmed or cancelled. The actual entitlement flip happens inside
- * the purchaseUpdatedListener (server validation → DB write).
+ * confirmed or cancelled. The entitlement flip happens inside the
+ * purchaseUpdatedListener (server validation → DB write).
  */
 export async function purchasePlus(productId: string): Promise<IapResult> {
   if (Platform.OS !== "ios") {
@@ -164,7 +190,20 @@ export async function purchasePlus(productId: string): Promise<IapResult> {
     return { ok: false, reason: "other", message: "Subscriptions module not available on this build." };
   }
   try {
-    await IAP.requestSubscription({ sku: productId });
+    if (typeof IAP.requestPurchase === "function") {
+      // expo-iap v3 shape: { request: { ios: { sku } }, type: 'subs' }
+      await IAP.requestPurchase({
+        request: {
+          ios: { sku: productId },
+          android: { skus: [productId] },
+        },
+        type: "subs",
+      });
+    } else if (typeof IAP.requestSubscription === "function") {
+      await IAP.requestSubscription({ sku: productId });
+    } else {
+      return { ok: false, reason: "other", message: "No supported purchase method on this expo-iap build." };
+    }
     return {
       ok: true,
       productId,
