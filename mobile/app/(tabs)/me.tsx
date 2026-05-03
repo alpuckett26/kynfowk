@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { router } from "expo-router";
 import { Screen } from "@/components/Screen";
+import { AdBanner } from "@/components/AdBanner";
 import { Card } from "@/components/Card";
 import { Button } from "@/components/Button";
 import { UpgradeToPlusButton } from "@/components/UpgradeToPlusButton";
@@ -75,6 +76,8 @@ export default function MeTab() {
           onPress={() => router.push("/feedback")}
         />
       </Card>
+
+      <AdBanner placement="me-tab" />
 
       <Button label="Sign out" variant="danger" onPress={onSignOut} />
     </Screen>

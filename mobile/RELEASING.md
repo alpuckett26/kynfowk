@@ -136,6 +136,8 @@ Bump `version` for any change with user-visible features. Keep `0.x` until you'r
 
 ---
 
+---
+
 ## Apple In-App Purchase (Plus subscription)
 
 M58 wired the iOS purchase flow. The server validator lives at
@@ -187,17 +189,85 @@ Otherwise the defaults in `mobile/lib/iap.ts` apply.
 - Watch the server log: a request hits `/api/native/iap/apple-receipt`, Apple's verifyReceipt routes to `sandbox.itunes.apple.com`, profile flips to `is_paid_tier=true`.
 - Reload the Earn panel — ads should be gone.
 
-### What's NOT yet wired (queued)
+---
 
-- **App Store Server Notifications V2** webhook for renewals, cancellations, refunds, billing failures. Without it, a paid user keeps `is_paid_tier=true` even after Apple cancels — we reconcile lazily on the next purchase or restore. Separate PR.
-- **Family Sharing entitlement transfer** — disabled by default in App Store Connect; safe.
-- **Google Play Billing** for the Android Plus subscription — separate PR (Play Billing has different ergonomics; the receipt-validator pattern carries over).
-- **Web Square checkout** for the same Plus tier — separate PR.
+## AdMob (mobile ads)
+
+M60 wired AdMob via `react-native-google-mobile-ads` + the
+`expo-tracking-transparency` plugin. Five banner placements exist
+(Home, Schedule, Family, Inbox, Me tabs). Web AdSense (M54) is
+independent.
+
+### Required setup before ads serve
+
+**1. AdMob account + apps**
+
+- Sign up at https://admob.google.com (free, instant approval).
+- Create two AdMob apps:
+  - **Kynfowk iOS** — get the App ID, format `ca-app-pub-XXXXXXXXXXXXXXXX~YYYYYYYYYY`.
+  - **Kynfowk Android** — separate App ID (also `ca-app-pub-...~...`).
+
+**2. Replace test App IDs in `mobile/app.json`**
+
+The plugin defaults to AdMob's published test App IDs so the build
+doesn't fail pre-approval. Apple rejects apps that ship with the
+test ID, so before the App Store submission edit:
+
+```json
+[
+  "react-native-google-mobile-ads",
+  {
+    "androidAppId": "ca-app-pub-YOURPUBID~YOURANDROIDAPPID",
+    "iosAppId": "ca-app-pub-YOURPUBID~YOURIOSAPPID",
+    "user_tracking_usage_description": "..."
+  }
+]
+```
+
+**3. Create five banner ad units per platform**
+
+In AdMob → Apps → Kynfowk iOS → **Ad units** → **+ Create ad unit** → Banner. Create five (one for each placement). Repeat for the Android app. Each unit gets a 16-digit ID like `1234567890123456`.
+
+**4. EAS env vars**
+
+```bash
+cd mobile
+npx eas-cli secret:create --scope project --name EXPO_PUBLIC_ADMOB_IOS_APP_ID --value 'ca-app-pub-X~Y'
+npx eas-cli secret:create --scope project --name EXPO_PUBLIC_ADMOB_ANDROID_APP_ID --value 'ca-app-pub-X~Y'
+
+# Per-placement banner unit IDs (10 total, 5 placements × 2 platforms)
+npx eas-cli secret:create --scope project --name EXPO_PUBLIC_ADMOB_BANNER_HOME_IOS --value 'ca-app-pub-X/Y'
+npx eas-cli secret:create --scope project --name EXPO_PUBLIC_ADMOB_BANNER_HOME_ANDROID --value 'ca-app-pub-X/Y'
+npx eas-cli secret:create --scope project --name EXPO_PUBLIC_ADMOB_BANNER_SCHEDULE_IOS --value '...'
+npx eas-cli secret:create --scope project --name EXPO_PUBLIC_ADMOB_BANNER_SCHEDULE_ANDROID --value '...'
+npx eas-cli secret:create --scope project --name EXPO_PUBLIC_ADMOB_BANNER_FAMILY_IOS --value '...'
+npx eas-cli secret:create --scope project --name EXPO_PUBLIC_ADMOB_BANNER_FAMILY_ANDROID --value '...'
+npx eas-cli secret:create --scope project --name EXPO_PUBLIC_ADMOB_BANNER_INBOX_IOS --value '...'
+npx eas-cli secret:create --scope project --name EXPO_PUBLIC_ADMOB_BANNER_INBOX_ANDROID --value '...'
+npx eas-cli secret:create --scope project --name EXPO_PUBLIC_ADMOB_BANNER_ME_IOS --value '...'
+npx eas-cli secret:create --scope project --name EXPO_PUBLIC_ADMOB_BANNER_ME_ANDROID --value '...'
+```
+
+Each placement's ad unit can roll out independently — when its env var is unset, the AdBanner for that placement renders nothing (or AdMob test creative in `__DEV__` builds).
+
+### Behavior summary
+
+| Viewer | App ID env var | Slot env var | What renders |
+|---|---|---|---|
+| Paid tier | any | any | nothing — `null` (paid users skip ads) |
+| Free tier | set | set | live AdMob banner + pre-roll on first ad of session + caption |
+| Free tier | set | unset (this placement) | nothing |
+| Free tier | unset | any | nothing in production. Test banner in `__DEV__`. |
+
+The AdPreRoll ("Sorry fam, gotta pay bills 🤷🏾‍♂️") shows once per session via AsyncStorage. After that, ads carry only the muted caption.
 
 ---
 
-## What's NOT yet wired (mobile, queued)
+## What's NOT yet wired (queued)
 
-- **AdMob in mobile** — separate PR using `react-native-google-mobile-ads` Expo plugin. Web AdSense (M54) is independent.
-- **Apple App Store Server Notifications V2 webhook** — see "What's NOT yet wired" under IAP above.
-- **App Tracking Transparency prompt** — string is set in `app.json` but the actual `requestTrackingPermissionAsync()` call happens when AdMob lands.
+- **App Store Server Notifications V2** webhook (renewals, cancellations, refunds, billing failures) — without it, paid users keep `is_paid_tier=true` after Apple cancels; we reconcile lazily on next purchase or restore. Separate PR.
+- **Family Sharing entitlement transfer** — disabled by default in App Store Connect; safe.
+- **Google Play Billing** for the Android Plus subscription — separate PR (Play Billing has different ergonomics; the receipt-validator pattern carries over).
+- **Web Square checkout** for the same Plus tier — separate PR (M61).
+- **Rewarded video** ads — separate PR; ties into the points / rewards-pool flow.
+- **AdMob interstitials** (full-screen between sessions) — separate PR.

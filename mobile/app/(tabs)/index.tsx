@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { router } from "expo-router";
 import { Screen } from "@/components/Screen";
+import { AdBanner } from "@/components/AdBanner";
 import { Card } from "@/components/Card";
 import { ListItem, SectionHeader } from "@/components/ListItem";
 import { Badge } from "@/components/Badge";
@@ -362,6 +363,8 @@ export default function HomeScreen() {
           </View>
         )}
       </Card>
+
+      <AdBanner placement="home-tab" />
     </Screen>
   );
 }

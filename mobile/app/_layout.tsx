@@ -7,6 +7,7 @@ import { colors } from "@/lib/theme";
 import { useSession } from "@/hooks/useSession";
 import { usePushRouting } from "@/hooks/usePushRouting";
 import { SplashOverlay } from "@/components/SplashOverlay";
+import { initializeAdMob } from "@/lib/admob-init";
 
 function AuthGate({ children }: { children: React.ReactNode }) {
   const session = useSession();
@@ -42,6 +43,12 @@ function PushRouter() {
 }
 
 export default function RootLayout() {
+  // M60 — kick off AdMob + ATT once at app boot. No-op when AdMob env
+  // vars aren't set, no-op on subsequent calls.
+  useEffect(() => {
+    void initializeAdMob();
+  }, []);
+
   return (
     <SafeAreaProvider>
       <StatusBar style="dark" />
