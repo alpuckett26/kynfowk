@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { router } from "expo-router";
 import { Screen } from "@/components/Screen";
+import { AdBanner } from "@/components/AdBanner";
 import { Card } from "@/components/Card";
 import { Button } from "@/components/Button";
 import { EmptyState } from "@/components/EmptyState";
@@ -243,6 +244,8 @@ export default function ScheduleTab() {
           onPress={() => router.push("/recurring")}
         />
       </Card>
+
+      <AdBanner placement="schedule-tab" />
     </Screen>
   );
 }
