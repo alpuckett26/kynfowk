@@ -1,3 +1,6 @@
+import type { Route } from "next";
+import Link from "next/link";
+
 import { AdSenseUnit } from "@/components/adsense-unit";
 import { type AdPlacement, getAdSenseClientId, getAdSenseSlotId } from "@/lib/ads";
 import { getViewerBilling } from "@/lib/billing";
@@ -59,8 +62,11 @@ export async function AdSlot({
     >
       <span className="ad-slot-eyebrow">Sponsored</span>
       <p className="ad-slot-body">
-        Ad-supported plan. Upgrade to Kynfowk Plus to remove ads and unlock
-        rewarded earnings.
+        Ad-supported plan.{" "}
+        <Link href={"/upgrade" as Route} className="ad-slot-upgrade-link">
+          Upgrade to Kynfowk Plus
+        </Link>{" "}
+        to remove ads and unlock rewarded earnings.
       </p>
     </aside>
   );

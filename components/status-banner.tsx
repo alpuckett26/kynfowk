@@ -19,6 +19,16 @@ const MESSAGES: Record<string, { title: string; body: string; tone: "success" | 
     body: "Your invite was matched to this account, and your dashboard is ready.",
     tone: "success"
   },
+  "plus-activated": {
+    title: "Welcome to Kynfowk Plus",
+    body: "Ads are off and rewards earnings are on. Cancel anytime from Settings.",
+    tone: "success"
+  },
+  "already-plus": {
+    title: "You're already on Plus",
+    body: "Manage your subscription from Settings. Thanks for keeping the family rewards pool funded.",
+    tone: "success"
+  },
   "schedule-error": {
     title: "Could not schedule that call",
     body: "Please try again. If it keeps happening, check your Supabase connection and RLS policies.",

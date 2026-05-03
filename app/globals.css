@@ -5620,9 +5620,28 @@ a.phonebook-detail:hover { text-decoration: underline; }
   color: var(--ink, #1f1916);
   opacity: 0.75;
 }
+.ad-slot-upgrade-link {
+  color: var(--accent-deep, #8d4428);
+  text-decoration: underline;
+  font-weight: 600;
+}
 .ad-slot-leaderboard { min-height: 90px; }
 .ad-slot-rectangle   { min-height: 250px; }
 .ad-slot-skyscraper  { min-height: 600px; max-width: 320px; }
+
+/* M61 — Square Web Payments SDK card form. Square renders its own
+   iframe inside #sq-card-container; we just give it room and a
+   sensible border. */
+.square-card-container {
+  min-height: 90px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.5rem 0.75rem;
+}
+.square-payment-form .button-primary {
+  align-self: flex-start;
+}
 
 /* ── M54 — live AdSense unit container + pre-roll + caption ─────────── */
 /* When AdSense env vars are configured, AdSlot renders this variant
