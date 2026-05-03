@@ -35,7 +35,15 @@ export type AdPlacement =
   | "phonebook-page";
 
 export function getAdSenseClientId(): string | null {
-  return process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID || null;
+  const raw = (process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID || "").trim();
+  if (!raw) return null;
+  // AdSense shows the publisher ID two ways: `ca-pub-XXX` (used in
+  // their snippet) and `pub-XXX` (shown in Account settings). The
+  // adsbygoogle script + the `data-ad-client` attribute both want the
+  // `ca-pub-` form, so normalize either input to that.
+  if (raw.startsWith("ca-pub-")) return raw;
+  if (raw.startsWith("pub-")) return `ca-${raw}`;
+  return null;
 }
 
 export function getAdSenseSlotId(placement: AdPlacement): string | null {
