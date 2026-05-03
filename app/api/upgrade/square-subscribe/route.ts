@@ -116,7 +116,17 @@ export async function POST(request: Request) {
     );
   } catch (err) {
     const detail = err instanceof Error ? err.message : "Couldn't charge the card.";
-    console.warn("[square-subscribe] failed:", detail);
+    const squareCodes =
+      err && typeof err === "object" && "squareErrors" in err
+        ? (err as { squareErrors?: Array<{ code: string; detail?: string; field?: string }> })
+            .squareErrors
+        : undefined;
+    console.warn(
+      "[square-subscribe] failed:",
+      detail,
+      squareCodes ? JSON.stringify(squareCodes) : ""
+    );
+
     // Map common Square error codes to friendly messaging.
     const lower = detail.toLowerCase();
     if (lower.includes("card_declined") || lower.includes("declined")) {
@@ -131,8 +141,17 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
+
+    // Sandbox surfaces the raw Square detail so it's debuggable from
+    // the UI without hunting Vercel logs. Production hides it.
+    const isSandbox = process.env.SQUARE_ENV !== "production";
     return Response.json(
-      { error: "Couldn't complete the charge. Try again in a moment." },
+      {
+        error: isSandbox
+          ? `Square: ${detail}`
+          : "Couldn't complete the charge. Try again in a moment.",
+        squareCodes: isSandbox ? squareCodes : undefined,
+      },
       { status: 500 }
     );
   }
