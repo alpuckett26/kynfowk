@@ -1,0 +1,92 @@
+name: Mobile iOS — EAS Build
+
+# Triggers an EAS Build (cloud) for iOS. Runs on manual dispatch from
+# the GitHub Actions tab — phone-friendly via the GitHub mobile app.
+#
+# Why a cloud delegate vs. building locally like Android:
+#   - iOS builds need macOS + Xcode + Apple developer signing assets.
+#   - GitHub-hosted macOS runners cost minutes; EAS Build is included
+#     in the Expo plan we're already paying for.
+#   - EAS handles cert + provisioning profile rotation automatically.
+#
+# Required GitHub repo secrets:
+#   EXPO_TOKEN                       Robot/personal token from
+#                                    expo.dev → Account Settings →
+#                                    Access Tokens.
+#   EXPO_PUBLIC_SUPABASE_URL         Same as the Android workflow.
+#   EXPO_PUBLIC_SUPABASE_ANON_KEY    Same.
+#   WEB_API_BASE_URL                 = https://kynfowk.com
+#
+# Required EAS-side credentials (one-time, via `eas credentials` from a
+# desktop OR by uploading an App Store Connect API key as a project
+# credential at https://expo.dev → project → Credentials → iOS):
+#   - Apple Distribution Certificate
+#   - Provisioning Profile for com.kynfowk.app
+#   - (Optional) ASC API Key for non-interactive `eas submit`
+#
+# After EAS has those credentials registered once, this workflow can
+# run end-to-end without any further desktop interaction.
+
+on:
+  workflow_dispatch:
+    inputs:
+      profile:
+        description: 'EAS build profile'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - preview
+      submit:
+        description: 'Auto-submit to App Store Connect after build'
+        required: true
+        default: false
+        type: boolean
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install deps
+        working-directory: mobile
+        run: npm install --legacy-peer-deps
+
+      - name: Type check (catches obvious errors before kicking off cloud build)
+        working-directory: mobile
+        run: npx tsc --noEmit
+
+      - name: Trigger EAS build
+        working-directory: mobile
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
+          EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
+          EXPO_PUBLIC_WEB_API_BASE_URL: ${{ secrets.WEB_API_BASE_URL }}
+        run: |
+          npx eas-cli build \
+            --platform ios \
+            --profile ${{ inputs.profile }} \
+            --non-interactive \
+            --no-wait
+
+      - name: Submit to App Store Connect (if opted in)
+        if: ${{ inputs.submit == true }}
+        working-directory: mobile
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          # --wait blocks until the build above completes, then submits.
+          npx eas-cli submit \
+            --platform ios \
+            --latest \
+            --non-interactive \
+            --wait
