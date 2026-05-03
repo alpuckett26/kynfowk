@@ -263,11 +263,47 @@ The AdPreRoll ("Sorry fam, gotta pay bills 🤷🏾‍♂️") shows once per se
 
 ---
 
+## App Store Server Notifications V2 (renewal / refund reconciliation)
+
+M62 wired the webhook at `/api/webhook/apple-app-store` so renewals,
+cancellations, billing failures, and refunds reconcile automatically.
+
+### Required setup
+
+**1. Run the migration.** `supabase/migrations/20260503020000_apple_subscription_columns.sql` adds `apple_original_transaction_id`, `apple_expires_at`, `apple_environment` to `profiles`. Apply it via the Supabase SQL editor.
+
+**2. Configure the webhook URL in App Store Connect.**
+
+- App Store Connect → **Kynfowk** → **App Information** → scroll to **App Store Server Notifications** → **Edit** under **Production Server URL**.
+- Production Server URL: `https://kynfowk.com/api/webhook/apple-app-store`
+- Sandbox Server URL: same — `https://kynfowk.com/api/webhook/apple-app-store` (it's fine to point both at the same handler; the payload's `data.environment` tells us which side it came from).
+- **Version:** Version 2.
+- Save.
+
+**3. Verify with a sandbox cancellation test.**
+
+- In the sandbox tester device's **Settings → App Store → Sandbox Account**, cancel the Kynfowk Plus subscription.
+- Apple sends `DID_CHANGE_RENEWAL_STATUS` immediately (auto_renew=false), then `EXPIRED` once the period ends. Sandbox subscriptions accelerate — monthly = 5 minutes.
+- Watch Vercel logs for `[apple-webhook]` entries.
+- Verify in Supabase: `select id, is_paid_tier, apple_expires_at from profiles where apple_original_transaction_id = '<the txn id>';` — `is_paid_tier` should flip to false on the EXPIRED event.
+
+### Behavior summary
+
+| Notification | Action |
+|---|---|
+| `SUBSCRIBED`, `DID_RENEW` (verified) | Flip `is_paid_tier` → true |
+| `EXPIRED`, `GRACE_PERIOD_EXPIRED`, `REFUND`, `REVOKE` | Flip `is_paid_tier` → false |
+| `DID_FAIL_TO_RENEW` | No-op (Apple gives a grace period; we wait for `GRACE_PERIOD_EXPIRED`) |
+| `DID_CHANGE_RENEWAL_STATUS` | No-op (just records the latest expires-at) |
+
+The webhook only **upgrades** users on a fully-verified JWS signature (against the leaf cert in the x5c chain). **Downgrades** happen even if the signature didn't verify — worst case is a brief downgrade that's undone on the user's next app open via verifyReceipt. Hardening pass (chain validation against Apple's published root CA - G3) is queued for a follow-up; v1 only verifies the leaf cert's signature.
+
+---
+
 ## What's NOT yet wired (queued)
 
-- **App Store Server Notifications V2** webhook (renewals, cancellations, refunds, billing failures) — without it, paid users keep `is_paid_tier=true` after Apple cancels; we reconcile lazily on next purchase or restore. Separate PR.
+- **Full Apple JWS chain validation** against Apple Root CA - G3. Currently we verify against the embedded leaf cert only — this catches naive forgery but not someone with a valid Apple-issued cert. Hardening pass before public launch.
 - **Family Sharing entitlement transfer** — disabled by default in App Store Connect; safe.
 - **Google Play Billing** for the Android Plus subscription — separate PR (Play Billing has different ergonomics; the receipt-validator pattern carries over).
-- **Web Square checkout** for the same Plus tier — separate PR (M61).
 - **Rewarded video** ads — separate PR; ties into the points / rewards-pool flow.
 - **AdMob interstitials** (full-screen between sessions) — separate PR.
