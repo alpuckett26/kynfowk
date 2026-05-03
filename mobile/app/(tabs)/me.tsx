@@ -4,6 +4,7 @@ import { router } from "expo-router";
 import { Screen } from "@/components/Screen";
 import { Card } from "@/components/Card";
 import { Button } from "@/components/Button";
+import { UpgradeToPlusButton } from "@/components/UpgradeToPlusButton";
 import { colors, fontSize, fontWeight, spacing } from "@/lib/theme";
 import { supabase } from "@/lib/supabase";
 
@@ -60,6 +61,10 @@ export default function MeTab() {
           variant="secondary"
           onPress={() => router.push("/circles")}
         />
+      </Card>
+
+      <Card>
+        <UpgradeToPlusButton />
       </Card>
 
       <Card>

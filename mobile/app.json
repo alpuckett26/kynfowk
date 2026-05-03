@@ -103,7 +103,8 @@
             "targetSdkVersion": 34
           }
         }
-      ]
+      ],
+      "react-native-iap"
     ],
     "experiments": {
       "typedRoutes": true
