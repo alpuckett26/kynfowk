@@ -36,7 +36,8 @@
     "production": {
       "ios": {
         "appleId": "aaron.elitetelecom@icloud.com",
-        "ascAppId": "6761375113"
+        "ascAppId": "6761375113",
+        "appleTeamId": "3PCV2CSM43"
       },
       "android": {
         "track": "internal"
