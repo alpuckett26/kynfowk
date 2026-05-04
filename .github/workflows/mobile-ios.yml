@@ -41,7 +41,7 @@ on:
           - production
           - preview
       submit:
-        description: 'Auto-submit to App Store Connect after build'
+        description: 'Submit to App Store Connect after build (uses --auto-submit on EAS side)'
         required: true
         default: false
         type: boolean
@@ -81,35 +81,24 @@ jobs:
         working-directory: mobile
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-          EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
-          EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
-          EXPO_PUBLIC_WEB_API_BASE_URL: ${{ secrets.WEB_API_BASE_URL }}
-          # EAS reads these to auto-manage Apple credentials. No
-          # interactive prompts; first build generates a Distribution
-          # Cert + Provisioning Profile in App Store Connect via the
-          # API key, then reuses them.
           APPLE_API_KEY_PATH: /tmp/asc/AuthKey_${{ secrets.ASC_API_KEY_ID }}.p8
           APPLE_API_KEY_ID: ${{ secrets.ASC_API_KEY_ID }}
           APPLE_API_ISSUER_ID: ${{ secrets.ASC_API_ISSUER_ID }}
         run: |
-          npx eas-cli build \
-            --platform ios \
-            --profile ${{ inputs.profile }} \
-            --non-interactive \
-            --no-wait
-
-      - name: Submit to App Store Connect (if opted in)
-        if: ${{ inputs.submit == true }}
-        working-directory: mobile
-        env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-          APPLE_API_KEY_PATH: /tmp/asc/AuthKey_${{ secrets.ASC_API_KEY_ID }}.p8
-          APPLE_API_KEY_ID: ${{ secrets.ASC_API_KEY_ID }}
-          APPLE_API_ISSUER_ID: ${{ secrets.ASC_API_ISSUER_ID }}
-        run: |
-          # --wait blocks until the build above completes, then submits.
-          npx eas-cli submit \
-            --platform ios \
-            --latest \
-            --non-interactive \
-            --wait
+          # --auto-submit tells EAS to submit to App Store Connect automatically
+          # after the build finishes on EAS servers — no separate submit step needed.
+          # Without submit input, builds without auto-submit for testing.
+          if [ "${{ inputs.submit }}" = "true" ]; then
+            npx eas-cli build \
+              --platform ios \
+              --profile ${{ inputs.profile }} \
+              --non-interactive \
+              --no-wait \
+              --auto-submit
+          else
+            npx eas-cli build \
+              --platform ios \
+              --profile ${{ inputs.profile }} \
+              --non-interactive \
+              --no-wait
+          fi
