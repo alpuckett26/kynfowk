@@ -26,7 +26,9 @@
       "android": {
         "buildType": "app-bundle"
       },
-      "ios": {},
+      "ios": {
+        "image": "macos-sequoia-15.2-xcode-16.2"
+      },
       "env": {
         "EXPO_PUBLIC_APP_ENV": "production"
       }
