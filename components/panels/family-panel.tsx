@@ -37,6 +37,7 @@ export interface FamilyPanelProps {
     photoUrl: string;
     caption: string | null;
     membershipId: string;
+    mediaType: "photo" | "video";
   }>;
 }
 

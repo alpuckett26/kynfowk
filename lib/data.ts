@@ -1650,6 +1650,8 @@ export async function getCircleCarouselPhotos(userId: string): Promise<Array<{
   caption: string | null;
   displayName: string;
   membershipId: string;
+  mediaType: "photo" | "video";
+  durationSeconds: number | null;
 }>> {
   if (!hasSupabaseEnv()) return [];
   const supabase = await createSupabaseServerClient();
@@ -1658,7 +1660,7 @@ export async function getCircleCarouselPhotos(userId: string): Promise<Array<{
 
   const { data } = await supabase
     .from("circle_carousel_photos")
-    .select("id, photo_url, caption, membership_id, family_memberships(display_name)")
+    .select("id, photo_url, caption, membership_id, media_type, duration_seconds, family_memberships(display_name)")
     .eq("family_circle_id", family.circle.id)
     .order("created_at", { ascending: false })
     .limit(20);
@@ -1670,7 +1672,9 @@ export async function getCircleCarouselPhotos(userId: string): Promise<Array<{
       photoUrl: row.photo_url,
       caption: row.caption ?? null,
       displayName: mem?.display_name ?? "Family member",
-      membershipId: row.membership_id
+      membershipId: row.membership_id,
+      mediaType: (row.media_type ?? "photo") as "photo" | "video",
+      durationSeconds: row.duration_seconds ?? null,
     };
   });
 }

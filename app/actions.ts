@@ -2588,7 +2588,9 @@ export async function scheduleDirectCallAction(formData: FormData): Promise<void
 
 export async function addCarouselPhotoAction(
   photoUrl: string,
-  caption: string | null
+  caption: string | null,
+  mediaType: "photo" | "video" = "photo",
+  durationSeconds: number | null = null
 ): Promise<void> {
   if (!hasSupabaseEnv()) return;
   const user = await requireViewer();
@@ -2600,7 +2602,9 @@ export async function addCarouselPhotoAction(
     family_circle_id: family.circle.id,
     membership_id: family.membership.id,
     photo_url: photoUrl,
-    caption
+    caption,
+    media_type: mediaType,
+    duration_seconds: durationSeconds,
   });
 
   revalidatePath("/");

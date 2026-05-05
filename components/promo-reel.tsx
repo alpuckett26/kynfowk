@@ -21,13 +21,13 @@ const VIDEO_CLIPS = [
 ];
 
 type VideoSlide = { kind: "video"; src: string; fallback: string; headline: string };
-type PhotoSlide = { kind: "photo"; id: string; photoUrl: string; caption: string | null; displayName: string };
+type PhotoSlide = { kind: "photo"; id: string; photoUrl: string; caption: string | null; displayName: string; mediaType: "photo" | "video" };
 type Slide = VideoSlide | PhotoSlide;
 
 function buildSlides(
-  photos: Array<{ id: string; photoUrl: string; caption: string | null; displayName: string }>
+  photos: Array<{ id: string; photoUrl: string; caption: string | null; displayName: string; mediaType?: "photo" | "video" }>
 ): Slide[] {
-  const photoSlides: PhotoSlide[] = photos.map((p) => ({ kind: "photo", ...p }));
+  const photoSlides: PhotoSlide[] = photos.map((p) => ({ kind: "photo", mediaType: "photo", ...p }));
   const slides: Slide[] = [];
   for (let i = 0; i < VIDEO_CLIPS.length; i++) {
     slides.push({ kind: "video", ...VIDEO_CLIPS[i] });
@@ -40,7 +40,7 @@ function buildSlides(
 }
 
 interface PromoReelProps {
-  photos?: Array<{ id: string; photoUrl: string; caption: string | null; displayName: string }>;
+  photos?: Array<{ id: string; photoUrl: string; caption: string | null; displayName: string; mediaType?: "photo" | "video" }>;
 }
 
 export function PromoReel({ photos = [] }: PromoReelProps) {
@@ -57,7 +57,9 @@ export function PromoReel({ photos = [] }: PromoReelProps) {
   useEffect(() => {
     slides.forEach((slide, i) => {
       const el = videoRefs.current[i];
-      if (!el || slide.kind !== "video") return;
+      if (!el) return;
+      const isVideoSlide = slide.kind === "video" || (slide.kind === "photo" && slide.mediaType === "video");
+      if (!isVideoSlide) return;
       if (i === index) {
         el.currentTime = 0;
         el.play().catch(() => {});
@@ -67,9 +69,12 @@ export function PromoReel({ photos = [] }: PromoReelProps) {
     });
   }, [index, slides]);
 
-  // Auto-advance photo slides after 5s
+  // Auto-advance static photo slides after 5s (video slides self-advance via onEnded)
   useEffect(() => {
-    if (slides[index]?.kind !== "photo") return;
+    const slide = slides[index];
+    if (!slide) return;
+    const isStaticPhoto = slide.kind === "photo" && slide.mediaType !== "video";
+    if (!isStaticPhoto) return;
     photoTimerRef.current = setTimeout(advance, 5000);
     return () => clearTimeout(photoTimerRef.current);
   }, [index, slides, advance]);
@@ -96,6 +101,15 @@ export function PromoReel({ photos = [] }: PromoReelProps) {
                 <source src={slide.src} type="video/mp4" />
                 <source src={slide.fallback} type="video/mp4" />
               </video>
+            ) : slide.mediaType === "video" ? (
+              <video
+                ref={(el) => { videoRefs.current[i] = el; }}
+                src={slide.photoUrl}
+                className="promo-slide-media"
+                muted
+                playsInline
+                onEnded={active ? advance : undefined}
+              />
             ) : (
               // eslint-disable-next-line @next/next/no-img-element
               <img
