@@ -1,23 +1,37 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 export function FamilyPhotoCarousel({
   photos
 }: {
-  photos: Array<{ id: string; photoUrl: string; caption: string | null; displayName: string }>;
+  photos: Array<{ id: string; photoUrl: string; caption: string | null; displayName: string; mediaType?: "photo" | "video" }>;
 }) {
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+
+  const advance = useCallback(() => {
+    setIndex((i) => (i + 1) % photos.length);
+  }, [photos.length]);
 
   useEffect(() => {
     if (paused || photos.length <= 1) return;
-    timerRef.current = setInterval(() => {
-      setIndex((i) => (i + 1) % photos.length);
-    }, 4000);
+    const current = photos[index];
+    // Videos self-advance via onEnded; only set interval for static photos
+    if (current?.mediaType === "video") return;
+    timerRef.current = setInterval(advance, 4000);
     return () => clearInterval(timerRef.current);
-  }, [paused, photos.length]);
+  }, [paused, photos.length, photos, index, advance]);
+
+  // Play/pause the video element when index changes
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.currentTime = 0;
+      videoRef.current.play().catch(() => {});
+    }
+  }, [index]);
 
   if (photos.length === 0) return null;
 
@@ -30,13 +44,25 @@ export function FamilyPhotoCarousel({
       onMouseLeave={() => setPaused(false)}
     >
       <div className="carousel-frame">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          key={current.id}
-          src={current.photoUrl}
-          alt={current.caption ?? `${current.displayName} photo`}
-          className="carousel-photo"
-        />
+        {current.mediaType === "video" ? (
+          <video
+            key={current.id}
+            ref={videoRef}
+            src={current.photoUrl}
+            className="carousel-photo"
+            muted
+            playsInline
+            onEnded={advance}
+          />
+        ) : (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            key={current.id}
+            src={current.photoUrl}
+            alt={current.caption ?? `${current.displayName} photo`}
+            className="carousel-photo"
+          />
+        )}
         <div className="carousel-overlay">
           {current.caption && <p className="carousel-caption">{current.caption}</p>}
           <p className="carousel-name">{current.displayName}</p>
