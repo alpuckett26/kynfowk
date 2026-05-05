@@ -56,7 +56,7 @@ When a plan describes work that *might already be merged*, run the state checks 
 For every PR I open in this repo:
 
 ```bash
-npx tsc --noEmit 2>&1 | grep -v -E 'capacitor|@xyflow|family-tree-canvas|push-notification-handler|deep-link-handler' || echo "✓ no errors in touched files"
+npx tsc --noEmit 2>&1 | grep -v -E '@xyflow|family-tree-canvas|push-notification-handler|deep-link-handler' || echo "✓ no errors in touched files"
 ```
 
 The grep filter exists because the listed files have known pre-existing errors that resolve at deploy time. **Add to the filter only when adding a new pre-existing-error file, never to hide an error in code I just touched.**

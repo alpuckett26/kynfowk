@@ -195,6 +195,7 @@ export interface CallDetailSnapshot {
     suggested_reschedule_start: string | null;
     suggested_reschedule_end: string | null;
     can_reschedule: boolean;
+    is_ring: boolean;
   };
   participants: CallDetailParticipant[];
   recap: CallRecap | null;

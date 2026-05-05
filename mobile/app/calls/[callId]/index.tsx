@@ -87,7 +87,7 @@ export default function CallDetailScreen() {
   }
 
   const { call, participants, recap, canManageFamily } = state.snapshot;
-  const isLive = call.status === "live" || !!call.actual_started_at;
+  const isLive = call.status === "live";
   const isCompleted = call.status === "completed";
   const isCanceled = call.status === "canceled";
 
