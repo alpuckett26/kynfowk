@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { useTourTarget } from "@/lib/tour-context";
 import { StyleSheet, Text, View } from "react-native";
 import { router, useFocusEffect } from "expo-router";
 import { Screen } from "@/components/Screen";
@@ -37,6 +38,7 @@ function memberBadge(m: FamilyMember) {
 
 export default function FamilyTab() {
   const [state, setState] = useState<State>({ kind: "loading" });
+  const inviteRef = useTourTarget("family-invite");
   const [refreshing, setRefreshing] = useState(false);
 
   const load = useCallback(async () => {
@@ -137,6 +139,7 @@ export default function FamilyTab() {
       <FamilyReel />
 
       {isOwner ? (
+        <View ref={inviteRef} collapsable={false}>
         <Card>
           <SectionHeader title="Add to the circle" />
           <Button
@@ -149,6 +152,7 @@ export default function FamilyTab() {
             onPress={() => router.push("/family/placeholder")}
           />
         </Card>
+        </View>
       ) : null}
 
       <Card>

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useTourTarget } from "@/lib/tour-context";
 import { router } from "expo-router";
 import { Screen } from "@/components/Screen";
 import { AdBanner } from "@/components/AdBanner";
@@ -32,6 +33,7 @@ type State =
 
 export default function ScheduleTab() {
   const [state, setState] = useState<State>({ kind: "loading" });
+  const gridRef = useTourTarget("schedule-grid");
   const [refreshing, setRefreshing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
@@ -169,6 +171,7 @@ export default function ScheduleTab() {
         </Text>
       </View>
 
+      <View ref={gridRef} collapsable={false}>
       <Card>
         <SectionHeader title="Weekly availability" />
         <View style={styles.gridHeader}>
@@ -206,6 +209,7 @@ export default function ScheduleTab() {
           </View>
         ))}
       </Card>
+      </View>
 
       {state.summary.length ? (
         <Card>

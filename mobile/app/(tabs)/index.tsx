@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { router } from "expo-router";
 import { Screen } from "@/components/Screen";
@@ -11,6 +11,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { StatGrid, StatTile } from "@/components/StatTile";
 import { HighlightCard } from "@/components/HighlightCard";
 import { FamilyReel } from "@/components/FamilyReel";
+import { maybeStartTour, useTour, useTourTarget } from "@/lib/tour-context";
 import { colors, fontSize, fontWeight, spacing } from "@/lib/theme";
 import { formatDate, formatTime, relativeTime } from "@/lib/format";
 import { fetchDashboard } from "@/lib/dashboard";
@@ -32,6 +33,13 @@ type State =
 export default function HomeScreen() {
   const [state, setState] = useState<State>({ kind: "loading" });
   const [refreshing, setRefreshing] = useState(false);
+  const { startTour } = useTour();
+  const tourStartedRef = useRef(false);
+
+  // Tour targets
+  const reelRef = useTourTarget("home-reel");
+  const readinessRef = useTourTarget("home-readiness");
+  const scheduleRef = useTourTarget("home-schedule");
 
   const load = useCallback(async () => {
     try {
@@ -55,6 +63,13 @@ export default function HomeScreen() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  // Auto-start tour once for new users after data loads
+  useEffect(() => {
+    if (state.kind !== "ok" || tourStartedRef.current) return;
+    tourStartedRef.current = true;
+    void maybeStartTour(startTour);
+  }, [state.kind, startTour]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -109,8 +124,11 @@ export default function HomeScreen() {
         ) : null}
       </View>
 
-      <FamilyReel />
+      <View ref={reelRef} collapsable={false}>
+        <FamilyReel />
+      </View>
 
+      <View ref={readinessRef} collapsable={false}>
       <Card>
         <Text style={styles.cardLabel}>Family circle readiness</Text>
         <Text style={styles.bigStat}>{snap.readiness.completionRate}% ready</Text>
@@ -126,6 +144,7 @@ export default function HomeScreen() {
           <Badge label={`${snap.stats.completedCalls} completed`} />
         </View>
       </Card>
+      </View>
 
       <StatGrid>
         <StatTile label="Connection score" value={snap.stats.connectionScore} />
@@ -154,11 +173,13 @@ export default function HomeScreen() {
         <SectionHeader
           title="Upcoming"
           action={
-            <Button
-              label="Schedule"
-              variant="ghost"
-              onPress={() => router.push("/schedule")}
-            />
+            <View ref={scheduleRef} collapsable={false}>
+              <Button
+                label="Schedule"
+                variant="ghost"
+                onPress={() => router.push("/schedule")}
+              />
+            </View>
           }
         />
         {snap.upcomingCalls.length === 0 ? (
