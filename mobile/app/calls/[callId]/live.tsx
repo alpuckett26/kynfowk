@@ -73,6 +73,8 @@ export default function LiveCallScreen() {
   const callStartedAtRef = useRef<number>(Date.now());
   const hasJoinedRef = useRef(false);
   const completedRef = useRef(false);
+  // When the last peer leaves, fire auto-complete after 5 min if nobody rejoins.
+  const lonelyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [micOn, setMicOn] = useState(true);
   const [cameraOn, setCameraOn] = useState(true);
@@ -277,6 +279,11 @@ export default function LiveCallScreen() {
 
       channel.on("presence", { event: "join" }, ({ newPresences }) => {
         if (!active) return;
+        // Someone (re)joined — cancel the lonely timer if it was running.
+        if (lonelyTimerRef.current) {
+          clearTimeout(lonelyTimerRef.current);
+          lonelyTimerRef.current = null;
+        }
         const currentCount = peersRef.current.size + 1;
         for (const presence of newPresences) {
           const remoteId = (presence as { membership_id?: string }).membership_id;
@@ -308,6 +315,23 @@ export default function LiveCallScreen() {
           }
         }
         setRoomFull(false);
+        // If room is now empty, auto-complete after 5 min in case the other
+        // person's app was killed and they can't trigger it themselves.
+        if (peersRef.current.size === 0 && hasJoinedRef.current) {
+          lonelyTimerRef.current = setTimeout(() => {
+            if (completedRef.current) return;
+            completedRef.current = true;
+            const durationMinutes = Math.max(
+              1,
+              Math.round((Date.now() - callStartedAtRef.current) / 60_000)
+            );
+            void completeCall(callId as string, {
+              durationMinutes,
+              attendedMembershipIds: [...allPeersEverRef.current],
+            }).catch(() => {});
+            router.back();
+          }, 5 * 60 * 1000);
+        }
       });
 
       channel.on("broadcast", { event: "signal" }, ({ payload }) => {
@@ -350,6 +374,11 @@ export default function LiveCallScreen() {
 
     return () => {
       active = false;
+
+      if (lonelyTimerRef.current) {
+        clearTimeout(lonelyTimerRef.current);
+        lonelyTimerRef.current = null;
+      }
 
       // Auto-complete when the last person leaves (handles navigation-away
       // and app-kill paths that bypass the Leave button).

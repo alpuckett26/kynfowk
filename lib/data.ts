@@ -446,17 +446,29 @@ export async function getDashboardSnapshot(
     );
   }
 
+  // Auto-complete any live calls that are >30 min past their scheduled end.
+  // Fire-and-forget so the dashboard load stays fast; subsequent fetches will
+  // see the corrected status. 30 min gives enough buffer for calls running over.
+  const staleLiveCalls = calls.filter((call) => {
+    if (call.status !== "live") return false;
+    const minPastEnd =
+      (Date.now() - new Date(call.scheduled_end).getTime()) / 60_000;
+    return minPastEnd > 30;
+  });
+  if (staleLiveCalls.length > 0) {
+    void supabase
+      .from("call_sessions")
+      .update({ status: "completed", actual_ended_at: new Date().toISOString() })
+      .in("id", staleLiveCalls.map((c) => c.id))
+      .eq("status", "live");
+    // Reflect the update locally so this response is consistent
+    for (const stale of staleLiveCalls) {
+      stale.status = "completed";
+    }
+  }
+
   const upcomingCalls = calls
-    .filter((call) => {
-      if (call.status !== "scheduled" && call.status !== "live") return false;
-      // Exclude stale live calls — same 6h threshold used by getCallDetailSnapshot.
-      if (call.status === "live") {
-        const hoursPastEnd =
-          (Date.now() - new Date(call.scheduled_end).getTime()) / 3_600_000;
-        if (hoursPastEnd > 6) return false;
-      }
-      return true;
-    })
+    .filter((call) => call.status === "scheduled" || call.status === "live")
     .map((call) => {
       const reminderStatus = normalizeReminderStatus(call.status, call.reminder_status);
       const needsJoinLinkPrompt = false; // built-in call room is always ready
@@ -785,13 +797,13 @@ export async function getCallDetailSnapshot(
   }
 
   // Auto-complete stale "live" calls — if a call is still live but its
-  // scheduled end was more than 6 hours ago, no one is still on it.
-  // This prevents old calls from showing "Re-join live call" indefinitely.
+  // scheduled end was more than 30 min ago, no one is still on it.
+  // This prevents calls from showing "Re-join live call" after they end.
   let callData = callResponse.data;
   if (callData.status === "live") {
-    const hoursPastEnd =
-      (Date.now() - new Date(callData.scheduled_end).getTime()) / 3_600_000;
-    if (hoursPastEnd > 6) {
+    const minPastEnd =
+      (Date.now() - new Date(callData.scheduled_end).getTime()) / 60_000;
+    if (minPastEnd > 30) {
       await supabase
         .from("call_sessions")
         .update({ status: "completed", actual_ended_at: new Date().toISOString() })
