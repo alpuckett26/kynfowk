@@ -765,6 +765,7 @@ export interface CallDetailSnapshot {
     suggested_reschedule_start: string | null;
     suggested_reschedule_end: string | null;
     can_reschedule: boolean;
+    is_ring: boolean;
   };
   participants: CallDetailParticipant[];
   recap: CallRecap | null;
@@ -787,7 +788,7 @@ export async function getCallDetailSnapshot(
   const callResponse = await supabase
     .from("call_sessions")
     .select(
-      "id, title, scheduled_start, scheduled_end, status, actual_duration_minutes, meeting_provider, meeting_url, actual_started_at, actual_ended_at, recovery_dismissed_at, reminder_status, reminder_sent_at, family_circle_id"
+      "id, title, scheduled_start, scheduled_end, status, actual_duration_minutes, meeting_provider, meeting_url, actual_started_at, actual_ended_at, recovery_dismissed_at, reminder_status, reminder_sent_at, family_circle_id, is_ring"
     )
     .eq("id", callId)
     .maybeSingle();
@@ -880,7 +881,8 @@ export async function getCallDetailSnapshot(
       ...recovery,
       can_reschedule:
         callData.status === "scheduled" &&
-        isFutureCall(callData.scheduled_start)
+        isFutureCall(callData.scheduled_start),
+      is_ring: callData.is_ring ?? false
     },
     participants,
     recap:

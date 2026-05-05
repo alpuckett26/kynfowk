@@ -55,6 +55,7 @@ type State =
       membershipId: string;
       displayName: string;
       familyCircleId: string;
+      scheduledEnd: string | null; // null for ring calls — no countdown
     };
 
 export default function LiveCallScreen() {
@@ -80,6 +81,7 @@ export default function LiveCallScreen() {
   const [cameraOn, setCameraOn] = useState(true);
   const [roomFull, setRoomFull] = useState(false);
   const [phase, setPhase] = useState<"connecting" | "ready" | "error">("connecting");
+  const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
 
   // Games (M11)
   type GamePeer = { membershipId: string; displayName: string };
@@ -116,6 +118,9 @@ export default function LiveCallScreen() {
           membershipId: detail.snapshot.viewerMembershipId,
           displayName: "You",
           familyCircleId: detail.snapshot.circle.id,
+          scheduledEnd: detail.snapshot.call.is_ring
+            ? null
+            : detail.snapshot.call.scheduled_end,
         });
         ownIdRef.current = detail.snapshot.viewerMembershipId;
         callStartedAtRef.current = detail.snapshot.call.actual_started_at
@@ -137,6 +142,17 @@ export default function LiveCallScreen() {
       active = false;
     };
   }, [callId]);
+
+  // Countdown timer — ticks every second, skipped for ring calls (scheduledEnd null).
+  useEffect(() => {
+    if (state.kind !== "ready" || !state.scheduledEnd) return;
+    const end = new Date(state.scheduledEnd).getTime();
+
+    const tick = () => setSecondsLeft(Math.floor((end - Date.now()) / 1000));
+    tick(); // set immediately without waiting for first interval
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [state]);
 
   // Wire signaling + media once we have viewer info.
   useEffect(() => {
@@ -590,7 +606,12 @@ export default function LiveCallScreen() {
         <Button label="← Back" variant="ghost" onPress={() => router.back()} />
       </View>
       <View style={styles.header}>
-        <Text style={styles.eyebrow}>Live</Text>
+        <View style={styles.headerTopRow}>
+          <Text style={styles.eyebrow}>Live</Text>
+          {secondsLeft !== null && (
+            <CountdownChip seconds={secondsLeft} />
+          )}
+        </View>
         <Text style={styles.title} numberOfLines={1}>
           {state.callTitle}
         </Text>
@@ -757,9 +778,66 @@ export default function LiveCallScreen() {
   );
 }
 
+function formatCountdown(seconds: number): string {
+  if (seconds <= 0) {
+    const over = Math.abs(seconds);
+    const m = Math.floor(over / 60);
+    const s = over % 60;
+    return `+${m}:${String(s).padStart(2, "0")}`;
+  }
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m}:${String(s).padStart(2, "0")}`;
+}
+
+function CountdownChip({ seconds }: { seconds: number }) {
+  const overtime = seconds <= 0;
+  const warning = !overtime && seconds <= 60;
+  const caution = !overtime && !warning && seconds <= 300;
+
+  const bg = overtime
+    ? colors.dangerBg
+    : warning
+      ? colors.dangerBg
+      : caution
+        ? "#fff8e1"
+        : colors.surfaceMuted;
+  const fg = overtime || warning
+    ? colors.danger
+    : caution
+      ? "#b45309"
+      : colors.textMuted;
+
+  return (
+    <View style={[chipStyles.chip, { backgroundColor: bg }]}>
+      <Text style={[chipStyles.text, { color: fg }]}>
+        {overtime ? "Time's up · " : ""}{formatCountdown(seconds)}
+      </Text>
+    </View>
+  );
+}
+
+const chipStyles = StyleSheet.create({
+  chip: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 3,
+    borderRadius: radius.pill,
+  },
+  text: {
+    fontSize: fontSize.xs,
+    fontWeight: fontWeight.bold,
+    fontVariant: ["tabular-nums"],
+  },
+});
+
 const styles = StyleSheet.create({
   headerRow: { flexDirection: "row", marginBottom: spacing.xs },
   header: { gap: 4 },
+  headerTopRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
   eyebrow: {
     textTransform: "uppercase",
     letterSpacing: 1.5,
