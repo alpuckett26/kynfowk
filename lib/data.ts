@@ -447,7 +447,16 @@ export async function getDashboardSnapshot(
   }
 
   const upcomingCalls = calls
-    .filter((call) => call.status === "scheduled" || call.status === "live")
+    .filter((call) => {
+      if (call.status !== "scheduled" && call.status !== "live") return false;
+      // Exclude stale live calls — same 6h threshold used by getCallDetailSnapshot.
+      if (call.status === "live") {
+        const hoursPastEnd =
+          (Date.now() - new Date(call.scheduled_end).getTime()) / 3_600_000;
+        if (hoursPastEnd > 6) return false;
+      }
+      return true;
+    })
     .map((call) => {
       const reminderStatus = normalizeReminderStatus(call.status, call.reminder_status);
       const needsJoinLinkPrompt = false; // built-in call room is always ready
@@ -775,6 +784,23 @@ export async function getCallDetailSnapshot(
     return null;
   }
 
+  // Auto-complete stale "live" calls — if a call is still live but its
+  // scheduled end was more than 6 hours ago, no one is still on it.
+  // This prevents old calls from showing "Re-join live call" indefinitely.
+  let callData = callResponse.data;
+  if (callData.status === "live") {
+    const hoursPastEnd =
+      (Date.now() - new Date(callData.scheduled_end).getTime()) / 3_600_000;
+    if (hoursPastEnd > 6) {
+      await supabase
+        .from("call_sessions")
+        .update({ status: "completed", actual_ended_at: new Date().toISOString() })
+        .eq("id", callId)
+        .eq("status", "live");
+      callData = { ...callData, status: "completed" as typeof callData.status };
+    }
+  }
+
   const [participantsResponse, recapResponse] = await Promise.all([
     supabase
       .from("call_participants")
@@ -808,50 +834,50 @@ export async function getCallDetailSnapshot(
   );
 
   const reminderStatus = normalizeReminderStatus(
-    callResponse.data.status,
-    callResponse.data.reminder_status
+    callData.status,
+    callData.reminder_status
   );
-  const recovery = buildCallRecoveryState(callResponse.data);
+  const recovery = buildCallRecoveryState(callData);
   const viewerTimezone = await getViewerTimezone(supabase, userId);
 
   return {
     circle: family.circle,
     call: {
-      id: callResponse.data.id,
-      title: callResponse.data.title,
-      scheduled_start: callResponse.data.scheduled_start,
-      scheduled_end: callResponse.data.scheduled_end,
-      status: callResponse.data.status,
-      actual_duration_minutes: callResponse.data.actual_duration_minutes,
-      meeting_provider: callResponse.data.meeting_provider,
-      meeting_url: callResponse.data.meeting_url,
-      actual_started_at: callResponse.data.actual_started_at,
-      actual_ended_at: callResponse.data.actual_ended_at,
+      id: callData.id,
+      title: callData.title,
+      scheduled_start: callData.scheduled_start,
+      scheduled_end: callData.scheduled_end,
+      status: callData.status,
+      actual_duration_minutes: callData.actual_duration_minutes,
+      meeting_provider: callData.meeting_provider,
+      meeting_url: callData.meeting_url,
+      actual_started_at: callData.actual_started_at,
+      actual_ended_at: callData.actual_ended_at,
       reminder_status: reminderStatus,
-      reminder_sent_at: callResponse.data.reminder_sent_at,
+      reminder_sent_at: callData.reminder_sent_at,
       reminder_label: formatReminderState(
-        callResponse.data.status,
+        callData.status,
         reminderStatus,
-        callResponse.data.reminder_sent_at
+        callData.reminder_sent_at
       ),
       needs_join_link_prompt: false,
       needs_completion_prompt: isCallPastDue(
-        callResponse.data.status,
-        callResponse.data.scheduled_end
+        callData.status,
+        callData.scheduled_end
       ),
       ...recovery,
       can_reschedule:
-        callResponse.data.status === "scheduled" &&
-        isFutureCall(callResponse.data.scheduled_start)
+        callData.status === "scheduled" &&
+        isFutureCall(callData.scheduled_start)
     },
     participants,
     recap:
-      callResponse.data.status === "completed"
+      callData.status === "completed"
         ? {
-            callId: callResponse.data.id,
-            title: callResponse.data.title,
-            scheduledStart: callResponse.data.scheduled_start,
-            actualDurationMinutes: callResponse.data.actual_duration_minutes ?? 0,
+            callId: callData.id,
+            title: callData.title,
+            scheduledStart: callData.scheduled_start,
+            actualDurationMinutes: callData.actual_duration_minutes ?? 0,
             summary: recapResponse.data?.summary ?? null,
             highlight: recapResponse.data?.highlight ?? null,
             nextStep: recapResponse.data?.next_step ?? null
