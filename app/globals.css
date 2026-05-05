@@ -4825,6 +4825,11 @@ a.phonebook-detail:hover { text-decoration: underline; }
   padding-bottom: 1rem;
 }
 
+.landing-section-reel {
+  min-height: unset;
+  padding: 0;
+}
+
 .promo-reel {
   position: relative;
   width: 100%;
