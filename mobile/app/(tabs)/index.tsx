@@ -10,6 +10,7 @@ import { Button } from "@/components/Button";
 import { EmptyState } from "@/components/EmptyState";
 import { StatGrid, StatTile } from "@/components/StatTile";
 import { HighlightCard } from "@/components/HighlightCard";
+import { FamilyReel } from "@/components/FamilyReel";
 import { colors, fontSize, fontWeight, spacing } from "@/lib/theme";
 import { formatDate, formatTime, relativeTime } from "@/lib/format";
 import { fetchDashboard } from "@/lib/dashboard";
@@ -107,6 +108,8 @@ export default function HomeScreen() {
           <Text style={styles.lede}>{snap.circle.description}</Text>
         ) : null}
       </View>
+
+      <FamilyReel />
 
       <Card>
         <Text style={styles.cardLabel}>Family circle readiness</Text>
@@ -378,7 +381,7 @@ function UpcomingCallRow({
 }) {
   const start = new Date(call.scheduled_start);
   const end = new Date(call.scheduled_end);
-  const isLive = call.status === "live" || !!call.actual_started_at;
+  const isLive = call.status === "live";
   const needsRecovery = call.show_recovery_prompt;
   return (
     <ListItem
