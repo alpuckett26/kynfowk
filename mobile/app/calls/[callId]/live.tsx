@@ -19,7 +19,7 @@ import {
   type WordChainAction,
 } from "@/components/GameWordChain";
 import { ApiError } from "@/lib/api";
-import { fetchCallDetail } from "@/lib/calls";
+import { completeCall, fetchCallDetail } from "@/lib/calls";
 import {
   endGameSession,
   fetchGameCatalog,
@@ -68,6 +68,12 @@ export default function LiveCallScreen() {
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const ownIdRef = useRef<string | null>(null);
 
+  // Presence-based auto-complete tracking (M78)
+  const allPeersEverRef = useRef<Set<string>>(new Set());
+  const callStartedAtRef = useRef<number>(Date.now());
+  const hasJoinedRef = useRef(false);
+  const completedRef = useRef(false);
+
   const [micOn, setMicOn] = useState(true);
   const [cameraOn, setCameraOn] = useState(true);
   const [roomFull, setRoomFull] = useState(false);
@@ -110,6 +116,9 @@ export default function LiveCallScreen() {
           familyCircleId: detail.snapshot.circle.id,
         });
         ownIdRef.current = detail.snapshot.viewerMembershipId;
+        callStartedAtRef.current = detail.snapshot.call.actual_started_at
+          ? new Date(detail.snapshot.call.actual_started_at).getTime()
+          : Date.now();
       } catch (e) {
         if (!active) return;
         const m =
@@ -274,6 +283,7 @@ export default function LiveCallScreen() {
           const remoteName =
             (presence as { display_name?: string }).display_name ?? "Family member";
           if (!remoteId || remoteId === myId) continue;
+          allPeersEverRef.current.add(remoteId); // track for auto-complete attendance
           if (currentCount >= ROOM_CAP) {
             setRoomFull(true);
             continue;
@@ -331,6 +341,8 @@ export default function LiveCallScreen() {
       await channel.subscribe(async (status) => {
         if (status === "SUBSCRIBED" && active) {
           await channel.track({ membership_id: myId, display_name: myName });
+          hasJoinedRef.current = true;
+          allPeersEverRef.current.add(myId); // count self as attended
           setPhase("ready");
         }
       });
@@ -338,6 +350,25 @@ export default function LiveCallScreen() {
 
     return () => {
       active = false;
+
+      // Auto-complete when the last person leaves (handles navigation-away
+      // and app-kill paths that bypass the Leave button).
+      if (
+        !completedRef.current &&
+        hasJoinedRef.current &&
+        peersRef.current.size === 0
+      ) {
+        completedRef.current = true;
+        const durationMinutes = Math.max(
+          1,
+          Math.round((Date.now() - callStartedAtRef.current) / 60_000)
+        );
+        void completeCall(callId as string, {
+          durationMinutes,
+          attendedMembershipIds: [...allPeersEverRef.current],
+        }).catch(() => {/* best-effort */});
+      }
+
       for (const peer of peersRef.current.values()) {
         try {
           peer.connection.close();
@@ -377,7 +408,30 @@ export default function LiveCallScreen() {
       {
         text: "Leave",
         style: "destructive",
-        onPress: () => router.back(),
+        onPress: async () => {
+          // Auto-complete when we're the last person in the room.
+          // If others are still present they'll complete it when they leave.
+          if (
+            !completedRef.current &&
+            hasJoinedRef.current &&
+            peersRef.current.size === 0
+          ) {
+            completedRef.current = true;
+            const durationMinutes = Math.max(
+              1,
+              Math.round((Date.now() - callStartedAtRef.current) / 60_000)
+            );
+            try {
+              await completeCall(callId as string, {
+                durationMinutes,
+                attendedMembershipIds: [...allPeersEverRef.current],
+              });
+            } catch {
+              // best-effort — stale-live cleanup will catch it after 6h
+            }
+          }
+          router.back();
+        },
       },
     ]);
   };
