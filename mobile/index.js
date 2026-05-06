@@ -2,27 +2,30 @@ const defaultHandler =
   global.ErrorUtils?.getGlobalHandler?.() ?? null;
 
 global.ErrorUtils?.setGlobalHandler?.((error, isFatal) => {
-  // Log to console so it appears in Xcode / logcat — safe on all iOS versions.
-  // Do NOT call Alert.alert here: on iOS 26 the Alert TurboModule
-  // (RCTAlertManager.alertWithArgs) throws an ObjC exception because
-  // UIApplication.keyWindow was removed, which causes a SIGABRT before
-  // the alert ever displays.
   const tag = isFatal ? "[FATAL]" : "[JS ERROR]";
   const msg =
     (error?.name ?? "Error") +
     ": " +
     (error?.message ?? "unknown") +
     "\n" +
-    (error?.stack?.slice(0, 800) ?? "no stack");
-  console.error(tag, msg);
+    (error?.stack?.slice(0, 600) ?? "no stack");
 
-  // For fatal errors let the default handler run — in production it logs
-  // to the system and allows a clean process exit without a TurboModule
-  // abort cascade.
+  // Always log — visible in Xcode console regardless of arch.
+  try { console.error(tag, msg); } catch (_) {}
+
   if (isFatal) {
-    defaultHandler?.(error, isFatal);
+    // DO NOT call defaultHandler for fatal errors.
+    // Old-arch defaultHandler = RCTFatal → throws NSException → SIGABRT.
+    // Instead show an Alert so the error is readable on-device.
+    // Wrapped in try/catch in case Alert itself fails on this iOS version.
+    try {
+      const { Alert } = require("react-native");
+      Alert.alert("JS Fatal Error", msg, [{ text: "OK" }]);
+    } catch (_) {}
+    // Return without crashing — app stays open so we can read the message.
     return;
   }
+
   defaultHandler?.(error, isFatal);
 });
 
