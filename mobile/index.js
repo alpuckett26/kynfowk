@@ -2,30 +2,26 @@ const defaultHandler =
   global.ErrorUtils?.getGlobalHandler?.() ?? null;
 
 global.ErrorUtils?.setGlobalHandler?.((error, isFatal) => {
-  const tag = isFatal ? "[FATAL]" : "[JS ERROR]";
   const msg =
     (error?.name ?? "Error") +
     ": " +
     (error?.message ?? "unknown") +
     "\n" +
-    (error?.stack?.slice(0, 600) ?? "no stack");
+    (error?.stack?.slice(0, 800) ?? "no stack");
 
-  // Always log — visible in Xcode console regardless of arch.
-  try { console.error(tag, msg); } catch (_) {}
+  // Persist to AsyncStorage so the NEXT launch can display it.
+  // Fire-and-forget — we race against the native abort but on iPhone 16
+  // the SQLite write often completes before the process dies.
+  try {
+    const AsyncStorage =
+      require("@react-native-async-storage/async-storage").default;
+    AsyncStorage.setItem("@kf:startup_crash", msg).catch(() => {});
+  } catch (_) {}
 
   if (isFatal) {
-    // DO NOT call defaultHandler for fatal errors.
-    // Old-arch defaultHandler = RCTFatal → throws NSException → SIGABRT.
-    // Instead show an Alert so the error is readable on-device.
-    // Wrapped in try/catch in case Alert itself fails on this iOS version.
-    try {
-      const { Alert } = require("react-native");
-      Alert.alert("JS Fatal Error", msg, [{ text: "OK" }]);
-    } catch (_) {}
-    // Return without crashing — app stays open so we can read the message.
+    // Do NOT call defaultHandler (= RCTFatal → NSException → abort).
     return;
   }
-
   defaultHandler?.(error, isFatal);
 });
 

@@ -1,5 +1,6 @@
 import { useEffect } from "react";
-import { ActivityIndicator, StyleSheet, View } from "react-native";
+import { ActivityIndicator, Alert, StyleSheet, View } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Stack, router, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -43,6 +44,18 @@ function PushRouter() {
 }
 
 export default function RootLayout() {
+  // M89 — on launch, check if a previous startup crash was persisted.
+  // Shows the JS error message so we can diagnose without Xcode.
+  useEffect(() => {
+    AsyncStorage.getItem("@kf:startup_crash")
+      .then((val) => {
+        if (!val) return;
+        AsyncStorage.removeItem("@kf:startup_crash").catch(() => {});
+        Alert.alert("Previous startup crash", val.slice(0, 600), [{ text: "OK" }]);
+      })
+      .catch(() => {});
+  }, []);
+
   // M60 — kick off AdMob + ATT once at app boot. No-op when AdMob env
   // vars aren't set, no-op on subsequent calls.
   useEffect(() => {
