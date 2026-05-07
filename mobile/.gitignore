@@ -5,6 +5,8 @@ web-build/
 .DS_Store
 *.log
 *.tsbuildinfo
+
+# package-lock.json — EAS resolves fresh on each build (matching working build conditions)
 package-lock.json
 
 # FCM config — written by CI from GOOGLE_SERVICES_JSON secret
