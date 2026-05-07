@@ -2,8 +2,9 @@ import type { Route } from "next";
 import Link from "next/link";
 
 import { Card } from "@/components/card";
+import { PromoReel } from "@/components/promo-reel";
 import { SplashScreen } from "@/components/splash-screen";
-import { getViewer, getViewerFamilyCircle } from "@/lib/data";
+import { getCircleCarouselPhotos, getViewer, getViewerFamilyCircle } from "@/lib/data";
 
 /**
  * M50 — landing rebuilt as four vertical snap-scroll sections, each
@@ -17,6 +18,9 @@ export default async function HomePage() {
   const family = viewer ? await getViewerFamilyCircle(viewer.id) : null;
   const isSignedIn = !!viewer;
   const hasCircle = !!family;
+  const carouselPhotos = hasCircle && viewer
+    ? await getCircleCarouselPhotos(viewer.id)
+    : [];
 
   const primaryHref: Route = hasCircle
     ? "/dashboard"
@@ -34,6 +38,11 @@ export default async function HomePage() {
       <SplashScreen />
 
       <main className="landing-track">
+        {/* Hero reel — 3 looping clips for new visitors; family photos mixed in once uploaded */}
+        <section className="landing-section landing-section-reel">
+          <PromoReel photos={carouselPhotos} />
+        </section>
+
         {/* Hero */}
         <section className="landing-section">
           <div className="container">
