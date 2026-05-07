@@ -1,4 +1,14 @@
-const defaultHandler = global.ErrorUtils?.getGlobalHandler?.();
+// M91 — boot-log breadcrumbs run BEFORE expo-router/entry imports
+// so we capture the last successful step if a module's import-time
+// or native init throws. The bootLog helper persists each entry to
+// AsyncStorage; _layout.tsx surfaces them on the next launch.
+const { bootLog } = require("./lib/boot-log");
+
+bootLog("01 index.js entered");
+
+const defaultHandler =
+  global.ErrorUtils?.getGlobalHandler?.() ?? null;
+
 global.ErrorUtils?.setGlobalHandler?.((error, isFatal) => {
   const msg =
     (error?.name ?? "Error") +
@@ -16,6 +26,8 @@ global.ErrorUtils?.setGlobalHandler?.((error, isFatal) => {
     AsyncStorage.setItem("@kf:startup_crash", msg).catch(() => {});
   } catch (_) {}
 
+  bootLog("FATAL_JS " + (error?.message ?? "unknown"));
+
   if (isFatal) {
     // Do NOT call defaultHandler (= RCTFatal → NSException → abort).
     return;
@@ -23,4 +35,8 @@ global.ErrorUtils?.setGlobalHandler?.((error, isFatal) => {
   defaultHandler?.(error, isFatal);
 });
 
+bootLog("02 error handler installed");
+
 require("expo-router/entry");
+
+bootLog("03 expo-router/entry required");

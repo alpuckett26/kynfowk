@@ -10,10 +10,17 @@ import {
   View,
 } from "react-native";
 import { router } from "expo-router";
+import { bootLog } from "@/lib/boot-log";
+
+bootLog("110 FamilyReel.tsx module loaded — about to import lib/photos");
+
 import { Card } from "@/components/Card";
 import { Button } from "@/components/Button";
 import { ApiError } from "@/lib/api";
 import { fetchPhotos } from "@/lib/photos";
+
+bootLog("111 FamilyReel — lib/photos imported successfully");
+
 import { colors, fontSize, fontWeight, radius, spacing } from "@/lib/theme";
 import type { CarouselPhoto } from "@/types/api";
 

@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { router } from "expo-router";
+import { bootLog } from "@/lib/boot-log";
+
+bootLog("100 (tabs)/index.tsx module loaded — about to import FamilyReel chain");
+
 import { Screen } from "@/components/Screen";
 import { AdBanner } from "@/components/AdBanner";
 import { Card } from "@/components/Card";
@@ -11,6 +15,8 @@ import { EmptyState } from "@/components/EmptyState";
 import { StatGrid, StatTile } from "@/components/StatTile";
 import { HighlightCard } from "@/components/HighlightCard";
 import { FamilyReel } from "@/components/FamilyReel";
+
+bootLog("101 (tabs)/index.tsx FamilyReel imported successfully");
 import { colors, fontSize, fontWeight, spacing } from "@/lib/theme";
 import { formatDate, formatTime, relativeTime } from "@/lib/format";
 import { fetchDashboard } from "@/lib/dashboard";
