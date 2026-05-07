@@ -6,6 +6,9 @@ import {
   View,
 } from "react-native";
 import { colors, fontSize, fontWeight, spacing } from "@/lib/theme";
+import { bootLog } from "@/lib/boot-log";
+
+bootLog("80 SplashOverlay.tsx module loaded");
 
 /**
  * In-app transition splash. Mirrors components/splash-screen.tsx + the
