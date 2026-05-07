@@ -103,8 +103,7 @@
             "targetSdkVersion": 34
           }
         }
-      ],
-      "expo-iap"
+      ]
     ],
     "experiments": {
       "typedRoutes": true
