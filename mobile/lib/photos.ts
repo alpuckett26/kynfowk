@@ -1,4 +1,11 @@
+import { bootLog } from "@/lib/boot-log";
+
+bootLog("120 lib/photos.ts — about to import expo-image-picker");
+
 import * as ImagePicker from "expo-image-picker";
+
+bootLog("121 lib/photos.ts — expo-image-picker imported");
+
 import { decode as decodeBase64 } from "base64-arraybuffer";
 import { apiFetch } from "@/lib/api";
 import { supabase } from "@/lib/supabase";
