@@ -4,13 +4,20 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Stack, router, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { bootLog, formatBootLog, readAndClearBootLog } from "@/lib/boot-log";
+
+bootLog("50 _layout.tsx imports starting");
+
 import { colors } from "@/lib/theme";
 import { useSession } from "@/hooks/useSession";
 import { usePushRouting } from "@/hooks/usePushRouting";
 import { SplashOverlay } from "@/components/SplashOverlay";
 import { initializeAdMob } from "@/lib/admob-init";
 
+bootLog("51 _layout.tsx imports complete");
+
 function AuthGate({ children }: { children: React.ReactNode }) {
+  bootLog("60 AuthGate render");
   const session = useSession();
   const segments = useSegments();
 
@@ -39,19 +46,44 @@ function AuthGate({ children }: { children: React.ReactNode }) {
 }
 
 function PushRouter() {
+  bootLog("61 PushRouter render");
   usePushRouting();
   return null;
 }
 
 export default function RootLayout() {
+  bootLog("70 RootLayout render");
+
   // M89 — on launch, check if a previous startup crash was persisted.
   // Shows the JS error message so we can diagnose without Xcode.
+  // M91 — also display the boot breadcrumb trail of the previous boot
+  // so we can pinpoint the last successful step before the crash.
   useEffect(() => {
-    AsyncStorage.getItem("@kf:startup_crash")
-      .then((val) => {
-        if (!val) return;
-        AsyncStorage.removeItem("@kf:startup_crash").catch(() => {});
-        Alert.alert("Previous startup crash", val.slice(0, 600), [{ text: "OK" }]);
+    bootLog("71 RootLayout mount effect");
+    Promise.all([
+      AsyncStorage.getItem("@kf:startup_crash"),
+      readAndClearBootLog(),
+    ])
+      .then(([crashMsg, prevBootEntries]) => {
+        const sections: string[] = [];
+        if (crashMsg) {
+          AsyncStorage.removeItem("@kf:startup_crash").catch(() => {});
+          sections.push("CRASH:\n" + crashMsg.slice(0, 400));
+        }
+        if (prevBootEntries.length > 0) {
+          sections.push(
+            "PREV BOOT TRAIL (last " +
+              prevBootEntries.length +
+              "):\n" +
+              formatBootLog(prevBootEntries.slice(-30))
+          );
+        }
+        if (sections.length === 0) return;
+        Alert.alert(
+          "Previous startup diagnosis",
+          sections.join("\n\n").slice(0, 1500),
+          [{ text: "OK" }]
+        );
       })
       .catch(() => {});
   }, []);
@@ -59,6 +91,7 @@ export default function RootLayout() {
   // M60 — kick off AdMob + ATT once at app boot. No-op when AdMob env
   // vars aren't set, no-op on subsequent calls.
   useEffect(() => {
+    bootLog("72 RootLayout — calling initializeAdMob");
     void initializeAdMob();
   }, []);
 

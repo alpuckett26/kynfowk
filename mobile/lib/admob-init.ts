@@ -21,6 +21,9 @@
 import { Platform } from "react-native";
 
 import { getAdMobAppId } from "@/lib/admob";
+import { bootLog } from "@/lib/boot-log";
+
+bootLog("40 admob-init.ts module loaded");
 
 let initialized = false;
 
@@ -28,6 +31,7 @@ export async function initializeAdMob(): Promise<void> {
   if (initialized) return;
   initialized = true;
 
+  bootLog("41 initializeAdMob called");
   const appId = getAdMobAppId();
   if (!appId) {
     // Pre-approval: AdMob not configured. Do nothing; AdBanner will
@@ -54,12 +58,16 @@ export async function initializeAdMob(): Promise<void> {
   // isn't installed yet on a particular environment.
   if (Platform.OS === "ios") {
     try {
+      bootLog("42 admob-init — importing expo-tracking-transparency");
       const trackingMod = await import("expo-tracking-transparency");
       const { getTrackingPermissionsAsync, requestTrackingPermissionsAsync } =
         trackingMod;
+      bootLog("43 admob-init — calling getTrackingPermissionsAsync");
       const current = await getTrackingPermissionsAsync();
       if (current.status === "undetermined") {
+        bootLog("44 admob-init — calling requestTrackingPermissionsAsync");
         await requestTrackingPermissionsAsync();
+        bootLog("45 admob-init — requestTrackingPermissionsAsync resolved");
       }
     } catch (err) {
       // If expo-tracking-transparency isn't installed yet (separate
@@ -70,7 +78,9 @@ export async function initializeAdMob(): Promise<void> {
   }
 
   try {
+    bootLog("46 admob-init — calling mobileAds().initialize");
     await mobileAds().initialize();
+    bootLog("47 admob-init — mobileAds.initialize resolved");
     if (MaxAdContentRating) {
       await mobileAds().setRequestConfiguration({
         maxAdContentRating: MaxAdContentRating.PG,
