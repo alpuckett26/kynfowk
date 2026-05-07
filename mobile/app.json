@@ -88,13 +88,6 @@
         }
       ],
       [
-        "@config-plugins/react-native-webrtc",
-        {
-          "cameraPermission": "Kynfowk uses your camera so the family can see you on a call.",
-          "microphonePermission": "Kynfowk uses your microphone so the family can hear you on a call."
-        }
-      ],
-      [
         "expo-build-properties",
         {
           "android": {
