@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
+import { bootLog } from "@/lib/boot-log";
+
+bootLog("20 useSession.ts module loaded");
 
 type State =
   | { status: "loading" }
@@ -12,7 +15,9 @@ export function useSession(): State {
 
   useEffect(() => {
     let active = true;
+    bootLog("21 useSession effect — calling supabase.auth.getSession");
     supabase.auth.getSession().then(({ data }) => {
+      bootLog("22 supabase.auth.getSession resolved");
       if (!active) return;
       setState(
         data.session
