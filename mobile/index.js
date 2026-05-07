@@ -1,6 +1,4 @@
-const defaultHandler =
-  global.ErrorUtils?.getGlobalHandler?.() ?? null;
-
+const defaultHandler = global.ErrorUtils?.getGlobalHandler?.();
 global.ErrorUtils?.setGlobalHandler?.((error, isFatal) => {
   const msg =
     (error?.name ?? "Error") +

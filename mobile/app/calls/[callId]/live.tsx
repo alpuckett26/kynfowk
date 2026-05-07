@@ -19,7 +19,7 @@ import {
   type WordChainAction,
 } from "@/components/GameWordChain";
 import { ApiError } from "@/lib/api";
-import { fetchCallDetail } from "@/lib/calls";
+import { completeCall, fetchCallDetail } from "@/lib/calls";
 import {
   endGameSession,
   fetchGameCatalog,
@@ -55,6 +55,7 @@ type State =
       membershipId: string;
       displayName: string;
       familyCircleId: string;
+      scheduledEnd: string | null; // null for ring calls — no countdown
     };
 
 export default function LiveCallScreen() {
@@ -68,10 +69,19 @@ export default function LiveCallScreen() {
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const ownIdRef = useRef<string | null>(null);
 
+  // Presence-based auto-complete tracking (M78)
+  const allPeersEverRef = useRef<Set<string>>(new Set());
+  const callStartedAtRef = useRef<number>(Date.now());
+  const hasJoinedRef = useRef(false);
+  const completedRef = useRef(false);
+  // When the last peer leaves, fire auto-complete after 5 min if nobody rejoins.
+  const lonelyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const [micOn, setMicOn] = useState(true);
   const [cameraOn, setCameraOn] = useState(true);
   const [roomFull, setRoomFull] = useState(false);
   const [phase, setPhase] = useState<"connecting" | "ready" | "error">("connecting");
+  const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
 
   // Games (M11)
   type GamePeer = { membershipId: string; displayName: string };
@@ -108,8 +118,14 @@ export default function LiveCallScreen() {
           membershipId: detail.snapshot.viewerMembershipId,
           displayName: "You",
           familyCircleId: detail.snapshot.circle.id,
+          scheduledEnd: detail.snapshot.call.is_ring
+            ? null
+            : detail.snapshot.call.scheduled_end,
         });
         ownIdRef.current = detail.snapshot.viewerMembershipId;
+        callStartedAtRef.current = detail.snapshot.call.actual_started_at
+          ? new Date(detail.snapshot.call.actual_started_at).getTime()
+          : Date.now();
       } catch (e) {
         if (!active) return;
         const m =
@@ -126,6 +142,17 @@ export default function LiveCallScreen() {
       active = false;
     };
   }, [callId]);
+
+  // Countdown timer — ticks every second, skipped for ring calls (scheduledEnd null).
+  useEffect(() => {
+    if (state.kind !== "ready" || !state.scheduledEnd) return;
+    const end = new Date(state.scheduledEnd).getTime();
+
+    const tick = () => setSecondsLeft(Math.floor((end - Date.now()) / 1000));
+    tick(); // set immediately without waiting for first interval
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [state]);
 
   // Wire signaling + media once we have viewer info.
   useEffect(() => {
@@ -268,12 +295,18 @@ export default function LiveCallScreen() {
 
       channel.on("presence", { event: "join" }, ({ newPresences }) => {
         if (!active) return;
+        // Someone (re)joined — cancel the lonely timer if it was running.
+        if (lonelyTimerRef.current) {
+          clearTimeout(lonelyTimerRef.current);
+          lonelyTimerRef.current = null;
+        }
         const currentCount = peersRef.current.size + 1;
         for (const presence of newPresences) {
           const remoteId = (presence as { membership_id?: string }).membership_id;
           const remoteName =
             (presence as { display_name?: string }).display_name ?? "Family member";
           if (!remoteId || remoteId === myId) continue;
+          allPeersEverRef.current.add(remoteId); // track for auto-complete attendance
           if (currentCount >= ROOM_CAP) {
             setRoomFull(true);
             continue;
@@ -298,6 +331,23 @@ export default function LiveCallScreen() {
           }
         }
         setRoomFull(false);
+        // If room is now empty, auto-complete after 5 min in case the other
+        // person's app was killed and they can't trigger it themselves.
+        if (peersRef.current.size === 0 && hasJoinedRef.current) {
+          lonelyTimerRef.current = setTimeout(() => {
+            if (completedRef.current) return;
+            completedRef.current = true;
+            const durationMinutes = Math.max(
+              1,
+              Math.round((Date.now() - callStartedAtRef.current) / 60_000)
+            );
+            void completeCall(callId as string, {
+              durationMinutes,
+              attendedMembershipIds: [...allPeersEverRef.current],
+            }).catch(() => {});
+            router.back();
+          }, 5 * 60 * 1000);
+        }
       });
 
       channel.on("broadcast", { event: "signal" }, ({ payload }) => {
@@ -331,6 +381,8 @@ export default function LiveCallScreen() {
       await channel.subscribe(async (status) => {
         if (status === "SUBSCRIBED" && active) {
           await channel.track({ membership_id: myId, display_name: myName });
+          hasJoinedRef.current = true;
+          allPeersEverRef.current.add(myId); // count self as attended
           setPhase("ready");
         }
       });
@@ -338,6 +390,30 @@ export default function LiveCallScreen() {
 
     return () => {
       active = false;
+
+      if (lonelyTimerRef.current) {
+        clearTimeout(lonelyTimerRef.current);
+        lonelyTimerRef.current = null;
+      }
+
+      // Auto-complete when the last person leaves (handles navigation-away
+      // and app-kill paths that bypass the Leave button).
+      if (
+        !completedRef.current &&
+        hasJoinedRef.current &&
+        peersRef.current.size === 0
+      ) {
+        completedRef.current = true;
+        const durationMinutes = Math.max(
+          1,
+          Math.round((Date.now() - callStartedAtRef.current) / 60_000)
+        );
+        void completeCall(callId as string, {
+          durationMinutes,
+          attendedMembershipIds: [...allPeersEverRef.current],
+        }).catch(() => {/* best-effort */});
+      }
+
       for (const peer of peersRef.current.values()) {
         try {
           peer.connection.close();
@@ -377,7 +453,30 @@ export default function LiveCallScreen() {
       {
         text: "Leave",
         style: "destructive",
-        onPress: () => router.back(),
+        onPress: async () => {
+          // Auto-complete when we're the last person in the room.
+          // If others are still present they'll complete it when they leave.
+          if (
+            !completedRef.current &&
+            hasJoinedRef.current &&
+            peersRef.current.size === 0
+          ) {
+            completedRef.current = true;
+            const durationMinutes = Math.max(
+              1,
+              Math.round((Date.now() - callStartedAtRef.current) / 60_000)
+            );
+            try {
+              await completeCall(callId as string, {
+                durationMinutes,
+                attendedMembershipIds: [...allPeersEverRef.current],
+              });
+            } catch {
+              // best-effort — stale-live cleanup will catch it after 6h
+            }
+          }
+          router.back();
+        },
       },
     ]);
   };
@@ -507,7 +606,12 @@ export default function LiveCallScreen() {
         <Button label="← Back" variant="ghost" onPress={() => router.back()} />
       </View>
       <View style={styles.header}>
-        <Text style={styles.eyebrow}>Live</Text>
+        <View style={styles.headerTopRow}>
+          <Text style={styles.eyebrow}>Live</Text>
+          {secondsLeft !== null && (
+            <CountdownChip seconds={secondsLeft} />
+          )}
+        </View>
         <Text style={styles.title} numberOfLines={1}>
           {state.callTitle}
         </Text>
@@ -674,9 +778,66 @@ export default function LiveCallScreen() {
   );
 }
 
+function formatCountdown(seconds: number): string {
+  if (seconds <= 0) {
+    const over = Math.abs(seconds);
+    const m = Math.floor(over / 60);
+    const s = over % 60;
+    return `+${m}:${String(s).padStart(2, "0")}`;
+  }
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m}:${String(s).padStart(2, "0")}`;
+}
+
+function CountdownChip({ seconds }: { seconds: number }) {
+  const overtime = seconds <= 0;
+  const warning = !overtime && seconds <= 60;
+  const caution = !overtime && !warning && seconds <= 300;
+
+  const bg = overtime
+    ? colors.dangerBg
+    : warning
+      ? colors.dangerBg
+      : caution
+        ? "#fff8e1"
+        : colors.surfaceMuted;
+  const fg = overtime || warning
+    ? colors.danger
+    : caution
+      ? "#b45309"
+      : colors.textMuted;
+
+  return (
+    <View style={[chipStyles.chip, { backgroundColor: bg }]}>
+      <Text style={[chipStyles.text, { color: fg }]}>
+        {overtime ? "Time's up · " : ""}{formatCountdown(seconds)}
+      </Text>
+    </View>
+  );
+}
+
+const chipStyles = StyleSheet.create({
+  chip: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 3,
+    borderRadius: radius.pill,
+  },
+  text: {
+    fontSize: fontSize.xs,
+    fontWeight: fontWeight.bold,
+    fontVariant: ["tabular-nums"],
+  },
+});
+
 const styles = StyleSheet.create({
   headerRow: { flexDirection: "row", marginBottom: spacing.xs },
   header: { gap: 4 },
+  headerTopRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
   eyebrow: {
     textTransform: "uppercase",
     letterSpacing: 1.5,
