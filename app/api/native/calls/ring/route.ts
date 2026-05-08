@@ -22,6 +22,7 @@ import {
 } from "@/lib/native-auth";
 import { getViewerFamilyCircleWith } from "@/lib/data";
 import { sendPush } from "@/lib/send-push";
+import { sendExpoPushToUsers } from "@/lib/expo-push";
 
 type Body = {
   participantMembershipIds?: string[];
@@ -127,25 +128,39 @@ export async function POST(request: Request) {
       startUtc.getTime() + RING_TIMEOUT_SECONDS * 1000
     ).toISOString();
 
+    let expoDelivered = 0;
     if (recipientUserIds.length > 0) {
-      try {
-        await sendPush({
-          userIds: recipientUserIds,
-          title: `${callerName} is calling you`,
-          body: family.circle.name,
-          data: {
-            type: "incoming_call",
-            deepLink: `kynfowk://calls/${callId}/ring`,
-            callId,
-            callerName,
-            circleName: family.circle.name,
-            ringExpiresAt,
-          },
-        });
-      } catch (e) {
-        // Don't fail the request — the caller still wants the call
-        // session created so they can wait. Log so we can diagnose.
-        console.error("[ring] sendPush failed:", e);
+      const ringPayload = {
+        userIds: recipientUserIds,
+        title: `${callerName} is calling you`,
+        body: family.circle.name,
+        data: {
+          type: "incoming_call" as const,
+          deepLink: `kynfowk://calls/${callId}/ring`,
+          callId,
+          callerName,
+          circleName: family.circle.name,
+          ringExpiresAt,
+        },
+      };
+
+      // Two delivery channels — both fire in parallel, both are best-effort.
+      // (1) Edge Function `send-notification` reads device_tokens (raw
+      //     APNs/FCM tokens). Reserved for any future native register flow.
+      // (2) Expo Push reads push_subscriptions where the mobile app
+      //     registers via /api/native/push/register. This is the channel
+      //     the M98 mobile build actually uses today.
+      const [edgeResult, expoResult] = await Promise.allSettled([
+        sendPush(ringPayload),
+        sendExpoPushToUsers(supabase, ringPayload),
+      ]);
+      if (edgeResult.status === "rejected") {
+        console.error("[ring] edge function push failed:", edgeResult.reason);
+      }
+      if (expoResult.status === "fulfilled") {
+        expoDelivered = expoResult.value.successes;
+      } else {
+        console.error("[ring] expo push failed:", expoResult.reason);
       }
     }
 
@@ -155,6 +170,7 @@ export async function POST(request: Request) {
       ringExpiresAt,
       participantCount: parts.length,
       pushedTo: recipientUserIds.length,
+      expoDelivered,
     });
   } catch (error) {
     return nativeErrorResponse(error);
