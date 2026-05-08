@@ -1,9 +1,6 @@
 import { useEffect } from "react";
 import * as Notifications from "expo-notifications";
 import { router } from "expo-router";
-import { bootLog } from "@/lib/boot-log";
-
-bootLog("30 usePushRouting.ts module loaded");
 
 /**
  * M42 — global push routing for the mobile app.
@@ -38,7 +35,6 @@ export function usePushRouting() {
       }
     };
 
-    bootLog("31 usePushRouting effect — registering listeners");
     const responseSub = Notifications.addNotificationResponseReceivedListener(
       (response) => {
         handlePayload(
@@ -63,10 +59,8 @@ export function usePushRouting() {
 
     // If the app cold-launched from a notification tap, the response
     // listener above may have missed it. Check getLastNotificationResponseAsync.
-    bootLog("32 usePushRouting — calling getLastNotificationResponseAsync");
     Notifications.getLastNotificationResponseAsync()
       .then((response) => {
-        bootLog("33 getLastNotificationResponseAsync resolved");
         if (!response) return;
         handlePayload(
           response.notification.request.content.data as

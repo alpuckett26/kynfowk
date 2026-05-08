@@ -9,9 +9,6 @@ import {
 } from "react-native";
 import { router } from "expo-router";
 import { supabase } from "@/lib/supabase";
-import { bootLog } from "@/lib/boot-log";
-
-bootLog("90 login.tsx module loaded");
 
 // Hard-coded so it exactly matches the Supabase Auth → URL Configuration →
 // Redirect URLs allow-list entry. expo-linking's createURL returns

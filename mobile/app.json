@@ -24,9 +24,7 @@
       },
       "infoPlist": {
         "NSCameraUsageDescription": "Kynfowk uses your camera so the family can see you on a call.",
-        "NSMicrophoneUsageDescription": "Kynfowk uses your microphone so the family can hear you on a call.",
-        "NSPhotoLibraryUsageDescription": "Kynfowk uses your photo library so you can share photos with your Family Circle.",
-        "NSUserTrackingUsageDescription": "Allow Kynfowk to show ads that help fund your family's rewards pool. Without this, ads still appear but aren't personalized."
+        "NSMicrophoneUsageDescription": "Kynfowk uses your microphone so the family can hear you on a call."
       },
       "privacyManifests": {
         "NSPrivacyAccessedAPITypes": [
@@ -85,6 +83,13 @@
         {
           "color": "#1f1916",
           "defaultChannel": "default"
+        }
+      ],
+      [
+        "@config-plugins/react-native-webrtc",
+        {
+          "cameraPermission": "Kynfowk uses your camera so the family can see you on a call.",
+          "microphonePermission": "Kynfowk uses your microphone so the family can hear you on a call."
         }
       ],
       [

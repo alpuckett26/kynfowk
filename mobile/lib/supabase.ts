@@ -1,15 +1,10 @@
 import "react-native-url-polyfill/auto";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createClient } from "@supabase/supabase-js";
-import { bootLog } from "@/lib/boot-log";
-
-bootLog("10 supabase.ts module loaded");
 
 const url = "https://xkufjotjcgptcoybyimb.supabase.co";
 const anonKey =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhrdWZqb3RqY2dwdGNveWJ5aW1iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMzNjQ3OTQsImV4cCI6MjA4ODk0MDc5NH0.haHwDjW3yuixjGjhTt5SlL8Kx07mF8HEj4npcxMmEQc";
-
-bootLog("11 supabase createClient about to run");
 
 export const supabase = createClient(url, anonKey, {
   auth: {
@@ -26,5 +21,3 @@ export const supabase = createClient(url, anonKey, {
     flowType: "pkce",
   },
 });
-
-bootLog("12 supabase createClient returned");

@@ -19,7 +19,6 @@ import {
 } from "@/lib/family";
 import { setMinorParentalConsent } from "@/lib/auto-schedule";
 import { ringFamilyMembers } from "@/lib/calls";
-import { pickAndUploadAvatar } from "@/lib/photos";
 import { colors, fontSize, fontWeight, spacing } from "@/lib/theme";
 import type { FamilyMember } from "@/types/api";
 
@@ -237,21 +236,12 @@ export default function MemberDetailScreen() {
   };
 
   const onSetPhoto = async () => {
-    setBusy(true);
-    try {
-      const res = await pickAndUploadAvatar(member.id);
-      if (!res.success) {
-        if (res.reason !== "Cancelled") {
-          Alert.alert("Couldn't upload", res.reason);
-        }
-        return;
-      }
-      await load();
-    } catch (e) {
-      Alert.alert("Error", e instanceof Error ? e.message : "Couldn't upload photo");
-    } finally {
-      setBusy(false);
-    }
+    // M98 — avatar upload disabled in iOS demolition build.
+    // Re-enable when expo-image-picker is reintroduced (M99).
+    Alert.alert(
+      "Photo upload coming soon",
+      "Avatar uploads will return in the next build."
+    );
   };
 
   const onToggleMinorConsent = async () => {

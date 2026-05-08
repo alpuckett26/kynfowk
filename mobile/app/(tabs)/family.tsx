@@ -2,13 +2,11 @@ import { useCallback, useEffect, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { router, useFocusEffect } from "expo-router";
 import { Screen } from "@/components/Screen";
-import { AdBanner } from "@/components/AdBanner";
 import { Card } from "@/components/Card";
 import { Button } from "@/components/Button";
 import { Badge } from "@/components/Badge";
 import { ListItem, SectionHeader } from "@/components/ListItem";
 import { EmptyState } from "@/components/EmptyState";
-import { FamilyReel } from "@/components/FamilyReel";
 import { ApiError } from "@/lib/api";
 import { fetchFamilyMembers } from "@/lib/family";
 import { colors, fontSize, fontWeight, spacing } from "@/lib/theme";
@@ -134,8 +132,6 @@ export default function FamilyTab() {
         </Text>
       </View>
 
-      <FamilyReel />
-
       {isOwner ? (
         <Card>
           <SectionHeader title="Add to the circle" />
@@ -202,8 +198,6 @@ export default function FamilyTab() {
         </Text>
         <Button label="Coming soon · v2" variant="ghost" disabled onPress={() => {}} />
       </Card>
-
-      <AdBanner placement="family-tab" />
     </Screen>
   );
 }
