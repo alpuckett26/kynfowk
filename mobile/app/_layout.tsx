@@ -6,6 +6,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { colors } from "@/lib/theme";
 import { useSession } from "@/hooks/useSession";
 import { usePushRouting } from "@/hooks/usePushRouting";
+import { useIncomingCallWatcher } from "@/hooks/useIncomingCallWatcher";
 import { SplashOverlay } from "@/components/SplashOverlay";
 
 function AuthGate({ children }: { children: React.ReactNode }) {
@@ -41,12 +42,18 @@ function PushRouter() {
   return null;
 }
 
+function IncomingCallWatcher() {
+  useIncomingCallWatcher();
+  return null;
+}
+
 export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <StatusBar style="dark" />
       <AuthGate>
         <PushRouter />
+        <IncomingCallWatcher />
         <Stack
           screenOptions={{
             headerShown: false,
