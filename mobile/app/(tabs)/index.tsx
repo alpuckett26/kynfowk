@@ -1,12 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { router } from "expo-router";
-import { bootLog } from "@/lib/boot-log";
-
-bootLog("100 (tabs)/index.tsx module loaded — about to import FamilyReel chain");
-
 import { Screen } from "@/components/Screen";
-import { AdBanner } from "@/components/AdBanner";
 import { Card } from "@/components/Card";
 import { ListItem, SectionHeader } from "@/components/ListItem";
 import { Badge } from "@/components/Badge";
@@ -14,9 +9,6 @@ import { Button } from "@/components/Button";
 import { EmptyState } from "@/components/EmptyState";
 import { StatGrid, StatTile } from "@/components/StatTile";
 import { HighlightCard } from "@/components/HighlightCard";
-import { FamilyReel } from "@/components/FamilyReel";
-
-bootLog("101 (tabs)/index.tsx FamilyReel imported successfully");
 import { colors, fontSize, fontWeight, spacing } from "@/lib/theme";
 import { formatDate, formatTime, relativeTime } from "@/lib/format";
 import { fetchDashboard } from "@/lib/dashboard";
@@ -114,8 +106,6 @@ export default function HomeScreen() {
           <Text style={styles.lede}>{snap.circle.description}</Text>
         ) : null}
       </View>
-
-      <FamilyReel />
 
       <Card>
         <Text style={styles.cardLabel}>Family circle readiness</Text>
@@ -372,8 +362,6 @@ export default function HomeScreen() {
           </View>
         )}
       </Card>
-
-      <AdBanner placement="home-tab" />
     </Screen>
   );
 }

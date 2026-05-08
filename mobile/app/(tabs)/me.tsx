@@ -2,10 +2,8 @@ import { useCallback, useEffect, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { router } from "expo-router";
 import { Screen } from "@/components/Screen";
-import { AdBanner } from "@/components/AdBanner";
 import { Card } from "@/components/Card";
 import { Button } from "@/components/Button";
-import { UpgradeToPlusButton } from "@/components/UpgradeToPlusButton";
 import { colors, fontSize, fontWeight, spacing } from "@/lib/theme";
 import { supabase } from "@/lib/supabase";
 
@@ -65,7 +63,10 @@ export default function MeTab() {
       </Card>
 
       <Card>
-        <UpgradeToPlusButton />
+        <Text style={styles.label}>Kynfowk Plus</Text>
+        <Text style={styles.muted}>
+          Manage your Kynfowk Plus subscription at kynfowk.com.
+        </Text>
       </Card>
 
       <Card>
@@ -76,8 +77,6 @@ export default function MeTab() {
           onPress={() => router.push("/feedback")}
         />
       </Card>
-
-      <AdBanner placement="me-tab" />
 
       <Button label="Sign out" variant="danger" onPress={onSignOut} />
     </Screen>
@@ -114,5 +113,6 @@ const styles = StyleSheet.create({
   muted: {
     fontSize: fontSize.sm,
     color: colors.textMuted,
+    marginTop: spacing.xs,
   },
 });

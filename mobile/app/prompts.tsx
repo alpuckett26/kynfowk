@@ -15,7 +15,6 @@ import {
   fetchPrompts,
   respondToPrompt,
 } from "@/lib/prompts";
-import { pickAndUploadPhoto } from "@/lib/photos";
 import { colors, fontSize, fontWeight, radius, spacing } from "@/lib/theme";
 import { relativeTime } from "@/lib/format";
 import type { FamilyPrompt, FamilyPromptKind } from "@/types/api";
@@ -228,25 +227,13 @@ function PromptCard({
   };
 
   const onSubmitPhoto = async () => {
-    setBusy("photo");
-    try {
-      const res = await pickAndUploadPhoto(viewerMembershipId, prompt.promptText);
-      if (!res.success) {
-        if (res.reason !== "Cancelled") {
-          Alert.alert("Couldn't upload", res.reason);
-        }
-        return;
-      }
-      // Pull the just-uploaded photo URL from the carousel response and post.
-      // pickAndUploadPhoto already inserted into the carousel; we re-fetch
-      // its public URL via prompt response. Simplest: ask user to retry on the
-      // next refresh. For now, just refresh — the carousel insert is the proof.
-      onChanged();
-    } catch (e) {
-      Alert.alert("Error", e instanceof Error ? e.message : "Couldn't upload");
-    } finally {
-      setBusy("none");
-    }
+    // M98 — photo upload disabled in iOS demolition build.
+    // Re-enable when expo-image-picker is reintroduced (M99).
+    Alert.alert(
+      "Photo upload coming soon",
+      "Photo prompts will return in the next build. Please respond with text for now."
+    );
+    setBusy("none");
   };
 
   const onClose = () => {

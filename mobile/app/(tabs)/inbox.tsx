@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { router, useFocusEffect } from "expo-router";
 import { Screen } from "@/components/Screen";
-import { AdBanner } from "@/components/AdBanner";
 import { Button } from "@/components/Button";
 import { EmptyState } from "@/components/EmptyState";
 import { ApiError } from "@/lib/api";
@@ -248,8 +247,6 @@ export default function InboxTab() {
         variant="ghost"
         onPress={() => router.push("/settings/notifications")}
       />
-
-      <AdBanner placement="inbox-tab" />
     </Screen>
   );
 }
