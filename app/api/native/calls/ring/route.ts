@@ -128,7 +128,12 @@ export async function POST(request: Request) {
       startUtc.getTime() + RING_TIMEOUT_SECONDS * 1000
     ).toISOString();
 
-    let expoDelivered = 0;
+    let expoSummary = {
+      attempted: 0,
+      successes: 0,
+      failures: 0,
+      invalidated: 0,
+    };
     if (recipientUserIds.length > 0) {
       const ringPayload = {
         userIds: recipientUserIds,
@@ -158,10 +163,22 @@ export async function POST(request: Request) {
         console.error("[ring] edge function push failed:", edgeResult.reason);
       }
       if (expoResult.status === "fulfilled") {
-        expoDelivered = expoResult.value.successes;
+        expoSummary = expoResult.value;
       } else {
         console.error("[ring] expo push failed:", expoResult.reason);
       }
+      console.log(
+        "[ring]",
+        JSON.stringify({
+          callId,
+          recipientUserIds,
+          edge:
+            edgeResult.status === "fulfilled"
+              ? edgeResult.value
+              : "rejected",
+          expo: expoSummary,
+        }),
+      );
     }
 
     return Response.json({
@@ -170,7 +187,8 @@ export async function POST(request: Request) {
       ringExpiresAt,
       participantCount: parts.length,
       pushedTo: recipientUserIds.length,
-      expoDelivered,
+      expoDelivered: expoSummary.successes,
+      expoSummary,
     });
   } catch (error) {
     return nativeErrorResponse(error);
