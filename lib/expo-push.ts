@@ -8,8 +8,13 @@
  * APNs (iOS) and FCM (Android).
  *
  * Used directly by ring fan-out where we need a synchronous push without
- * going through the queued notification_deliveries pipeline.
+ * going through the queued notification_deliveries pipeline. Uses the
+ * service-role client because RLS on push_subscriptions restricts SELECT
+ * to user_id = auth.uid() — a caller looking up a recipient's tokens
+ * with their own authed client would otherwise see zero rows.
  */
+
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 type ExpoPushFanoutInput = {
   userIds: string[];
@@ -25,14 +30,9 @@ type ExpoPushFanoutResult = {
   invalidated: number;
 };
 
-type AppSupabaseClient = Awaited<
-  ReturnType<typeof import("@/lib/supabase/server").createSupabaseServerClient>
->;
-
 const EXPO_PREFIX = "expo:";
 
 export async function sendExpoPushToUsers(
-  supabase: AppSupabaseClient,
   input: ExpoPushFanoutInput,
 ): Promise<ExpoPushFanoutResult> {
   const result: ExpoPushFanoutResult = {
@@ -43,6 +43,8 @@ export async function sendExpoPushToUsers(
   };
 
   if (input.userIds.length === 0) return result;
+
+  const supabase = createSupabaseAdminClient();
 
   const { data: subs } = await supabase
     .from("push_subscriptions")

@@ -157,7 +157,7 @@ export async function POST(request: Request) {
       //     the M98 mobile build actually uses today.
       const [edgeResult, expoResult] = await Promise.allSettled([
         sendPush(ringPayload),
-        sendExpoPushToUsers(supabase, ringPayload),
+        sendExpoPushToUsers(ringPayload),
       ]);
       if (edgeResult.status === "rejected") {
         console.error("[ring] edge function push failed:", edgeResult.reason);
