@@ -71,10 +71,12 @@ export async function sendExpoPushToUsers(
     : undefined;
 
   const invalidIds: string[] = [];
+  const errorSamples: string[] = [];
 
   await Promise.all(
     expoSubs.map(async (sub) => {
       const token = sub.endpoint.slice(EXPO_PREFIX.length);
+      const tokenSuffix = token.slice(-10);
       try {
         const resp = await fetch("https://exp.host/--/api/v2/push/send", {
           method: "POST",
@@ -89,6 +91,10 @@ export async function sendExpoPushToUsers(
           }),
         });
         if (!resp.ok) {
+          const text = await resp.text().catch(() => "");
+          errorSamples.push(
+            `[${tokenSuffix}] http ${resp.status}: ${text.slice(0, 200)}`,
+          );
           result.failures += 1;
           return;
         }
@@ -100,10 +106,21 @@ export async function sendExpoPushToUsers(
                 message?: string;
                 details?: { error?: string };
               };
+              errors?: Array<{ code?: string; message?: string }>;
             }
           | null;
+        if (payload?.errors?.length) {
+          errorSamples.push(
+            `[${tokenSuffix}] expo errors: ${JSON.stringify(payload.errors).slice(0, 200)}`,
+          );
+          result.failures += 1;
+          return;
+        }
         const ticket = payload?.data;
         if (ticket?.status === "error") {
+          errorSamples.push(
+            `[${tokenSuffix}] ticket ${ticket.details?.error ?? "unknown"}: ${ticket.message ?? ""}`,
+          );
           if (ticket.details?.error === "DeviceNotRegistered") {
             invalidIds.push(sub.id);
             result.invalidated += 1;
@@ -113,7 +130,10 @@ export async function sendExpoPushToUsers(
           return;
         }
         result.successes += 1;
-      } catch {
+      } catch (err) {
+        errorSamples.push(
+          `[${tokenSuffix}] threw: ${err instanceof Error ? err.message : String(err)}`,
+        );
         result.failures += 1;
       }
     }),
@@ -121,6 +141,19 @@ export async function sendExpoPushToUsers(
 
   if (invalidIds.length > 0) {
     await supabase.from("push_subscriptions").delete().in("id", invalidIds);
+  }
+
+  if (result.failures > 0 || result.invalidated > 0) {
+    console.log(
+      "[expo-push]",
+      JSON.stringify({
+        attempted: result.attempted,
+        successes: result.successes,
+        failures: result.failures,
+        invalidated: result.invalidated,
+        errorSamples,
+      }),
+    );
   }
 
   return result;
