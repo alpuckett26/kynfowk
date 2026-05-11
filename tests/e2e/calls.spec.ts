@@ -95,33 +95,33 @@ async function deleteTestCall(callId: string) {
   await fetch(supabaseUrl(`call_sessions?id=eq.${callId}`), { method: "DELETE", headers: supabaseHeaders() });
 }
 
-async function seedRingCall(
-  circleId: string,
-  recipientMembershipId: string,
-  fakeCallerUserId: string,
-  title: string,
-): Promise<string> {
-  // is_ring=true session with a synthetic created_by (no real auth user
-  // needed — the watcher only joins through call_participants for the
-  // caller's display_name, which we leave to fall back to "A family
-  // member" since fakeCallerUserId has no family_memberships row).
+async function seedRingCall(args: {
+  circleId: string;
+  callerUserId: string;
+  callerMembershipId: string;
+  recipientMembershipId: string;
+  title: string;
+}): Promise<string> {
+  // is_ring=true session created BY the caller. Both caller and
+  // recipient go into call_participants so the watcher can resolve
+  // the caller's display_name via the family_memberships join.
   const now = new Date();
   const end = new Date(now.getTime() + 30 * 60 * 1000);
   const [call] = await fetchSupabase("POST", "call_sessions", {
-    family_circle_id: circleId,
-    title,
+    family_circle_id: args.circleId,
+    title: args.title,
     scheduled_start: now.toISOString(),
     scheduled_end: end.toISOString(),
     status: "scheduled",
     is_ring: true,
     meeting_provider: "Kynfowk",
     reminder_status: "not_needed",
-    created_by: fakeCallerUserId,
+    created_by: args.callerUserId,
   });
-  await fetchSupabase("POST", "call_participants", {
-    call_session_id: call.id,
-    membership_id: recipientMembershipId,
-  });
+  await fetchSupabase("POST", "call_participants", [
+    { call_session_id: call.id, membership_id: args.callerMembershipId },
+    { call_session_id: call.id, membership_id: args.recipientMembershipId },
+  ]);
   return call.id;
 }
 
@@ -231,23 +231,104 @@ test.describe("Call termination", () => {
 
 // ── Ring (incoming-call watcher) ────────────────────────────────────────────
 //
-// These tests are skipped because they require a second test user in the
-// same family circle as test@kynfowk.com to act as the caller:
-//   - call_sessions.created_by references auth.users(id) — a synthetic
-//     UUID fails the FK constraint.
-//   - The IncomingCallWatcher explicitly skips rows where created_by ===
-//     viewerId, so the test user can't ring themselves.
-// Unblock by provisioning test2@kynfowk.com + adding them to the same
-// circle, then flip these to `test(...)`. The component-level behaviour
-// of IncomingCallWatcher (race-window retry, RLS handling, role="dialog"
-// markup) is covered by Vitest unit tests in components/__tests__/.
+// Uses test2@kynfowk.com (seeded via scripts/seed-test-user2.mjs) as the
+// caller and test@kynfowk.com as the recipient. The IncomingCallWatcher
+// is mounted globally in app/layout.tsx; mounting /dashboard gives the
+// Realtime subscription time to attach before we seed.
 
-test.describe("Ring — incoming call watcher (needs second user)", () => {
-  test.fixme("modal appears when an is_ring call_session is inserted for the viewer", async () => {
-    // see block comment above
+test.describe("Ring — incoming call watcher", () => {
+  let caller: { userId: string; membershipId: string };
+  let recipient: { userId: string; membershipId: string; circleId: string };
+  let ringCallId: string | null = null;
+
+  test.beforeAll(async () => {
+    const primary = await getTestUser();
+    const circleId = await getFamilyCircleId(primary.id);
+    const recipientMembershipId = await getMembershipId(primary.id, circleId);
+
+    const caller2Email = process.env.TEST_USER2_EMAIL;
+    if (!caller2Email) {
+      throw new Error(
+        "TEST_USER2_EMAIL not set — run scripts/seed-test-user2.mjs first.",
+      );
+    }
+    const caller2 = (await fetchSupabase(
+      "GET",
+      `profiles?email=eq.${encodeURIComponent(caller2Email)}&select=id&limit=1`,
+    )) as Array<{ id: string }>;
+    if (!caller2.length) {
+      throw new Error(
+        `Caller user ${caller2Email} not found — run scripts/seed-test-user2.mjs.`,
+      );
+    }
+    const callerMembershipId = await getMembershipId(caller2[0].id, circleId);
+
+    caller = { userId: caller2[0].id, membershipId: callerMembershipId };
+    recipient = {
+      userId: primary.id,
+      membershipId: recipientMembershipId,
+      circleId,
+    };
   });
 
-  test.fixme("decline button dismisses the modal", async () => {
-    // see block comment above
+  test.afterEach(async () => {
+    if (ringCallId) {
+      await deleteTestCall(ringCallId);
+      ringCallId = null;
+    }
+  });
+
+  test("modal appears when an is_ring call_session is inserted for the viewer", async ({ page }) => {
+    // Mount the dashboard so the global IncomingCallWatcher subscribes
+    // to Realtime before we seed the ring. The watcher attaches after
+    // supabase.auth.getUser() resolves — give it a beat.
+    await page.goto(`/dashboard?t=${Date.now()}`);
+    await expect(page.getByText(/% ready/i).first()).toBeVisible();
+    await page.waitForTimeout(1500);
+
+    ringCallId = await seedRingCall({
+      circleId: recipient.circleId,
+      callerUserId: caller.userId,
+      callerMembershipId: caller.membershipId,
+      recipientMembershipId: recipient.membershipId,
+      title: "E2E Ring Test",
+    });
+
+    // Watcher renders <div role="dialog" aria-modal="true"> with the
+    // copy "is calling you on Kynfowk…". Generous timeout: Realtime +
+    // the 8×200ms participants retry can push delivery to ~3s.
+    const dialog = page.getByRole("dialog").filter({
+      hasText: /is calling you on Kynfowk/i,
+    });
+    await expect(dialog).toBeVisible({ timeout: 10000 });
+    // Scope the caller-name check to the dialog so it doesn't match
+    // the same name rendered in the Family panel below.
+    await expect(dialog.getByText(/Test User 2/i)).toBeVisible();
+  });
+
+  test("decline button dismisses the modal", async ({ page }) => {
+    await page.goto(`/dashboard?t=${Date.now()}`);
+    await expect(page.getByText(/% ready/i).first()).toBeVisible();
+    await page.waitForTimeout(1500);
+
+    ringCallId = await seedRingCall({
+      circleId: recipient.circleId,
+      callerUserId: caller.userId,
+      callerMembershipId: caller.membershipId,
+      recipientMembershipId: recipient.membershipId,
+      title: "E2E Ring Decline",
+    });
+
+    const dialog = page.getByRole("dialog").filter({
+      hasText: /is calling you on Kynfowk/i,
+    });
+    await expect(dialog).toBeVisible({ timeout: 10000 });
+    // force:true — the modal has a CSS pulse/animation on the action
+    // buttons that Playwright reads as "not stable". The button is
+    // visible + enabled; forcing the click is safe.
+    await dialog
+      .getByRole("button", { name: /^Decline$/i })
+      .click({ force: true });
+    await expect(dialog).not.toBeVisible({ timeout: 10000 });
   });
 });
