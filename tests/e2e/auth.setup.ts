@@ -31,7 +31,10 @@ setup("sign in as test user", async ({ page }) => {
     await page.waitForURL("**/dashboard", { timeout: 15000 });
   }
 
-  await expect(page.getByRole("heading", { name: /Keep your family rhythm in view/i })).toBeVisible();
+  // Post-M50 dashboard renders the Connect panel by default.
+  // The greeting heading varies with the user's first name, so assert
+  // on stable structural copy instead: the readiness meta line.
+  await expect(page.getByText(/% ready/i).first()).toBeVisible({ timeout: 10000 });
 
   // Save auth cookies for all other tests
   await page.context().storageState({ path: authFile });
