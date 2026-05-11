@@ -40,15 +40,20 @@ afterEach(() => {
 // Helpers
 // ---------------------------------------------------------------------------
 
+type FetchImpl = (
+  url: string | URL | Request,
+  init?: RequestInit,
+) => Response | Promise<Response>;
+
 function mockFetchOnce(impl: () => Response | Promise<Response>) {
-  const fetchMock = vi.fn(impl);
+  const fetchMock = vi.fn<FetchImpl>((_url, _init) => impl());
   vi.stubGlobal("fetch", fetchMock);
   return fetchMock;
 }
 
 function mockFetchSequence(responses: Array<() => Response | Promise<Response>>) {
   let i = 0;
-  const fetchMock = vi.fn(() => {
+  const fetchMock = vi.fn<FetchImpl>((_url, _init) => {
     const r = responses[i++];
     if (!r) throw new Error(`fetch called more times than expected (${i})`);
     return r();

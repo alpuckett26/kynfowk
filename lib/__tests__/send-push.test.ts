@@ -2,6 +2,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { sendPush } from "@/lib/send-push";
 
+type FetchImpl = (
+  url: string | URL | Request,
+  init?: RequestInit,
+) => Response | Promise<Response>;
+
 beforeEach(() => {
   vi.unstubAllEnvs();
   vi.unstubAllGlobals();
@@ -33,7 +38,7 @@ describe("sendPush — environment", () => {
 
 describe("sendPush — request shape", () => {
   it("POSTs to /functions/v1/send-notification with bearer auth", async () => {
-    const fetchMock = vi.fn(() =>
+    const fetchMock = vi.fn<FetchImpl>(() =>
       Promise.resolve(
         jsonResponse({
           attempted: 1,
@@ -73,7 +78,7 @@ describe("sendPush — request shape", () => {
   });
 
   it("forwards data payload but strips undefined values", async () => {
-    const fetchMock = vi.fn(() =>
+    const fetchMock = vi.fn<FetchImpl>(() =>
       Promise.resolve(
         jsonResponse({
           attempted: 1,
