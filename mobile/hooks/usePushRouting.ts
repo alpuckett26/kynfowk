@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import * as Notifications from "expo-notifications";
 import { router } from "expo-router";
+import { hasSeenRing, markRingSeen } from "@/lib/ring-dedupe";
 
 /**
  * M42 — global push routing for the mobile app.
@@ -23,6 +24,12 @@ export function usePushRouting() {
     const handlePayload = (data: Record<string, unknown> | null | undefined) => {
       if (!data) return;
       if (data.type === "incoming_call" && typeof data.callId === "string") {
+        // Shared dedupe with useIncomingCallWatcher — without this the
+        // foreground Realtime INSERT and an arriving push notification
+        // would both route to /ring, stacking two screens.
+        if (hasSeenRing(data.callId)) return;
+        markRingSeen(data.callId);
+
         const callerName =
           typeof data.callerName === "string" ? data.callerName : "";
         const circleName =
