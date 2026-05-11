@@ -1,7 +1,12 @@
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { router } from "expo-router";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
+import {
+  clearSeenRings,
+  hasSeenRing,
+  markRingSeen,
+} from "@/lib/ring-dedupe";
 
 /**
  * M100 — Mobile foreground listener for incoming "ring now" calls.
@@ -22,10 +27,12 @@ import { supabase } from "@/lib/supabase";
  *     ring/route.ts inserts call_sessions and call_participants in
  *     separate statements and the postgres_changes INSERT can land
  *     before participants are queryable.
+ *
+ * Dedupe note: `seen` is module-level (lib/ring-dedupe) so this hook
+ * and usePushRouting share it — without that, push tap + Realtime
+ * INSERT can stack two ring screens for one call.
  */
 export function useIncomingCallWatcher() {
-  const seenCallIdsRef = useRef<Set<string>>(new Set());
-
   useEffect(() => {
     let active = true;
     let viewerId: string | null = null;
@@ -43,6 +50,9 @@ export function useIncomingCallWatcher() {
       teardown();
 
       const nextViewerId = session?.user?.id ?? null;
+      // Drop the seen-set when the viewer changes (sign-out, account
+      // swap) so a new session doesn't inherit the previous user's IDs.
+      if (nextViewerId !== viewerId) clearSeenRings();
       viewerId = nextViewerId;
       if (!nextViewerId) return;
 
@@ -73,7 +83,7 @@ export function useIncomingCallWatcher() {
             };
 
             if (!viewerId || row.created_by === viewerId) return;
-            if (seenCallIdsRef.current.has(row.id)) return;
+            if (hasSeenRing(row.id)) return;
 
             let parts: ParticipantRow[] = [];
             for (let attempt = 0; attempt < 8; attempt++) {
@@ -89,6 +99,18 @@ export function useIncomingCallWatcher() {
             }
 
             if (!active) return;
+
+            if (parts.length === 0) {
+              // 8×200ms = 1.6s with no participants. Either the ring API
+              // races much further than expected, or RLS hides the rows.
+              // Surfacing this saves a debugging hour the next time
+              // "the ring didn't fire" comes up.
+              console.warn(
+                "[m100] no participants resolved for ring",
+                row.id,
+              );
+              return;
+            }
 
             const amParticipant = parts.some((p) => {
               const fm = p.family_memberships;
@@ -113,10 +135,16 @@ export function useIncomingCallWatcher() {
               .select("name")
               .eq("id", row.family_circle_id)
               .maybeSingle();
+            if (circleResp.error) {
+              console.warn(
+                "[m100] family_circles lookup failed",
+                circleResp.error.message,
+              );
+            }
             const circleName =
               (circleResp.data as { name: string } | null)?.name ?? "";
 
-            seenCallIdsRef.current.add(row.id);
+            markRingSeen(row.id);
 
             const params = new URLSearchParams();
             if (callerName) params.set("callerName", callerName);
