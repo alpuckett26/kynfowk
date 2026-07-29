@@ -25,9 +25,27 @@ const manrope = Manrope({
 });
 
 export const metadata: Metadata = {
+  // metadataBase makes every relative OG/twitter URL absolute. Without it Next
+  // emits relative image paths, which crawlers and link unfurlers ignore — so
+  // the generated opengraph-image would never actually show up.
+  metadataBase: new URL("https://kynfowk.com"),
   title: "Kynfowk",
   description:
     "A warm family coordination app for shared availability, call scheduling, and Time Together.",
+  openGraph: {
+    type: "website",
+    siteName: "Kynfowk",
+    url: "https://kynfowk.com",
+    title: "Kynfowk — family coordination that actually fits a family",
+    description:
+      "Shared availability, call scheduling, and Time Together — so staying close doesn't take a group chat.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Kynfowk — family coordination that actually fits a family",
+    description:
+      "Shared availability, call scheduling, and Time Together — so staying close doesn't take a group chat.",
+  },
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
