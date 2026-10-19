@@ -23,6 +23,7 @@
         "usesNonExemptEncryption": false
       },
       "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Kynfowk uses your location only when you choose to share it with immediate family.",
         "NSCameraUsageDescription": "Kynfowk uses your camera so the family can see you on a call.",
         "NSMicrophoneUsageDescription": "Kynfowk uses your microphone so the family can hear you on a call."
       },
@@ -78,6 +79,12 @@
     "plugins": [
       "expo-router",
       "expo-secure-store",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Kynfowk uses your location only when you choose to share it with immediate family."
+        }
+      ],
       [
         "expo-notifications",
         {

@@ -18,7 +18,8 @@ const TYPE_FILTERS = new Set<NotificationType>([
   "call_passed_without_completion",
   "invite_claimed",
   "recap_posted",
-  "weekly_connection_digest"
+  "weekly_connection_digest",
+  "location_shared"
 ]);
 
 export default async function NotificationsPage({

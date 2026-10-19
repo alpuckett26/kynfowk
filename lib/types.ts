@@ -15,7 +15,8 @@ export type NotificationType =
   | "weekly_briefing"
   | "incoming_call"
   | "call_missed"
-  | "call_declined";
+  | "call_declined"
+  | "location_shared";
 
 export type NotificationChannel = "in_app" | "email" | "push";
 

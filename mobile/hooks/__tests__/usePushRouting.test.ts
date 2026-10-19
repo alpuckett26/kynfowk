@@ -98,6 +98,15 @@ describe("usePushRouting — incoming_call payloads", () => {
 });
 
 describe("usePushRouting — non-routing payloads", () => {
+  it("opens the family location screen from a location notification", async () => {
+    renderHook(() => usePushRouting());
+    await waitFor(() => expect(responseCallback).not.toBeNull());
+
+    emitTap({ type: "location_shared", deepLink: "kynfowk://location" });
+
+    expect(router.push).toHaveBeenCalledWith("/location");
+  });
+
   it("does nothing when type is not 'incoming_call'", async () => {
     renderHook(() => usePushRouting());
     await waitFor(() => expect(responseCallback).not.toBeNull());

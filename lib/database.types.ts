@@ -82,6 +82,39 @@ export interface Database {
           role?: "owner" | "member";
         };
       };
+      member_location_shares: {
+        Row: {
+          id: string;
+          family_circle_id: string;
+          membership_id: string;
+          user_id: string;
+          latitude: number;
+          longitude: number;
+          accuracy_meters: number | null;
+          recipient_membership_ids: string[];
+          shared_until: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          family_circle_id: string;
+          membership_id: string;
+          user_id: string;
+          latitude: number;
+          longitude: number;
+          accuracy_meters?: number | null;
+          recipient_membership_ids?: string[];
+          shared_until: string;
+        };
+        Update: {
+          latitude?: number;
+          longitude?: number;
+          accuracy_meters?: number | null;
+          recipient_membership_ids?: string[];
+          shared_until?: string;
+        };
+      };
       availability_windows: {
         Row: {
           id: string;
@@ -236,7 +269,8 @@ export interface Database {
             | "weekly_briefing"
             | "incoming_call"
             | "call_missed"
-            | "call_declined";
+            | "call_declined"
+            | "location_shared";
           title: string;
           body: string;
           cta_label: string | null;

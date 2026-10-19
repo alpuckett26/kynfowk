@@ -32,7 +32,8 @@ const TYPE_LABELS: Record<NotificationType, string> = {
   weekly_briefing: "Weekly briefing",
   incoming_call: "Incoming call",
   call_missed: "Missed call",
-  call_declined: "Call declined"
+  call_declined: "Call declined",
+  location_shared: "Location shared"
 };
 
 const TYPE_GLYPHS: Record<NotificationType, string> = {
@@ -48,7 +49,8 @@ const TYPE_GLYPHS: Record<NotificationType, string> = {
   weekly_briefing: "📖",
   incoming_call: "📞",
   call_missed: "📵",
-  call_declined: "🚫"
+  call_declined: "🚫",
+  location_shared: "📍"
 };
 
 function buildNotificationsHref(input: {

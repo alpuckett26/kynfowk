@@ -39,6 +39,17 @@ export function usePushRouting() {
         if (circleName) params.set("circleName", circleName);
         const qs = params.toString() ? `?${params.toString()}` : "";
         router.push(`/calls/${data.callId}/ring${qs}`);
+        return;
+      }
+
+      if (typeof data.deepLink === "string") {
+        const locationMatch = data.deepLink.match(/^kynfowk:\/\/location\/?$/);
+        if (locationMatch) {
+          router.push("/location");
+          return;
+        }
+        const callMatch = data.deepLink.match(/^kynfowk:\/\/calls\/([^/?#]+)/);
+        if (callMatch) router.push(`/calls/${callMatch[1]}`);
       }
     };
 

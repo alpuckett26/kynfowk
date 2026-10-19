@@ -8,6 +8,7 @@ import type {
   NotificationType
 } from "@/lib/types";
 import { sendBrandedTransactionalEmail } from "@/lib/branded-email";
+import { sendExpoPushToUsers } from "@/lib/expo-push";
 import { getWeekKey } from "@/lib/utils";
 import webpush from "web-push";
 
@@ -592,7 +593,7 @@ async function flushQueuedPushDeliveries(
         .from("notification_deliveries")
         .update({
           status: "skipped",
-          error_message: "No active browser push subscription is available."
+          error_message: "No active push subscription is available."
         })
         .eq("id", delivery.id);
       updatedCount += 1;
@@ -607,7 +608,25 @@ async function flushQueuedPushDeliveries(
     let lastError: string | null = null;
     let sawPermanentInvalidSubscription = false;
 
-    for (const subscription of subscriptions) {
+    const expoSubscriptions = subscriptions.filter((subscription) => subscription.endpoint.startsWith("expo:"));
+    const webSubscriptions = subscriptions.filter((subscription) => !subscription.endpoint.startsWith("expo:"));
+
+    if (expoSubscriptions.length) {
+      const href = notification.cta_href ?? "/dashboard";
+      const expoResult = await sendExpoPushToUsers({
+        userIds: [delivery.user_id],
+        title: notification.title,
+        body: notification.body,
+        data: {
+          type: notification.type,
+          deepLink: `kynfowk://${href.replace(/^\//, "")}`,
+        },
+      });
+      delivered = expoResult.successes > 0;
+      if (!delivered && expoResult.failures > 0) lastError = "Expo push delivery failed.";
+    }
+
+    for (const subscription of webSubscriptions) {
       const result = await sendPushThroughProvider({
         subscription: {
           endpoint: subscription.endpoint,
@@ -646,7 +665,7 @@ async function flushQueuedPushDeliveries(
               : subscriptions.length
                 ? "failed"
                 : "skipped",
-        error_message: delivered ? null : lastError ?? "Push delivery did not reach a browser.",
+        error_message: delivered ? null : lastError ?? "Push delivery did not reach a device.",
         sent_at: delivered ? new Date().toISOString() : null
       })
       .eq("id", delivery.id);
@@ -1306,7 +1325,8 @@ export async function getNotificationInboxData(
       "call_passed_without_completion",
       "invite_claimed",
       "recap_posted",
-      "weekly_connection_digest"
+      "weekly_connection_digest",
+      "location_shared"
     ] satisfies NotificationType[]
   )
     .map((type) => ({

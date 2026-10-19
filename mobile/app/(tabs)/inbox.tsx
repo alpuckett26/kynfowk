@@ -33,6 +33,7 @@ const TYPE_GLYPHS: Record<NotificationType, string> = {
   incoming_call: "📞",
   call_missed: "📵",
   call_declined: "🚫",
+  location_shared: "📍",
 };
 
 type State =
@@ -114,6 +115,10 @@ export default function InboxTab() {
       }
     }
     if (item.ctaHref) {
+      if (item.ctaHref === "/location") {
+        router.push("/location");
+        return;
+      }
       const callMatch = item.ctaHref.match(/\/calls\/([^/?#]+)/);
       if (callMatch) {
         router.push(`/calls/${callMatch[1]}`);

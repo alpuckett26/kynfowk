@@ -20,6 +20,7 @@ const ALL_TYPES: NotificationType[] = [
   "invite_claimed",
   "recap_posted",
   "weekly_connection_digest",
+  "location_shared",
 ];
 
 const DEFAULT_PREFS: NotificationPreferenceSettings = {
