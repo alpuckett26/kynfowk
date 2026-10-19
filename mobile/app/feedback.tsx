@@ -64,9 +64,9 @@ export default function FeedbackScreen() {
       </View>
       <View style={styles.header}>
         <Text style={styles.eyebrow}>Feedback</Text>
-        <Text style={styles.title}>Tell us what's up</Text>
+        <Text style={styles.title}>Tell us what’s up</Text>
         <Text style={styles.lede}>
-          What's broken, confusing, or worth keeping. Goes straight to the
+          What’s broken, confusing, or worth keeping. Goes straight to the
           team building this app.
         </Text>
       </View>

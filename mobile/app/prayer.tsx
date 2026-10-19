@@ -108,7 +108,7 @@ export default function PrayerScreen() {
         <Text style={styles.eyebrow}>Faith</Text>
         <Text style={styles.title}>Prayer chain</Text>
         <Text style={styles.lede}>
-          Share what's on your heart. The family can offer a kind word in
+          Share what’s on your heart. The family can offer a kind word in
           response.
         </Text>
       </View>
