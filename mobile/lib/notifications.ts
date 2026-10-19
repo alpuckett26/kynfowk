@@ -20,6 +20,7 @@ export const NOTIFICATION_TYPE_LABELS: Record<NotificationType, string> = {
   incoming_call: "Incoming call",
   call_missed: "Missed call",
   call_declined: "Call declined",
+  location_shared: "Location shared",
 };
 
 export function fetchNotifications(filters?: {

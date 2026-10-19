@@ -150,6 +150,11 @@ export default function FamilyTab() {
       <Card>
         <SectionHeader title="Quick links" />
         <Button
+          label="Family locations"
+          variant="secondary"
+          onPress={() => router.push("/location")}
+        />
+        <Button
           label="Phonebook"
           variant="secondary"
           onPress={() => router.push("/phonebook")}

@@ -62,6 +62,9 @@ export function FamilyPanel({
             <Link className="button button-secondary" href={"/family/tree" as Route}>
               View family tree
             </Link>
+            <Link className="button button-secondary" href={"/location" as Route}>
+              Family locations
+            </Link>
           </div>
           <FamilyManagementList
             canManage={canManage}

@@ -21,7 +21,24 @@ export type NotificationType =
   | "weekly_briefing"
   | "incoming_call"
   | "call_missed"
-  | "call_declined";
+  | "call_declined"
+  | "location_shared";
+
+export interface LocationShare {
+  id: string;
+  membershipId: string;
+  displayName: string;
+  latitude: number;
+  longitude: number;
+  accuracyMeters: number | null;
+  sharedUntil: string;
+  updatedAt: string;
+  isViewer: boolean;
+}
+
+export type LocationSharesResponse =
+  | { needsOnboarding: true; viewerShare: null; shares: LocationShare[] }
+  | { needsOnboarding: false; viewerShare: LocationShare | null; shares: LocationShare[] };
 
 export interface Suggestion {
   start_at: string;
