@@ -85,7 +85,7 @@ export default function AdminHome() {
         <Text style={styles.h2}>Test fixtures</Text>
         <Text style={styles.meta}>
           Spawn a 6-person Test Family with relationships + availability,
-          or wipe every circle named "Test Family*".
+          or wipe every circle named “Test Family*”.
         </Text>
         <Button
           label="Spawn test family"

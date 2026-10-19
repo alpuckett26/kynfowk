@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Alert, StyleSheet, Text, View } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 
@@ -15,18 +15,18 @@ export default function AdminCircleDetailScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [busy, setBusy] = useState(false);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     if (!id) return;
     try {
       setData(await admin.getCircle(id));
     } catch (e) {
       Alert.alert("Failed", e instanceof Error ? e.message : String(e));
     }
-  };
+  }, [id]);
 
   useEffect(() => {
     load();
-  }, [id]);
+  }, [load]);
 
   const onRefresh = async () => {
     setRefreshing(true);

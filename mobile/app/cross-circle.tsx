@@ -261,7 +261,7 @@ function CreateLinkForm({
       {otherCircles.length === 0 ? (
         <Text style={styles.subtle}>
           You only belong to one circle right now. Cross-circle links help
-          when you're a member of multiple circles or when another circle's
+          when you’re a member of multiple circles or when another circle’s
           owner sends a request.
         </Text>
       ) : (

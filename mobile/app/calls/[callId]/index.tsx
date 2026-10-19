@@ -510,7 +510,7 @@ function RecoveryActions({
       <SectionHeader title="Missed-call follow-up" />
       <Text style={styles.subtle}>
         Either roll this call forward a week with the same participants, or
-        clear it from the missed list if it isn't happening.
+        clear it from the missed list if it isn’t happening.
       </Text>
       <Button
         label={busy === "reschedule" ? "Rescheduling…" : "Reschedule for next week"}

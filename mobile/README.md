@@ -1,72 +1,70 @@
 # Kynfowk Mobile
 
-React Native (Expo) companion to the Next.js web app. Talks to the
-**same Supabase project** as production. See `../NATIVE_PLAN.md` for
-the architectural decisions and rationale.
+Kynfowk Mobile is the Expo React Native companion to the Next.js web app. It uses the same Supabase project and accesses server-owned workflows through authenticated `/api/native/*` endpoints on `kynfowk.com`.
+
+## Current capabilities
+
+- Email authentication, session persistence, onboarding, and active-circle selection
+- Home dashboard, family activity, notifications, and profile/settings screens
+- Family management, invitations, placeholders, relationships, cross-circle links, and phonebook
+- Availability, overlap suggestions, one-off scheduling, recurring calls, and auto-schedule settings
+- Call detail, Ring Now, foreground incoming-call handling, live WebRTC calls, and completion/recap flows
+- Expo push registration and notification deep links
+- Polls, prompts, prayer chain, family reel, and feedback
+- Protected mobile admin screens for users, circles, and audit data
 
 ## Setup
 
-```sh
-cd mobile
+```powershell
 npm install
-# If anything's out of date with the SDK, align it:
-npx expo install --fix
+Copy-Item .env.example .env.local
+npm run start
 ```
 
-Copy env:
+Use `npm run android` for an Android emulator/device or `npm run ios` on macOS. Development builds are preferred for WebRTC and push behavior because those native modules are not fully represented in Expo Go.
 
-```sh
-cp .env.example .env.local
-# Fill in EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY
-# from the same Supabase project the web app uses.
+Configuration:
+
+```env
+EXPO_PUBLIC_SUPABASE_URL=
+EXPO_PUBLIC_SUPABASE_ANON_KEY=
+EXPO_PUBLIC_WEB_API_BASE_URL=http://YOUR-LAN-IP:3000
+EXPO_PUBLIC_APP_ENV=development
 ```
 
-## Running
+For production, `EXPO_PUBLIC_WEB_API_BASE_URL` should be `https://kynfowk.com`. The API forwards the current Supabase bearer token, so web and mobile must point at the same Supabase project.
 
-```sh
-npx expo start            # starts the dev server
-# Then 'a' in the terminal launches Android emulator,
-# 'i' launches iOS simulator (Mac only).
-# Or scan the QR code with Expo Go on your phone.
+## Deep links
+
+- Custom scheme: `kynfowk://`
+- Universal/app link host: `https://kynfowk.com`
+- Auth callback: `kynfowk://auth/callback`
+
+Add the callback URLs used by development and production builds to Supabase Auth URL Configuration. Associated-domain and Android asset-link routes are served by the web app.
+
+## Verification
+
+```powershell
+npm run lint
+npm run typecheck
+npm test -- --runInBand
 ```
 
-## Building an APK
+Push notifications, Ring Now, camera/microphone permissions, and live calls must also be tested on physical devices.
 
-```sh
-# First time only:
-npx eas-cli@latest login
-npx eas-cli@latest build:configure
-# Build:
+## Builds and releases
+
+```powershell
 npx eas-cli@latest build --platform android --profile preview
+npx eas-cli@latest build --platform all --profile production
 ```
 
-## What's here in v0
+Production builds use remote versioning and EAS configuration in `eas.json`. See [RELEASING.md](RELEASING.md) for the release checklist and [IOS_BUILD_FROM_PHONE.md](IOS_BUILD_FROM_PHONE.md) for the iOS-specific workflow.
 
-- `app/index.tsx` — home screen. Reads current user, looks up their
-  `family_memberships` row, shows their family circle name. Bare.
-- `app/login.tsx` — magic-link sign-in.
-- `app/auth/callback.tsx` — handles the deep-link from the email.
-- `lib/supabase.ts` — the Supabase client with AsyncStorage persistence.
+## Structure
 
-## What's NOT here yet
-
-- Upcoming calls list (`call_sessions` query) — next
-- Call detail screen
-- Push notifications (Expo + APNs/FCM)
-- LiveKit / video room
-- Family member invites
-- Polls, games, photo carousel, chyron — all later
-
-## Test devices (from prior debugging)
-
-- **G33 (Android 13):** confirmed working baseline. Use first.
-- **Android 11 (Samsung A12):** acceptable.
-- **Android 10 (Pixel 3):** known issues with newer RN — skip.
-
-## Deep-link config
-
-The magic-link callback uses `expo-linking`'s `createURL("/auth/callback")`.
-In dev that's `exp://...`, in standalone apps it's `kynfowk://auth/callback`
-(the `scheme` from `app.json`). When you provision the dev/prod build,
-add the same callback URL to the Supabase Auth → URL Configuration →
-Redirect URLs allow-list.
+- `app/`: Expo Router screens and layouts
+- `components/`: native UI and feature components
+- `hooks/`: session, push, and incoming-call lifecycle hooks
+- `lib/`: Supabase client, authenticated API client, and native utilities
+- `assets/`: app icons and splash assets

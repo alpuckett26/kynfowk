@@ -176,7 +176,7 @@ export default function AutoScheduleSettingsScreen() {
           <Card>
             <SectionHeader title="Max calls per week" />
             <Text style={styles.subtle}>
-              Kynfowk won't schedule more than this many auto-calls for you in
+              Kynfowk won’t schedule more than this many auto-calls for you in
               any 7-day window.
             </Text>
             <View style={styles.chipRow}>

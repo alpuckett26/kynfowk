@@ -259,7 +259,7 @@ export default function ScheduleNewScreen() {
             ))}
           </View>
         )}
-        <Text style={styles.helper}>You're automatically included.</Text>
+        <Text style={styles.helper}>You’re automatically included.</Text>
       </Card>
 
       {error ? (

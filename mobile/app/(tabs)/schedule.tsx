@@ -146,7 +146,7 @@ export default function ScheduleTab() {
           <Text style={styles.eyebrow}>Schedule</Text>
           <Text style={styles.title}>Start your circle</Text>
           <Text style={styles.lede}>
-            Once you're in a family circle you can mark your weekly windows
+            Once you’re in a family circle you can mark your weekly windows
             here.
           </Text>
         </View>
@@ -233,7 +233,7 @@ export default function ScheduleTab() {
       <Card>
         <SectionHeader title="Plan a call" />
         <Text style={styles.lede}>
-          Pick a date, time, and who to invite. The call lands on everyone's
+          Pick a date, time, and who to invite. The call lands on everyone’s
           dashboard immediately.
         </Text>
         <Button label="Schedule a call" onPress={() => router.push("/schedule/new")} />

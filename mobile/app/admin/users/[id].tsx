@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   Alert,
   Modal,
@@ -35,18 +35,18 @@ export default function AdminUserDetailScreen() {
   const [ttB, setTtB] = useState("");
   const [ttDays, setTtDays] = useState("8");
 
-  const load = async () => {
+  const load = useCallback(async () => {
     if (!id) return;
     try {
       setData(await admin.getUser(id));
     } catch (e) {
       Alert.alert("Failed", e instanceof Error ? e.message : String(e));
     }
-  };
+  }, [id]);
 
   useEffect(() => {
     load();
-  }, [id]);
+  }, [load]);
 
   const onRefresh = async () => {
     setRefreshing(true);

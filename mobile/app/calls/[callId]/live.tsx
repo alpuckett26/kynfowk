@@ -161,6 +161,8 @@ export default function LiveCallScreen() {
     const myId = state.membershipId;
     const myName = state.displayName;
     let active = true;
+    const allPeersEver = allPeersEverRef.current;
+    const peers = peersRef.current;
 
     const createPeer = (remoteId: string, remoteName: string): PeerState => {
       const pc = new RTCPeerConnection({ iceServers: buildIceServers() });
@@ -390,6 +392,7 @@ export default function LiveCallScreen() {
 
     return () => {
       active = false;
+      const attendedMembershipIds = [...allPeersEver];
 
       if (lonelyTimerRef.current) {
         clearTimeout(lonelyTimerRef.current);
@@ -401,7 +404,7 @@ export default function LiveCallScreen() {
       if (
         !completedRef.current &&
         hasJoinedRef.current &&
-        peersRef.current.size === 0
+        peers.size === 0
       ) {
         completedRef.current = true;
         const durationMinutes = Math.max(
@@ -410,18 +413,18 @@ export default function LiveCallScreen() {
         );
         void completeCall(callId as string, {
           durationMinutes,
-          attendedMembershipIds: [...allPeersEverRef.current],
+          attendedMembershipIds,
         }).catch(() => {/* best-effort */});
       }
 
-      for (const peer of peersRef.current.values()) {
+      for (const peer of peers.values()) {
         try {
           peer.connection.close();
         } catch {
           /* noop */
         }
       }
-      peersRef.current.clear();
+      peers.clear();
       channelRef.current?.untrack();
       channelRef.current?.unsubscribe();
       localStreamRef.current?.getTracks().forEach((t) => t.stop());
